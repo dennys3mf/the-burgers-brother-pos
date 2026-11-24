@@ -142,20 +142,20 @@ function publicOrder(row) {
 async function createOrder(db, draft) {
   const order = orderDraft(draft);
   await db.batch([
-    db.prepare(`INSERT INTO orders (${orderColumns}) VALUES (${'?,'.repeat(17)}?) ON CONFLICT(id) DO NOTHING`)
+    db.prepare(`INSERT INTO pos_orders (${orderColumns}) VALUES (${'?,'.repeat(17)}?) ON CONFLICT(id) DO NOTHING`)
       .bind(...orderValues(order)),
-    db.prepare(`INSERT INTO app_state (id, payload, revision)
+    db.prepare(`INSERT INTO pos_state (id, payload, revision)
       VALUES (1, json_insert(?, '$.orders[#]', json(?)), ?)
       ON CONFLICT(id) DO UPDATE SET
-        payload = json_set(app_state.payload, '$.orders', json('[' || json(?) ||
-          CASE WHEN json_array_length(app_state.payload, '$.orders') > 0
-            THEN ',' || substr(json_extract(app_state.payload, '$.orders'), 2)
+        payload = json_set(pos_state.payload, '$.orders', json('[' || json(?) ||
+          CASE WHEN json_array_length(pos_state.payload, '$.orders') > 0
+            THEN ',' || substr(json_extract(pos_state.payload, '$.orders'), 2)
             ELSE ']' END)),
         updated_at = datetime('now'), revision = excluded.revision
-      WHERE NOT EXISTS (SELECT 1 FROM json_each(app_state.payload, '$.orders') WHERE json_extract(value, '$.id') = ?)`)
+      WHERE NOT EXISTS (SELECT 1 FROM json_each(pos_state.payload, '$.orders') WHERE json_extract(value, '$.id') = ?)`)
       .bind(JSON.stringify(initialState()), JSON.stringify(order), crypto.randomUUID(), JSON.stringify(order), order.id)
   ]);
-  const row = await db.prepare('SELECT id, code, channel, table_name, customer, total, status FROM orders WHERE id = ?').bind(order.id).first();
+  const row = await db.prepare('SELECT id, code, channel, table_name, customer, total, status FROM pos_orders WHERE id = ?').bind(order.id).first();
   return json({ ok: true, order: publicOrder(row) }, 201);
 }
 
@@ -169,20 +169,20 @@ async function saveState(db, body, expected) {
   const next = crypto.randomUUID();
   const payload = JSON.stringify(state);
   const statements = [expected === 'none'
-    ? db.prepare('INSERT INTO app_state (id, payload, revision) VALUES (1, ?, ?) ON CONFLICT(id) DO NOTHING').bind(payload, next)
-    : db.prepare("UPDATE app_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
+    ? db.prepare('INSERT INTO pos_state (id, payload, revision) VALUES (1, ?, ?) ON CONFLICT(id) DO NOTHING').bind(payload, next)
+    : db.prepare("UPDATE pos_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
       .bind(payload, next, expected)
   ];
   for (const order of state.orders.slice(0, 50)) {
-    statements.push(db.prepare(`INSERT INTO orders (${orderColumns})
-      SELECT ${'?,'.repeat(17)}? WHERE EXISTS (SELECT 1 FROM app_state WHERE id = 1 AND revision = ?)
+    statements.push(db.prepare(`INSERT INTO pos_orders (${orderColumns})
+      SELECT ${'?,'.repeat(17)}? WHERE EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)
       ON CONFLICT(id) DO UPDATE SET status = excluded.status, payment_status = excluded.payment_status,
         payment_method = excluded.payment_method, boleta_num = excluded.boleta_num,
         approved_at = excluded.approved_at, completed_at = excluded.completed_at`).bind(...orderValues(order), next));
   }
   for (const ingredient of state.ingredients) {
     statements.push(db.prepare(`INSERT INTO ingredients (id, code, name, station, unit, stock, min_stock, cost)
-      SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM app_state WHERE id = 1 AND revision = ?)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)
       ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, cost = excluded.cost`)
       .bind(ingredient.id, ingredient.code, ingredient.name, ingredient.station, ingredient.unit,
         Number(ingredient.stock) || 0, Number(ingredient.minStock) || 0, Number(ingredient.cost) || 0, next));
@@ -204,7 +204,7 @@ export async function onRequest({ request, env }) {
     if (!db) return reject('La base de datos no está disponible.', 503);
 
     if (path === '/api/health' && method === 'GET') {
-      await db.prepare('SELECT revision FROM app_state LIMIT 1').first();
+      await db.prepare('SELECT revision FROM pos_state LIMIT 1').first();
       return json({ ok: true, service: 'the-burgers-brother-d1' });
     }
     if (path === '/api/session' && method === 'POST') {
@@ -221,14 +221,14 @@ export async function onRequest({ request, env }) {
     const id = path.startsWith('/api/orders/') ? path.slice('/api/orders/'.length) : '';
     if (method === 'GET' && uuid.test(id)) {
       const row = await db.prepare(`SELECT json_extract(value, '$.status') AS status
-        FROM app_state, json_each(app_state.payload, '$.orders')
-        WHERE app_state.id = 1 AND json_extract(value, '$.id') = ?`).bind(id).first();
+        FROM pos_state, json_each(pos_state.payload, '$.orders')
+        WHERE pos_state.id = 1 AND json_extract(value, '$.id') = ?`).bind(id).first();
       return row ? json({ ok: true, status: row.status }) : reject('Pedido no encontrado.', 404);
     }
 
     if (!await signedIn(request, env.STAFF_PASSWORD)) return reject('Inicia sesión para continuar.', 401);
     if (path === '/api/state' && method === 'GET') {
-      const row = await db.prepare('SELECT payload, revision, updated_at FROM app_state WHERE id = 1').first();
+      const row = await db.prepare('SELECT payload, revision, updated_at FROM pos_state WHERE id = 1').first();
       return json({ ok: true, state: row ? JSON.parse(row.payload) : initialState(),
         revision: row?.revision || null, updatedAt: row?.updated_at || null });
     }
@@ -236,7 +236,7 @@ export async function onRequest({ request, env }) {
       return await saveState(db, await input(request, 1_500_000), request.headers.get('If-Match'));
     }
     if (path === '/api/orders' && method === 'GET') {
-      const { results } = await db.prepare('SELECT * FROM orders ORDER BY rowid DESC LIMIT 100').all();
+      const { results } = await db.prepare('SELECT * FROM pos_orders ORDER BY rowid DESC LIMIT 100').all();
       return json({ ok: true, orders: results });
     }
 
