@@ -103,7 +103,7 @@
   </style>
 <link rel="stylesheet" href="./brand.css">
 </head>
-<body class="antialiased overflow-x-hidden">
+<body data-public-menu class="antialiased overflow-x-hidden">
 
   <!-- THERMAL PRINT TARGET (BIXOLON SPP-R310BK 80mm) -->
   <div id="thermal-print-area"></div>
@@ -121,20 +121,6 @@
       </div>
 
       <button id="staff-access" type="button" class="min-h-11 px-2 text-xs font-semibold text-amber-400">Personal</button>
-      <dialog id="staff-login" class="rounded-xl p-5 w-80 max-w-[90vw]">
-        <form id="staff-login-form" class="space-y-3">
-          <label for="staff-role" class="block text-sm font-bold">Área de trabajo</label>
-          <select id="staff-role" class="w-full rounded border p-2 text-base">
-            <option value="admin">Nicol · Administración</option>
-            <option value="chef">Cocina · Chef</option>
-          </select>
-          <label for="staff-password" class="block text-sm font-bold">Clave del personal</label>
-          <input id="staff-password" type="password" autocomplete="current-password" required class="w-full rounded border p-2">
-          <p id="staff-login-error" role="alert" class="text-sm text-rose-700"></p>
-          <button type="submit" class="rounded bg-slate-900 px-3 py-2 text-white">Entrar</button>
-          <button type="button" id="staff-login-cancel" class="px-3 py-2">Cancelar</button>
-        </form>
-      </dialog>
       <button id="staff-logout" hidden type="button" class="text-xs font-semibold">Cerrar sesión</button>
       <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1" id="role-tabs" aria-label="Secciones del POS">
         <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
@@ -159,6 +145,21 @@
     </div>
   </header>
 
+      <dialog id="staff-login" class="rounded-xl p-5 w-80 max-w-[90vw]">
+        <form id="staff-login-form" class="space-y-3">
+          <label for="staff-role" class="block text-sm font-bold">Área de trabajo</label>
+          <select id="staff-role" class="w-full rounded border p-2 text-base">
+            <option value="admin">Nicol · Administración</option>
+            <option value="chef">Cocina · Chef</option>
+          </select>
+          <label for="staff-password" class="block text-sm font-bold">Clave del personal</label>
+          <input id="staff-password" type="password" autocomplete="current-password" required class="w-full rounded border p-2">
+          <p id="staff-login-error" role="alert" class="text-sm text-rose-700"></p>
+          <button type="submit" class="rounded bg-slate-900 px-3 py-2 text-white">Entrar</button>
+          <button type="button" id="staff-login-cancel" class="px-3 py-2">Cancelar</button>
+        </form>
+      </dialog>
+
   <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
@@ -175,13 +176,13 @@
         </div>
       </div>
       <!-- Mode Banner -->
-      <div class="customer-hero">
+      <div class="customer-hero" id="staff-menu-hero">
         <div>
           <h1>The Burgers Brother</h1>
           <p>Carta y pedidos</p>
         </div>
 
-        <div class="customer-hero-controls">
+        <div id="menu-mode-controls" class="customer-hero-controls">
           <div class="order-modes" aria-label="Tipo de pedido">
             <button type="button" id="btn-mode-mesa" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">En mesa</button>
             <button type="button" id="btn-mode-delivery" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">Delivery</button>
@@ -213,7 +214,7 @@
           <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 id="carta-title" class="menu-title">La carta</h2>
-              <a id="carta-cart-link" class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
+              <a id="carta-cart-link" hidden class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
             </div>
             <div class="carta-controls menu-modes" aria-label="Formato de la carta">
               <button type="button" data-menu-format="visual" aria-pressed="true">Carta ilustrada</button>
@@ -241,7 +242,7 @@
         </div>
 
         <!-- Client Cart & Checkout -->
-        <div id="client-cart" class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-20">
+        <div id="client-cart" hidden class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-20">
           <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h2 class="cart-heading">Tu pedido</h2>
@@ -252,6 +253,7 @@
 
           <div id="client-cart-items" class="p-3.5 space-y-2.5 max-h-64 overflow-y-auto min-h-[120px]"></div>
 
+          <div id="public-order-controls"></div>
           <!-- Customer Info & Delivery Payment Gate -->
           <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3 text-xs">
             <div>
@@ -1289,6 +1291,16 @@
         bChef.classList.toggle('hidden', cookingCount === 0);
       }
 
+      let staffMenu = false;
+
+      function updateMenuLayout(role) {
+        const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
+        document.body.toggleAttribute('data-public-menu', isPublic);
+        const controls = document.getElementById('menu-mode-controls');
+        const destination = document.getElementById(isPublic ? 'public-order-controls' : 'staff-menu-hero');
+        if (controls.parentElement !== destination) destination.append(controls);
+      }
+
       function switchRole(role) {
         if (role !== 'cliente' && !staffReady) {
           requestedRole = role;
@@ -1297,7 +1309,9 @@
           return;
         }
         if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
+        if (role !== 'cliente') staffMenu = true;
         ui.role = role;
+        updateMenuLayout(role);
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
 
@@ -1331,7 +1345,7 @@
         document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
         document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
         document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
-        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry);
+        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu);
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
         document.getElementById('client-cart-origin').textContent = isMesa ? `${ui.clientMesa} (${ui.staffOrderEntry ? 'Mostrador' : 'QR'})` : 'Delivery — Requiere Pago Previo';
         document.getElementById('btn-submit-client-label').textContent = ui.staffOrderEntry ? 'Crear pedido' : isMesa ? 'Enviar Pedido al Admin' : 'Confirmar Pago y Enviar Delivery';
@@ -1439,7 +1453,11 @@
           fee ? 'Recargo tarjeta: ' + money(fee) : ''
         ].filter(Boolean).join(' · ');
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
-        document.getElementById('carta-cart-link').textContent = 'Ver pedido (' + units + ')';
+        const showCart = units > 0 || staffMenu || ui.staffOrderEntry;
+        document.getElementById('client-cart').hidden = !showCart;
+        const cartLink = document.getElementById('carta-cart-link');
+        cartLink.hidden = !showCart;
+        cartLink.textContent = 'Ver pedido (' + units + ')';
         document.getElementById('client-cart-total').textContent = money(total);
       }
 
@@ -2668,8 +2686,13 @@
 
       function applyHashRoute(hashStr) {
         const h = (hashStr || '').replace(/^#/, '');
-        if (!h) { switchRole('cliente'); return; }
         const params = new URLSearchParams(h);
+        if (params.has('personal')) {
+          switchRole(staffArea === 'chef' ? 'chef' : 'admin');
+          return;
+        }
+        staffMenu = false;
+        if (!h) { switchRole('cliente'); return; }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
           ui.clientMode = 'MESA';
