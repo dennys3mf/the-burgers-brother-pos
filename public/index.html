@@ -78,7 +78,6 @@
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08);
     }
     .thermal-brand { display: block; width: 48mm; height: auto; max-width: 100%; margin: 0 auto 2mm; }
-    .thermal-comanda-brand { width: 34mm; }
     .thermal-comanda-title { text-align: center; font-size: 1.2em; font-weight: 800; letter-spacing: .04em; }
     .thermal-line {
       border-top: 1px dashed #000;
@@ -944,7 +943,6 @@
 
         return `
           <div class="thermal-paper font-mono-ticket">
-            <img class="thermal-brand thermal-comanda-brand" width="384" height="235" src="${receiptLogo}" alt="The Burgers Brother">
             <div class="thermal-comanda-title">COMANDA DE SERVICIO</div>
             <div style="text-align:center;font-size:1.7em;font-weight:800;border:2px solid #000;padding:4px;margin:6px 0;">
               ${order.code}
