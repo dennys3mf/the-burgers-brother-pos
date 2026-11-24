@@ -15,3 +15,9 @@ El proyecto está vinculado a GitHub y usa `main` para producción. `wrangler.to
 Antes de publicar una versión con migraciones, ejecuta `npm run db:migrate:remote` desde un entorno autorizado en la cuenta de Cloudflare. Configura o rota la clave con `npx wrangler pages secret put STAFF_PASSWORD --project-name the-burgers-brother-pos` y publícala mediante un despliegue de Pages. Mantén la clave fuera de Git y compártela solamente con el personal autorizado.
 
 `GET /api/health` comprueba la conexión al esquema D1. `GET /api/state` y `GET /api/orders` requieren una sesión del personal.
+
+## Impresión directa BIXOLON
+
+Instala [BIXOLON Web Print SDK](https://es.bixolon.com/download_view.php?idx=14&s_key=SDK) en el equipo desde el que se imprimirá. Registra allí la SPP-R310 con el nombre lógico `Printer1` o introduce el nombre que elegiste en **Configurar BIXOLON**. En celular, empareja la variante Bluetooth y abre el POS en el navegador integrado del SDK. En PC, inicia el servicio local antes de abrir el POS.
+
+En **Gestión → Caja**, abre una boleta y elige **Conectar impresora**. Cuando se verifique la conexión, pulsa **Imprimir directo**. Si el SDK tiene activado TLS, selecciona **HTTPS local en el SDK**. El POS usa el puerto local predeterminado 18080. El diálogo del sistema y el PDF siguen disponibles como opciones de impresión.

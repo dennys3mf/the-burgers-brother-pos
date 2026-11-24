@@ -611,11 +611,31 @@
       <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <div>
           <h3 id="bixolon-modal-title" class="font-extrabold text-sm text-slate-900">Impresión Térmica — BIXOLON SPP-R310BK (80 mm)</h3>
-          <p class="text-xs text-slate-500">Imprime con el sistema o comparte el PDF con BIXOLON mPrint por Bluetooth.</p>
+          <p class="text-xs text-slate-500">Conecta la BIXOLON para imprimir la boleta desde el POS.</p>
         </div>
         <button type="button" data-close-modal="modal-bixolon" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <div id="bixolon-modal-body" class="p-5 bg-slate-200/80 overflow-y-auto flex flex-wrap justify-center gap-6"></div>
+      <section id="bixolon-direct" aria-label="Impresión directa" class="border-t border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="btn-bixolon-connect" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Conectar impresora</button>
+          <button type="button" id="btn-bixolon-direct-print" disabled class="min-h-11 rounded-xl bg-amber-500 px-3 text-xs font-bold text-slate-950">Imprimir directo</button>
+        </div>
+        <p id="bixolon-status" role="status" class="text-xs text-slate-700">Impresora sin verificar.</p>
+        <details class="text-xs text-slate-700">
+          <summary class="cursor-pointer font-semibold">Configurar BIXOLON</summary>
+          <div class="mt-2 flex flex-wrap items-end gap-3">
+            <label class="grid gap-1">Nombre lógico en el SDK
+              <input id="bixolon-printer-name" value="Printer1" maxlength="32" autocomplete="off" class="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">
+            </label>
+            <label class="flex items-center gap-2 py-2">
+              <input type="checkbox" id="bixolon-secure"> HTTPS local en el SDK
+            </label>
+          </div>
+          <p class="mt-2 leading-relaxed">Registra la SPP-R310 en BIXOLON Web Print SDK. En celular, empareja la impresora y abre este POS en el navegador del SDK. En PC, abre el servicio local y luego el POS.</p>
+          <a class="mt-1 inline-block underline" href="https://es.bixolon.com/download_view.php?idx=14&amp;s_key=SDK" target="_blank" rel="noopener noreferrer">Descargar BIXOLON Web Print SDK</a>
+        </details>
+      </section>
       <div class="px-5 py-3.5 border-t border-slate-200 bg-white flex flex-wrap items-center justify-end gap-2">
         <button type="button" id="btn-bixolon-print-comanda" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5">
           <i data-lucide="printer" class="w-4 h-4"></i> Imprimir Comanda Cocina
@@ -765,6 +785,7 @@
 
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
+    import { runBixolon, thermalReceiptText } from './bixolon.js';
     import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js';
 
@@ -1006,6 +1027,63 @@
 
       const shareReceipt = document.getElementById('btn-bixolon-share-boleta');
       const printReceipt = document.getElementById('btn-bixolon-print-boleta');
+      const directPanel = document.getElementById('bixolon-direct');
+      const connectPrinter = document.getElementById('btn-bixolon-connect');
+      const printDirect = document.getElementById('btn-bixolon-direct-print');
+      const printerName = document.getElementById('bixolon-printer-name');
+      const secureBridge = document.getElementById('bixolon-secure');
+      const printerStatus = document.getElementById('bixolon-status');
+      let printerVerified = false;
+      let printerBusy = false;
+      try {
+        const saved = JSON.parse(localStorage.getItem('pos-bixolon-printer') || 'null');
+        if (saved) {
+          printerName.value = saved.name;
+          secureBridge.checked = saved.secure;
+        }
+      } catch {}
+
+      function updatePrinterButtons() {
+        connectPrinter.disabled = printerBusy;
+        printDirect.disabled = printerBusy || !printerVerified || !ui.activeBixolonOrder?.boletaNum;
+        printerName.disabled = printerBusy;
+        secureBridge.disabled = printerBusy;
+      }
+
+      async function usePrinter(order) {
+        if (printerBusy || (order && !printerVerified)) return;
+        const settings = { name: printerName.value.trim(), secure: secureBridge.checked };
+        printerBusy = true;
+        updatePrinterButtons();
+        printerStatus.textContent = order ? 'Enviando boleta…' : 'Verificando la impresora…';
+        try {
+          await runBixolon(settings, order ? thermalReceiptText(order, receiptDate(order)) : undefined);
+          printerVerified = true;
+          printerStatus.textContent = order ? 'BIXOLON confirmó el trabajo de impresión.' : 'Impresora verificada: ' + settings.name;
+          try { localStorage.setItem('pos-bixolon-printer', JSON.stringify(settings)); } catch {}
+        } catch (error) {
+          printerVerified = false;
+          printerStatus.textContent = order
+            ? error.message + ' Revisa si salió la boleta antes de reenviar.'
+            : error.message;
+        } finally {
+          printerBusy = false;
+          updatePrinterButtons();
+        }
+      }
+
+      connectPrinter.addEventListener('click', () => usePrinter());
+      printDirect.addEventListener('click', () => {
+        if (ui.activeBixolonOrder?.boletaNum) usePrinter(ui.activeBixolonOrder);
+      });
+      for (const field of [printerName, secureBridge]) {
+        field.addEventListener('input', () => {
+          printerVerified = false;
+          printerStatus.textContent = 'Impresora sin verificar.';
+          updatePrinterButtons();
+        });
+      }
+
       let pdfLibrary;
       function loadPdf() {
         pdfLibrary ||= new Promise((resolve, reject) => {
@@ -1023,6 +1101,8 @@
 
       function openBixolonModal(order) {
         ui.activeBixolonOrder = order;
+        directPanel.hidden = !order.boletaNum;
+        updatePrinterButtons();
         printReceipt.classList.toggle('hidden', !order.boletaNum);
         shareReceipt.hidden = !order.boletaNum;
         shareReceipt.disabled = true;
