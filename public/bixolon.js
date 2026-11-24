@@ -24,16 +24,22 @@ async function request(url, data) {
   }
 }
 
-export async function runBixolon({ name, secure }, receipt) {
+export async function runBixolon({ name, secure }, text, qrCode) {
   if (!/^[a-zA-Z0-9]{1,32}$/.test(name)) {
     throw new Error('Indica el nombre lógico registrado en BIXOLON, usando letras o números.');
   }
   const url = (secure ? 'https' : 'http') + '://127.0.0.1:18080/WebPrintSDK/' + name;
   const id = crypto.getRandomValues(new Uint32Array(1))[0] & 0x7fffffff;
   const functions = { func1: statusCommand };
-  if (receipt) {
+  if (text) {
     functions.func2 = { setCharacterset: [1252] };
-    functions.func3 = { printText: [receipt + '\n\n\n\n', 0, 0, false, false, false, 0, 0] };
+    const printText = value => ({ printText: [value, 0, 0, false, false, false, 0, 0] });
+    const feed = '\n\n\n\n';
+    functions.func3 = printText(text.trimEnd() + (qrCode ? '\n' : feed));
+    if (qrCode) {
+      functions.func4 = { printQRCode: [qrCode, 1, 1, 6, 1] };
+      functions.func5 = printText(feed);
+    }
   }
   let result = await request(url, { id, functions });
   for (let attempt = 0; attempt < 3 && /^(ready|progress|in progress)$/i.test(String(result?.Result).trim()); attempt++) {
