@@ -322,12 +322,12 @@
             </div>
           </div>
 
-          <p class="text-xs text-slate-400">Ingresa los 3 dígitos del código impreso en el ticket de la BIXOLON (ej. <span class="font-mono-ticket text-amber-300">002</span> para <span class="font-mono-ticket text-amber-300">BB-002</span>) para marcarlo completado.</p>
+          <p class="text-xs text-slate-400">Escanea el QR de la comanda o escribe el código del pedido. Luego confirma que está listo.</p>
 
           <!-- Code Display -->
           <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 flex items-center justify-between">
             <span class="font-mono-ticket text-xl font-bold text-slate-500">BB-</span>
-            <input id="chef-code-input" type="text" maxlength="6" placeholder="000" class="w-full bg-transparent text-right font-mono-ticket text-3xl font-extrabold text-amber-400 tracking-widest focus:outline-none" />
+            <input id="chef-code-input" type="text" maxlength="12" placeholder="000" aria-label="Código del pedido sin el prefijo BB" autocapitalize="characters" autocomplete="off" spellcheck="false" class="w-full min-w-0 bg-transparent text-right font-mono-ticket text-xl sm:text-3xl font-extrabold text-amber-400 tracking-widest focus:outline-none" />
           </div>
 
           <!-- Touch Numeric Keypad -->
@@ -936,6 +936,12 @@
         });
       }
 
+      function serviceTicketUrl(order) {
+        const url = new URL(location.pathname, location.origin);
+        url.hash = new URLSearchParams({ chef: order.code }).toString();
+        return url.href;
+      }
+
       // ==================== BIXOLON SPP-R310BK 80MM TICKETS ====================
       function buildComandaHTML(order) {
         const cocinaItems = order.items.filter(i => i.station === 'COCINA');
@@ -969,9 +975,9 @@
             ${order.note ? `<div class="thermal-line"></div><div style="font-weight:700;border:1px solid #000;padding:4px;">NOTA: ${order.note.toUpperCase()}</div>` : ''}
             <div class="thermal-line-bold"></div>
             <div style="display:flex;justify-content:center;margin:8px 0;">
-              ${makeQrSvgString(order.code, 3)}
+              ${makeQrSvgString(serviceTicketUrl(order), 3)}
             </div>
-            <div style="text-align:center;font-size:0.9em;">CHEF: Escanea QR o ingresa <b>${order.num}</b> en App Chef</div>
+            <div style="text-align:center;font-size:0.9em;">CHEF: Escanea el QR para cargar el pedido o ingresa <b>${order.num}</b> en App Chef</div>
             <div style="text-align:center;font-size:0.8em;color:#444;margin-top:4px;">BIXOLON SPP-R310BK (80mm) • Avance corte manual</div>
             <div style="height:20px;"></div>
           </div>
@@ -1091,7 +1097,7 @@
         try {
           if (comanda) {
             const text = buildEscPosRaw(order).replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ');
-            await runBixolon(settings, text, order.code);
+            await runBixolon(settings, text, serviceTicketUrl(order));
           } else {
             await runBixolon(settings, order ? thermalReceiptText(order, receiptDate(order)) : undefined);
           }
@@ -2155,6 +2161,10 @@
           showToast(`El pedido ${order.code} ya fue marcado como completado.`, 'info');
           return;
         }
+        if (order.status !== 'EN_COCINA') {
+          showToast('Este pedido no está en cocina.', 'err');
+          return;
+        }
         order.status = 'LISTO_CHEF';
         order.completedAt = nowStr();
         document.getElementById('chef-code-input').value = '';
@@ -2337,8 +2347,14 @@
           ui.clientMode = 'DELIVERY';
           switchRole('cliente');
         } else if (params.has('chef')) {
+          const scannedCode = params.get('chef').trim().toUpperCase().replace(/^BB-/, '');
+          if (!/^[A-Z0-9]{1,12}$/.test(scannedCode)) {
+            showToast('El QR no contiene un código de pedido válido.', 'err');
+            switchRole('cliente');
+            return;
+          }
+          document.getElementById('chef-code-input').value = scannedCode;
           switchRole('chef');
-          document.getElementById('chef-code-input').value = params.get('chef').slice(0, 40);
         } else {
           switchRole('cliente');
         }
