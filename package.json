@@ -1,0 +1,17 @@
+{
+  "name": "the-burgers-brother-pos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema POS QR, Admin, BIXOLON SPP-R310BK, App Chef, Inventario, Kardex y Caja en Cloudflare Pages + D1",
+  "scripts": {
+    "dev": "wrangler pages dev public --d1=DB",
+    "db:create": "wrangler d1 create the-burgers-brother-db",
+    "db:migrate:local": "wrangler d1 execute the-burgers-brother-db --local --file=./migrations/0001_init.sql",
+    "db:migrate:remote": "wrangler d1 execute the-burgers-brother-db --remote --file=./migrations/0001_init.sql",
+    "deploy": "wrangler pages deploy public --project-name=the-burgers-brother-pos"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  },
+  "type": "module"
+}

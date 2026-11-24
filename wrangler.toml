@@ -1,0 +1,8 @@
+name = "the-burgers-brother-pos"
+compatibility_date = "2026-11-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "the-burgers-brother-db"
+database_id = "ffd16dc9-b181-4cfd-82fa-1253efaeefdc"

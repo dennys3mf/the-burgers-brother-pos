@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Burgers Brother — Sistema QR, Admin, BIXOLON SPP-R310 y Chef</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .font-mono-ticket {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
+    .thermal-paper {
+      background: #ffffff;
+      color: #000000;
+      width: 302px; /* 80mm / 72mm printable BIXOLON SPP-R310BK */
+      font-size: 12px;
+      line-height: 1.32;
+      padding: 14px 12px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08);
+    }
+    .thermal-line {
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+    .thermal-line-bold {
+      border-top: 2px solid #000;
+      margin: 6px 0;
+    }
+    #thermal-print-area {
+      display: none;
+    }
+    @media print {
+      @page { margin: 0; size: 80mm auto; }
+      html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+      body > *:not(#thermal-print-area) { display: none !important; }
+      #thermal-print-area { display: block !important; width: 78mm !important; }
+      #thermal-print-area .thermal-paper { box-shadow: none !important; width: 76mm !important; padding: 4mm 2mm !important; font-size: 11px !important; }
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 antialiased overflow-x-hidden">
+
+  <!-- THERMAL PRINT TARGET (BIXOLON SPP-R310BK 80mm) -->
+  <div id="thermal-print-area"></div>
+
+  <!-- SIMULATED PHONE PUSH NOTIFICATION BANNER (FOR ADMIN) -->
+  <div id="push-banner-container" class="fixed top-4 right-4 z-[90] flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0 pointer-events-none"></div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[95] flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none"></div>
+
+  <!-- TOP NAVIGATION BAR (4-ACTOR SWITCHER) -->
+  <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 h-16 flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold shadow-sm">
+          <i data-lucide="flame" class="w-5 h-5"></i>
+        </div>
+        <div class="leading-tight hidden sm:block">
+          <div class="font-extrabold text-sm tracking-tight text-amber-400">THE BURGERS BROTHER</div>
+          <div class="text-[11px] text-slate-400">QR • Admin • BIXOLON SPP-R310 • Chef</div>
+        </div>
+      </div>
+
+      <!-- Actor Role Tabs -->
+      <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1" id="role-tabs">
+        <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
+          <i data-lucide="qr-code" class="w-4 h-4"></i>
+          <span>1. Carta QR / Delivery</span>
+        </button>
+        <button type="button" data-role="admin" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
+          <i data-lucide="bell-ring" class="w-4 h-4"></i>
+          <span>2. Admin</span>
+          <span id="badge-admin-pending" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-extrabold">0</span>
+        </button>
+        <button type="button" data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
+          <i data-lucide="chef-hat" class="w-4 h-4"></i>
+          <span>3. App Chef</span>
+          <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
+        </button>
+        <button type="button" data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
+          <i data-lucide="database" class="w-4 h-4"></i>
+          <span>4. Gestión y Caja</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="max-w-7xl mx-auto p-3 sm:p-6">
+
+    <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
+    <section id="view-cliente" class="role-view space-y-5">
+      <!-- Mode Banner -->
+      <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 mb-1">
+            <i data-lucide="smartphone" class="w-4 h-4"></i>
+            <span>VISTA DEL CLIENTE EN SU CELULAR</span>
+          </div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Carta Digital — The Burgers Brother</h1>
+          <p class="text-xs text-slate-300 mt-0.5">Pedidos: 958656930 • Elige Mesa (QR) o Delivery (pago previo obligatorio).</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="bg-slate-800 p-1 rounded-xl flex items-center gap-1">
+            <button type="button" id="btn-mode-mesa" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">🍽️ En Mesa (QR)</button>
+            <button type="button" id="btn-mode-delivery" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">🛵 Delivery (Prepago)</button>
+          </div>
+          <select id="client-mesa-select" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400 focus:outline-none">
+            <option value="Mesa 1">Mesa 1</option>
+            <option value="Mesa 2">Mesa 2</option>
+            <option value="Mesa 3">Mesa 3</option>
+            <option value="Mesa 4" selected>Mesa 4</option>
+            <option value="Mesa 5">Mesa 5</option>
+            <option value="Mesa 6">Mesa 6</option>
+          </select>
+          <button type="button" id="btn-show-qr" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 transition-colors">
+            <i data-lucide="qr-code" class="w-4 h-4"></i> Ver QR
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Client Order Tracker (if client just placed orders) -->
+      <div id="client-tracker-wrap" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">
+        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado de tus pedidos en vivo</div>
+        <div id="client-tracker-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- Menu + Client Cart -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Menu Catalog -->
+        <div class="lg:col-span-8 space-y-4">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input id="client-search" type="text" placeholder="Buscar en la carta (ej. Burger Royal, Alitas, Salchipapa, Mojito)..." class="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div id="client-categories" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+          </div>
+
+          <div id="client-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- Client Cart & Checkout -->
+        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-20">
+          <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h2 class="font-extrabold text-sm text-slate-900">Tu Pedido</h2>
+              <p id="client-cart-origin" class="text-xs text-amber-700 font-semibold">Mesa 4 (Escaneado por QR)</p>
+            </div>
+            <button type="button" id="btn-client-clear" class="text-xs font-semibold text-rose-600 hover:underline">Vaciar</button>
+          </div>
+
+          <div id="client-cart-items" class="p-3.5 space-y-2.5 max-h-64 overflow-y-auto min-h-[120px]"></div>
+
+          <!-- Customer Info & Delivery Payment Gate -->
+          <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Tu Nombre</label>
+              <input id="client-name" type="text" placeholder="Ej. Carlos Quispe" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <!-- Delivery-only fields + Mandatory Prepayment -->
+            <div id="client-delivery-fields" class="hidden space-y-2.5 p-3 rounded-xl bg-sky-50 border border-sky-200">
+              <div class="font-bold text-sky-900 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-sky-600"></i>
+                Pago previo obligatorio para Delivery
+              </div>
+              <input id="client-phone" type="text" placeholder="Teléfono / WhatsApp (ej. 958123456)" class="w-full px-3 py-2 rounded-lg border border-sky-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              <input id="client-address" type="text" placeholder="Dirección exacta y referencia" class="w-full px-3 py-2 rounded-lg border border-sky-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" data-del-pay="Yape" class="del-pay-btn py-1.5 rounded-lg font-bold border">Yape</button>
+                <button type="button" data-del-pay="Plin" class="del-pay-btn py-1.5 rounded-lg font-bold border">Plin</button>
+                <button type="button" data-del-pay="Tarjeta" class="del-pay-btn py-1.5 rounded-lg font-bold border">Tarjeta</button>
+              </div>
+              <div class="text-[11px] text-sky-800 bg-white/80 p-2 rounded-lg border border-sky-100">
+                Yape / Plin oficial: <b>958 656 930</b> (The Burgers Brother)
+              </div>
+              <input id="client-pay-ref" type="text" placeholder="N° de operación o código de pago *" class="w-full px-3 py-2 rounded-lg border border-sky-300 bg-white font-mono-ticket focus:outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+
+            <div>
+              <input id="client-order-note" type="text" placeholder="Nota general (ej. Cremas aparte, sin ají)..." class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-200 text-base font-extrabold">
+              <span>Total</span>
+              <span id="client-cart-total" class="text-orange-600">S/ 0.00</span>
+            </div>
+
+            <button type="button" id="btn-submit-client-order" class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span id="btn-submit-client-label">Enviar Pedido al Admin</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
+    <section id="view-admin" class="role-view hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs font-bold text-orange-600 mb-1">
+            <i data-lucide="bell-ring" class="w-4 h-4"></i>
+            <span>TELÉFONO DEL ADMIN — APROBACIÓN Y BOLETERA BIXOLON SPP-R310BK</span>
+          </div>
+          <h2 class="text-lg font-extrabold text-slate-900">Bandeja de Pedidos Entrantes</h2>
+          <p class="text-xs text-slate-500">Ningún pedido pasa a cocina ni se imprime en la boletera hasta que presiones <b>Aprobar e Imprimir</b>.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+            <i data-lucide="printer" class="w-4 h-4"></i> BIXOLON SPP-R310BK (80mm)
+          </div>
+          <div id="admin-filter-tabs" class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button type="button" data-admin-filter="POR_APROBAR" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Por Aprobar</button>
+            <button type="button" data-admin-filter="EN_COCINA" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">En Cocina</button>
+            <button type="button" data-admin-filter="LISTO_CHEF" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Listos (Chef)</button>
+            <button type="button" data-admin-filter="ENTREGADO" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Historial</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-orders-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ==================== VIEW 3: INTERFAZ MÓVIL DEL CHEF ==================== -->
+    <section id="view-chef" class="role-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Mobile Chef Keypad (Left 5 cols) -->
+        <div class="lg:col-span-5 bg-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Interfaz Móvil del Chef</div>
+              <h2 class="text-lg font-extrabold">Completar por Código</h2>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <i data-lucide="chef-hat" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400">Ingresa los 3 dígitos del código impreso en el ticket de la BIXOLON (ej. <span class="font-mono-ticket text-amber-300">002</span> para <span class="font-mono-ticket text-amber-300">BB-002</span>) para marcarlo completado.</p>
+
+          <!-- Code Display -->
+          <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 flex items-center justify-between">
+            <span class="font-mono-ticket text-xl font-bold text-slate-500">BB-</span>
+            <input id="chef-code-input" type="text" maxlength="6" placeholder="000" class="w-full bg-transparent text-right font-mono-ticket text-3xl font-extrabold text-amber-400 tracking-widest focus:outline-none" />
+          </div>
+
+          <!-- Touch Numeric Keypad -->
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-numpad="1" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">1</button>
+            <button type="button" data-numpad="2" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">2</button>
+            <button type="button" data-numpad="3" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">3</button>
+            <button type="button" data-numpad="4" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">4</button>
+            <button type="button" data-numpad="5" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">5</button>
+            <button type="button" data-numpad="6" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">6</button>
+            <button type="button" data-numpad="7" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">7</button>
+            <button type="button" data-numpad="8" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">8</button>
+            <button type="button" data-numpad="9" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">9</button>
+            <button type="button" data-numpad="CLR" class="numpad-btn py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-xs font-bold text-rose-400">BORRAR</button>
+            <button type="button" data-numpad="0" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">0</button>
+            <button type="button" data-numpad="DEL" class="numpad-btn py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-xs font-bold text-slate-300">←</button>
+          </div>
+
+          <button type="button" id="btn-chef-complete-code" class="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+            MARCAR PEDIDO COMPLETADO
+          </button>
+        </div>
+
+        <!-- Active Approved Tickets in Kitchen (Right 7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-sm">Comandas Aprobadas en Cocina</h3>
+              <p class="text-xs text-slate-500">Solo aparecen pedidos ya aprobados por el Admin e impresos en la boletera. Toca cualquier código para cargarlo en el teclado.</p>
+            </div>
+            <span id="chef-active-count" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">0 activos</span>
+          </div>
+
+          <div id="chef-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
+    <section id="view-gestion" class="role-view hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+          <button type="button" data-subtab="inventario" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">📦 Inventario (Insumos)</button>
+          <button type="button" data-subtab="kardex" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">🔄 Kardex</button>
+          <button type="button" data-subtab="proveedores" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">🚚 Proveedores y Compras</button>
+          <button type="button" data-subtab="caja" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">💰 Caja y Boletas Internas</button>
+        </div>
+        <button type="button" id="btn-reset-all" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50">Restaurar Demo</button>
+      </div>
+
+      <!-- SUBTAB: INVENTARIO -->
+      <div id="subtab-inventario" class="gestion-panel space-y-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="inv-kpis"></div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Inventario de Insumos Clave (Descuento por Receta)</h3>
+              <p class="text-xs text-slate-500">Cada pedido aprobado descuenta asado de tira (g), alitas (und), papas nativas, pan brioche y botellas/onzas.</p>
+            </div>
+            <button type="button" id="btn-open-adjust" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold">Ajustar Stock</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Código</th>
+                  <th class="py-3 px-4">Insumo</th>
+                  <th class="py-3 px-4">Estación</th>
+                  <th class="py-3 px-4 text-right">Stock Actual</th>
+                  <th class="py-3 px-4 text-right">Mínimo</th>
+                  <th class="py-3 px-4 text-right">Costo Unit.</th>
+                  <th class="py-3 px-4 text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="inv-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: KARDEX -->
+      <div id="subtab-kardex" class="gestion-panel hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-sm text-slate-900">Kardex Físico y Valorizado</h3>
+            <p class="text-xs text-slate-500">Movimientos automáticos generados al aprobar pedidos del Admin o registrar compras.</p>
+          </div>
+          <button type="button" id="btn-export-kardex" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Fecha / Hora</th>
+                <th class="py-3 px-4">Insumo</th>
+                <th class="py-3 px-4">Tipo</th>
+                <th class="py-3 px-4">Documento / Pedido</th>
+                <th class="py-3 px-4 text-right">Ant.</th>
+                <th class="py-3 px-4 text-right">Cant.</th>
+                <th class="py-3 px-4 text-right">Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="kardex-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBTAB: PROVEEDORES -->
+      <div id="subtab-proveedores" class="gestion-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-slate-900">Proveedores de The Burgers Brother</h3>
+            <button type="button" id="btn-open-purchase" class="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold">+ Registrar Compra</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">RUC / Razón Social</th>
+                  <th class="py-3 px-4">Rubro</th>
+                  <th class="py-3 px-4">Contacto</th>
+                </tr>
+              </thead>
+              <tbody id="sup-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200">
+            <h3 class="font-bold text-sm text-slate-900">Compras Ingresadas al Kardex</h3>
+          </div>
+          <div id="pur-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: CAJA Y BOLETAS -->
+      <div id="subtab-caja" class="gestion-panel hidden space-y-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="caja-kpis"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="font-bold text-sm text-slate-900">Movimientos de Caja (Turno Activo)</h3>
+              <button type="button" id="btn-open-expense" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">+ Registrar Egreso</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th class="py-3 px-4">Hora</th>
+                    <th class="py-3 px-4">Concepto</th>
+                    <th class="py-3 px-4">Método</th>
+                    <th class="py-3 px-4 text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody id="caja-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200">
+              <h3 class="font-bold text-sm text-slate-900">Boletas Internas Emitidas</h3>
+            </div>
+            <div id="boletas-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL: CUSTOMIZE ITEM (EXTRAS / ALITAS FLAVORS / NOTES) -->
+  <div id="modal-customize" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <h3 id="cust-title" class="font-extrabold text-sm text-slate-900">Personalizar</h3>
+          <p id="cust-desc" class="text-xs text-slate-500"></p>
+        </div>
+        <button type="button" data-close-modal="modal-customize" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-customize" class="p-4 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
+        <input type="hidden" id="cust-prod-id" />
+
+        <!-- Wing Flavors Picker (Only for Combos de Alitas) -->
+        <div id="cust-flavors-wrap" class="hidden space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-slate-800">Elige los sabores de alitas</label>
+            <span id="cust-flavors-req" class="text-[11px] font-bold text-orange-600">Elige 2 sabores</span>
+          </div>
+          <div id="cust-flavors-grid" class="grid grid-cols-2 gap-1.5"></div>
+        </div>
+
+        <!-- Extras Picker (For Burgers / Salchipapas) -->
+        <div id="cust-extras-wrap" class="space-y-2">
+          <label class="block font-bold text-slate-800">Agregar Extras (Opcional)</label>
+          <div id="cust-extras-list" class="grid grid-cols-2 gap-1.5"></div>
+        </div>
+
+        <!-- Kitchen Note -->
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">Indicaciones para cocina / barra</label>
+          <input id="cust-note" type="text" placeholder="Ej. Término 3/4, sin cebolla, poco hielo..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+        </div>
+
+        <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+          <span class="font-extrabold text-sm text-slate-900" id="cust-price-preview">S/ 0.00</span>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold">Agregar al Pedido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REAL SCANNABLE TABLE QR CODE -->
+  <div id="modal-qr" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <span class="text-xs font-extrabold text-orange-600 uppercase tracking-wider">Código QR Real (ISO Escaneable)</span>
+          <h3 class="text-base font-extrabold text-slate-900">THE BURGERS BROTHER — <span id="qr-mesa-title" class="text-amber-600">Mesa 4</span></h3>
+        </div>
+        <button type="button" data-close-modal="modal-qr" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Target Selector -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Destino del QR</label>
+          <select id="qr-target-select" class="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-white font-semibold">
+            <option value="mesa=1">Mesa 1</option>
+            <option value="mesa=2">Mesa 2</option>
+            <option value="mesa=3">Mesa 3</option>
+            <option value="mesa=4">Mesa 4</option>
+            <option value="mesa=5">Mesa 5</option>
+            <option value="mesa=6">Mesa 6</option>
+            <option value="delivery=1">Carta Delivery</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">URL pública donde alojarás la app</label>
+          <input id="qr-base-url" type="url" placeholder="https://tu-sitio.netlify.app" class="w-full px-2.5 py-2 rounded-lg border border-slate-200 font-mono-ticket text-[11px] focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <!-- Real Generated QR Canvas/SVG -->
+      <div class="flex flex-col items-center">
+        <div id="qr-real-box" class="w-52 h-52 p-3 bg-white border-2 border-slate-900 rounded-2xl flex items-center justify-center shadow-sm"></div>
+        <div id="qr-url-label" class="mt-2.5 w-full font-mono-ticket text-[11px] bg-slate-100 p-2 rounded-lg text-slate-700 break-all text-center"></div>
+      </div>
+
+      <!-- Clear explanation for local preview vs hosted -->
+      <div id="qr-host-notice" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+        <b>Importante:</b> Mientras pruebas este archivo sin subirlo a internet, un celular externo no podrá abrir una URL local. Sube este HTML gratis a <b>Netlify Drop</b>, <b>Vercel</b> o tu hosting y pega esa URL arriba para que cualquier celular abra la mesa exacta al escanear.
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <button type="button" id="btn-qr-simulate-scan" class="col-span-2 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold flex items-center justify-center gap-1.5">
+          <i data-lucide="scan-line" class="w-4 h-4"></i> Probar Escaneo QR Aquí Mismo
+        </button>
+        <button type="button" id="btn-qr-download-png" class="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold flex items-center justify-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Descargar PNG
+        </button>
+        <button type="button" id="btn-qr-copy-link" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Enlace
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BIXOLON SPP-R310BK 80MM THERMAL TICKET PRINT -->
+  <div id="modal-bixolon" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div>
+          <h3 id="bixolon-modal-title" class="font-extrabold text-sm text-slate-900">Impresión Térmica — BIXOLON SPP-R310BK (80 mm)</h3>
+          <p class="text-xs text-slate-500">Formato BXL/POS 72 mm útiles • 5 saltos finales para corte manual</p>
+        </div>
+        <button type="button" data-close-modal="modal-bixolon" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="bixolon-modal-body" class="p-5 bg-slate-200/80 overflow-y-auto flex flex-wrap justify-center gap-6"></div>
+      <div class="px-5 py-3.5 border-t border-slate-200 bg-white flex flex-wrap items-center justify-end gap-2">
+        <button type="button" id="btn-bixolon-print-comanda" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5">
+          <i data-lucide="printer" class="w-4 h-4"></i> Imprimir Comanda Cocina
+        </button>
+        <button type="button" id="btn-bixolon-print-boleta" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5">
+          <i data-lucide="receipt" class="w-4 h-4"></i> Imprimir Boleta Interna
+        </button>
+        <button type="button" id="btn-bixolon-escpos" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+          BXL/POS (.txt)
+        </button>
+        <button type="button" data-close-modal="modal-bixolon" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: COBRAR MESA & EMITIR BOLETA -->
+  <div id="modal-pay-mesa" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="pay-mesa-title" class="font-extrabold text-sm text-slate-900">Cobrar Pedido de Mesa</h3>
+        <button type="button" data-close-modal="modal-pay-mesa" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-pay-mesa" class="p-5 space-y-3 text-xs">
+        <input type="hidden" id="pay-mesa-order-id" />
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+          <span class="font-semibold text-slate-600">Total a Cobrar:</span>
+          <span id="pay-mesa-amount" class="text-lg font-extrabold text-orange-600">S/ 0.00</span>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Método de Pago</label>
+          <select id="pay-mesa-method" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Yape">Yape</option>
+            <option value="Plin">Plin</option>
+            <option value="Tarjeta">Tarjeta</option>
+          </select>
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" data-close-modal="modal-pay-mesa" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">Cobrar y Emitir Boleta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: STOCK ADJUST / PURCHASE / EXPENSE -->
+  <div id="modal-adjust" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-extrabold text-sm text-slate-900">Ajuste de Inventario (Kardex)</h3>
+        <button type="button" data-close-modal="modal-adjust" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-adjust" class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Insumo</label>
+          <select id="adj-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Tipo</label>
+            <select id="adj-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
+              <option value="ENTRADA">Entrada (+)</option>
+              <option value="MERMA">Merma / Salida (-)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cantidad</label>
+            <input id="adj-qty" type="number" min="1" required value="5" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Motivo</label>
+          <input id="adj-reason" type="text" required placeholder="Ej. Conteo físico, merma plancha" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" data-close-modal="modal-adjust" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-purchase" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-extrabold text-sm text-slate-900">Registrar Compra a Proveedor</h3>
+        <button type="button" data-close-modal="modal-purchase" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-purchase" class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Proveedor</label>
+          <select id="pur-sup" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Insumo</label>
+          <select id="pur-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cantidad</label>
+            <input id="pur-qty" type="number" min="1" required value="20" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Total Compra (S/)</label>
+            <input id="pur-total" type="number" step="0.50" min="1" required value="120" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">N° Factura / Guía</label>
+          <input id="pur-doc" type="text" required value="F001-00921" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" data-close-modal="modal-purchase" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Ingresar a Kardex</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-expense" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-extrabold text-sm text-slate-900">Registrar Egreso de Caja</h3>
+        <button type="button" data-close-modal="modal-expense" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-expense" class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Concepto</label>
+          <input id="exp-desc" type="text" required placeholder="Ej. Hielo, bolsas delivery, gas" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Monto (S/)</label>
+          <input id="exp-amt" type="number" step="0.50" min="0.50" required class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" data-close-modal="modal-expense" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 text-white font-bold">Registrar Egreso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const STORAGE_KEY = 'burgers_brother_v1';
+
+      const WING_FLAVORS = [
+        'Crispy (Brothers)',
+        'BBQ y Más',
+        'Acevichadas (La Gringa)',
+        'Buffalo (Vuela y Pica)',
+        'Honey Mustard',
+        'Maracumango Habanero'
+      ];
+
+      const EXTRAS = [
+        { id: 'ex_huevo', name: 'Huevo', price: 4.00, ingId: 'ing_huevo', qty: 1 },
+        { id: 'ex_tocino', name: 'Tocino', price: 4.00, ingId: 'ing_tocino', qty: 1 },
+        { id: 'ex_cheddar', name: 'Queso Cheddar', price: 4.00, ingId: 'ing_cheddar', qty: 1 },
+        { id: 'ex_salchicha', name: 'Porción Salchicha Ahumada', price: 8.00, ingId: 'ing_salchicha', qty: 1 }
+      ];
+
+      // Real 5-page menu from "Carta The Burgers Brother.pdf"
+      const MENU = [
+        // Page 1: Hamburguesas
+        { id: 'm1', name: 'Burger Classic', cat: 'Hamburguesas', station: 'COCINA', price: 14.00, desc: 'Asado de tira 150g, tomate, cebolla blanca, lechuga, papas nativas, pan brioche.', recipe: [{ id: 'ing_carne', qty: 150 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm2', name: 'Classic 2.0', cat: 'Hamburguesas', station: 'COCINA', price: 16.00, desc: 'Asado de tira 150g, lechuga, tomate, queso cheddar, cebolla blanca, papas nativas.', recipe: [{ id: 'ing_carne', qty: 150 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_cheddar', qty: 1 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm3', name: 'Burger Cheese', cat: 'Hamburguesas', station: 'COCINA', price: 18.00, desc: 'Asado de tira 150g, lechuga, tocino, tomate, queso cheddar y papas nativas.', recipe: [{ id: 'ing_carne', qty: 150 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_cheddar', qty: 1 }, { id: 'ing_tocino', qty: 1 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm4', name: 'Burger Royal', cat: 'Hamburguesas', station: 'COCINA', price: 24.00, desc: 'Asado de tira 200g, tocino, huevo, tomate, queso cheddar, lechuga, papas nativas.', recipe: [{ id: 'ing_carne', qty: 200 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_cheddar', qty: 1 }, { id: 'ing_tocino', qty: 1 }, { id: 'ing_huevo', qty: 1 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm5', name: 'Big Bacon', cat: 'Hamburguesas', station: 'COCINA', price: 30.00, desc: 'Asado de tira 240g, tocino, huevo, tomate, doble cheddar, mermelada de tocino, papas nativas.', recipe: [{ id: 'ing_carne', qty: 240 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_cheddar', qty: 2 }, { id: 'ing_tocino', qty: 2 }, { id: 'ing_huevo', qty: 1 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm6', name: 'Burger Brother', cat: 'Hamburguesas', station: 'COCINA', price: 34.00, desc: 'Doble burger asado de tira 250g, cebolla crispy, lechuga, doble tocino, doble queso, papas nativas, pan brioche.', recipe: [{ id: 'ing_carne', qty: 250 }, { id: 'ing_pan', qty: 1 }, { id: 'ing_cheddar', qty: 2 }, { id: 'ing_tocino', qty: 2 }, { id: 'ing_papas', qty: 1 }] },
+
+        // Page 2: Alitas & Combos
+        { id: 'm7', name: 'Alitas Brothers (Crispy)', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Alitas crispy acompañadas de papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm8', name: 'Ala BBQ y Más', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Alitas a la BBQ acompañadas de papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm9', name: 'Alitas La Gringa (Acevichadas)', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Alitas acevichadas acompañadas de papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm10', name: 'Alitas Vuela y Pica (Buffalo)', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Alitas al buffalo acompañadas de papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm11', name: 'Alitas Honey Mustard', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Alitas en salsa de mostaza y miel con papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm12', name: 'Alitas Maracumango Habanero', cat: 'Alitas y Combos', station: 'COCINA', price: 15.00, desc: 'Salsa de mango dulce y habanero picante con papas nativas.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }] },
+        { id: 'm13', name: 'Combo La Sabrosa (6 Alitas)', cat: 'Alitas y Combos', station: 'COCINA', price: 22.00, flavorsRequired: 2, desc: '6 alitas en 2 sabores + papas nativas con salchicha ahumada.', recipe: [{ id: 'ing_alitas', qty: 6 }, { id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }] },
+        { id: 'm14', name: 'Combo Alas, Risas y Salsas (12)', cat: 'Alitas y Combos', station: 'COCINA', price: 38.00, flavorsRequired: 4, desc: '12 alitas en 4 sabores + papas nativas con salchicha ahumada.', recipe: [{ id: 'ing_alitas', qty: 12 }, { id: 'ing_papas', qty: 2 }, { id: 'ing_salchicha', qty: 1 }] },
+        { id: 'm15', name: 'Combo Brothers (18 Alitas)', cat: 'Alitas y Combos', station: 'COCINA', price: 52.00, flavorsRequired: 4, desc: '18 alitas en 4 sabores + papas nativas con salchicha ahumada.', recipe: [{ id: 'ing_alitas', qty: 18 }, { id: 'ing_papas', qty: 2 }, { id: 'ing_salchicha', qty: 2 }] },
+        { id: 'm16', name: 'Combo Vuelo y Sazón (24 Alitas)', cat: 'Alitas y Combos', station: 'COCINA', price: 68.00, flavorsRequired: 6, desc: '24 alitas en todos los sabores + papas nativas con salchicha ahumada.', recipe: [{ id: 'ing_alitas', qty: 24 }, { id: 'ing_papas', qty: 3 }, { id: 'ing_salchicha', qty: 2 }] },
+
+        // Page 4: Salchipapas y Broster
+        { id: 'm17', name: 'Cononuggets', cat: 'Salchipapas y Broster', station: 'COCINA', price: 7.00, desc: 'Papas nativas con salchicha ahumada y nuggets.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }] },
+        { id: 'm18', name: 'Salchipapa', cat: 'Salchipapas y Broster', station: 'COCINA', price: 12.00, desc: 'Papas nativas acompañado de salchicha ahumada.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }] },
+        { id: 'm19', name: 'Pollo Broster', cat: 'Salchipapas y Broster', station: 'COCINA', price: 14.00, desc: 'Papas nativas, salchicha ahumada y pollo broster.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }, { id: 'ing_pollo', qty: 1 }] },
+        { id: 'm20', name: 'Salchipollo', cat: 'Salchipapas y Broster', station: 'COCINA', price: 15.00, desc: 'Papas nativas, salchicha ahumada y pollo desmenuzado.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }, { id: 'ing_pollo', qty: 1 }] },
+        { id: 'm21', name: 'Salchipapa Cheese', cat: 'Salchipapas y Broster', station: 'COCINA', price: 17.00, desc: 'Papas nativas, salchicha ahumada y queso fundido.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }, { id: 'ing_cheddar', qty: 2 }] },
+        { id: 'm22', name: 'Chanchipapa', cat: 'Salchipapas y Broster', station: 'COCINA', price: 19.00, desc: 'Papas nativas, salchicha ahumada, doble huevo y tocino.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 1 }, { id: 'ing_huevo', qty: 2 }, { id: 'ing_tocino', qty: 1 }] },
+        { id: 'm23', name: 'Salchipapa Especial', cat: 'Salchipapas y Broster', station: 'COCINA', price: 23.00, desc: 'Papas nativas, salchicha ahumada, salchicha arequipeña, huevo y pollo desmenuzado.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 2 }, { id: 'ing_huevo', qty: 1 }, { id: 'ing_pollo', qty: 1 }] },
+
+        // Page 3: Bebidas, Jarras, Infusiones y Frappes
+        { id: 'm24', name: 'Inka Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+        { id: 'm25', name: 'Coca Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+        { id: 'm26', name: 'Fanta / Sprite 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml (indicar sabor en nota).', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+        { id: 'm27', name: 'Agua Botella', cat: 'Bebidas y Frappes', station: 'BARRA', price: 3.00, desc: 'Agua sin gas botella personal.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+        { id: 'm28', name: 'Jarra 1L (Maracuyá / Limonada / Chicha)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 12.00, desc: 'Jarra 1 litro (Maracuyá, Limonada, Emoliente, Linaza o Chicha).', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
+        { id: 'm29', name: 'Infusión (Maracuyá / Mango / Cherry / Emoliente)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 7.00, desc: 'Infusión artesanal caliente o fría.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
+        { id: 'm30', name: 'Frappe (Oreo / Fresa / Café)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 17.00, desc: 'Frappe cremoso preparado al momento.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
+
+        // Page 5: Cocteles (Barra)
+        { id: 'm31', name: 'The Brothers (Especialidad)', cat: 'Cocteles (Barra)', station: 'BARRA', price: 25.00, desc: 'Especialidad de la casa, leche condensada y pulpa de maracuyá.', recipe: [{ id: 'ing_pisco', qty: 2 }, { id: 'ing_pulpa', qty: 1 }] },
+        { id: 'm32', name: 'Piña Colada', cat: 'Cocteles (Barra)', station: 'BARRA', price: 18.00, desc: 'Ron blanco, rodajas de piña, crema de coco y leche.', recipe: [{ id: 'ing_ron', qty: 2 }] },
+        { id: 'm33', name: 'Mojito Clásico / Maracuyá', cat: 'Cocteles (Barra)', station: 'BARRA', price: 17.90, desc: 'Ron blanco, azúcar, hierba buena, ginger ale y limón.', recipe: [{ id: 'ing_ron', qty: 2 }] },
+        { id: 'm34', name: 'Mojito de Jagger', cat: 'Cocteles (Barra)', station: 'BARRA', price: 25.00, desc: 'Jägermeister, hierba buena y zumo de limón.', recipe: [{ id: 'ing_ron', qty: 2 }] },
+        { id: 'm35', name: 'Chilcano Clásico / Maracuyá', cat: 'Cocteles (Barra)', station: 'BARRA', price: 17.00, desc: 'Pisco, zumo de limón, ginger ale y jarabe de goma.', recipe: [{ id: 'ing_pisco', qty: 2 }] },
+        { id: 'm36', name: 'Pantera Rosa', cat: 'Cocteles (Barra)', station: 'BARRA', price: 17.00, desc: 'Pisco, jarabe de granadina, leche y crema de coco.', recipe: [{ id: 'ing_pisco', qty: 2 }] },
+        { id: 'm37', name: 'Pisco Sour', cat: 'Cocteles (Barra)', station: 'BARRA', price: 19.00, desc: 'Pisco, jarabe de goma, limón, clara de huevo y amargo de angostura.', recipe: [{ id: 'ing_pisco', qty: 2 }] },
+        { id: 'm38', name: 'Cuba Libre', cat: 'Cocteles (Barra)', station: 'BARRA', price: 19.00, desc: 'Ron rubio, gaseosa negra y zumo de limón.', recipe: [{ id: 'ing_ron', qty: 2 }] },
+        { id: 'm39', name: 'Tequila Sunrise', cat: 'Cocteles (Barra)', station: 'BARRA', price: 19.00, desc: 'Tequila, jugo de naranja y jarabe de granadina.', recipe: [{ id: 'ing_pisco', qty: 2 }] },
+        { id: 'm40', name: 'Algarrobina', cat: 'Cocteles (Barra)', station: 'BARRA', price: 19.00, desc: 'Algarrobina, pisco y leche.', recipe: [{ id: 'ing_pisco', qty: 2 }] },
+        { id: 'm41', name: 'Ruleta Shot', cat: 'Cocteles (Barra)', station: 'BARRA', price: 85.00, desc: 'Tequila, ron, Jägermeister, vodka, pisco, gin, whisky y gaseosa.', recipe: [{ id: 'ing_pisco', qty: 4 }, { id: 'ing_ron', qty: 4 }] }
+      ];
+
+      function nowStr() {
+        const d = new Date();
+        const p = n => String(n).padStart(2, '0');
+        return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+      function timeStr() {
+        const d = new Date();
+        const p = n => String(n).padStart(2, '0');
+        return `${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+      function money(v) {
+        return `S/ ${(Number(v) || 0).toFixed(2)}`;
+      }
+      function pad(n, len = 3) {
+        return String(n).padStart(len, '0');
+      }
+
+      function createInitialState() {
+        const t = nowStr();
+        return {
+          counters: { order: 3, boleta: 1, kardex: 4 },
+          ingredients: [
+            { id: 'ing_carne', code: 'IN-01', name: 'Carne Asado de Tira', station: 'COCINA', unit: 'g', stock: 8500, minStock: 2000, cost: 0.032 },
+            { id: 'ing_pan', code: 'IN-02', name: 'Pan Brioche', station: 'COCINA', unit: 'und', stock: 48, minStock: 15, cost: 1.50 },
+            { id: 'ing_papas', code: 'IN-03', name: 'Papas Nativas (Porción)', station: 'COCINA', unit: 'porc', stock: 62, minStock: 18, cost: 2.20 },
+            { id: 'ing_alitas', code: 'IN-04', name: 'Alitas de Pollo', station: 'COCINA', unit: 'und', stock: 120, minStock: 36, cost: 1.10 },
+            { id: 'ing_salchicha', code: 'IN-05', name: 'Salchicha Ahumada', station: 'COCINA', unit: 'porc', stock: 40, minStock: 12, cost: 2.80 },
+            { id: 'ing_cheddar', code: 'IN-06', name: 'Queso Cheddar (Lámina)', station: 'COCINA', unit: 'und', stock: 55, minStock: 15, cost: 1.20 },
+            { id: 'ing_tocino', code: 'IN-07', name: 'Tocino Ahumado (Porción)', station: 'COCINA', unit: 'porc', stock: 34, minStock: 10, cost: 2.00 },
+            { id: 'ing_huevo', code: 'IN-08', name: 'Huevo', station: 'COCINA', unit: 'und', stock: 42, minStock: 12, cost: 0.60 },
+            { id: 'ing_pollo', code: 'IN-09', name: 'Pollo Broster / Desmenuzado', station: 'COCINA', unit: 'porc', stock: 26, minStock: 8, cost: 4.50 },
+            { id: 'ing_gaseosa', code: 'IN-10', name: 'Gaseosas / Agua', station: 'BARRA', unit: 'bot', stock: 64, minStock: 18, cost: 2.30 },
+            { id: 'ing_pulpa', code: 'IN-11', name: 'Pulpas / Bases Frappe y Jarra', station: 'BARRA', unit: 'porc', stock: 35, minStock: 10, cost: 3.00 },
+            { id: 'ing_pisco', code: 'IN-12', name: 'Pisco / Destilados Blancos', station: 'BARRA', unit: 'oz', stock: 90, minStock: 24, cost: 2.50 },
+            { id: 'ing_ron', code: 'IN-13', name: 'Ron / Licores Barra', station: 'BARRA', unit: 'oz', stock: 84, minStock: 24, cost: 2.40 }
+          ],
+          suppliers: [
+            { id: 'sup1', ruc: '20541287901', name: 'Carnes Premium del Sur S.A.C.', category: 'Asado de Tira y Alitas', contact: 'Marco Mendoza • 959 321 440' },
+            { id: 'sup2', ruc: '10428791234', name: 'Panadería Artesanal El Horno', category: 'Pan Brioche', contact: 'Jorge Chávez • 982 114 776' },
+            { id: 'sup3', ruc: '20100049181', name: 'Distribuidora Bebidas & Licores AQP', category: 'Gaseosas, Pisco y Ron', contact: 'Lucía Paredes • 954 881 209' }
+          ],
+          purchases: [
+            { id: 'pur1', date: t, doc: 'F001-00840', supplier: 'Carnes Premium del Sur S.A.C.', item: 'Carne Asado de Tira (5000 g)', total: 160.00 }
+          ],
+          orders: [
+            {
+              id: 'ord_1',
+              code: 'BB-001',
+              num: '001',
+              channel: 'DELIVERY',
+              table: '-',
+              customer: 'Valeria Ramos',
+              phone: '958441209',
+              address: 'Av. Socabaya 310, Dpto 2B',
+              paymentStatus: 'PAGADO',
+              paymentMethod: 'Yape',
+              paymentRef: 'YP-884120',
+              status: 'POR_APROBAR',
+              boletaNum: null,
+              createdAt: t,
+              approvedAt: null,
+              completedAt: null,
+              note: 'Cremas aparte por favor',
+              total: 46.00,
+              items: [
+                { menuId: 'm4', name: 'Burger Royal', station: 'COCINA', qty: 1, basePrice: 24.00, unitPrice: 24.00, extras: [], flavors: [], note: 'Término 3/4' },
+                { menuId: 'm13', name: 'Combo La Sabrosa (6 Alitas)', station: 'COCINA', qty: 1, basePrice: 22.00, unitPrice: 22.00, extras: [], flavors: ['BBQ y Más', 'Acevichadas (La Gringa)'], note: '' }
+              ]
+            },
+            {
+              id: 'ord_2',
+              code: 'BB-002',
+              num: '002',
+              channel: 'MESA',
+              table: 'Mesa 2',
+              customer: 'Diego Flores',
+              phone: '',
+              address: '',
+              paymentStatus: 'PENDIENTE',
+              paymentMethod: 'Por cobrar',
+              paymentRef: '',
+              status: 'EN_COCINA',
+              boletaNum: null,
+              createdAt: t,
+              approvedAt: t,
+              completedAt: null,
+              note: '',
+              total: 52.00,
+              items: [
+                { menuId: 'm6', name: 'Burger Brother', station: 'COCINA', qty: 1, basePrice: 34.00, unitPrice: 38.00, extras: [{ id: 'ex_huevo', name: 'Huevo', price: 4.00, ingId: 'ing_huevo', qty: 1 }], flavors: [], note: 'Sin cebolla crispy' },
+                { menuId: 'm19', name: 'Pollo Broster', station: 'COCINA', qty: 1, basePrice: 14.00, unitPrice: 14.00, extras: [], flavors: [], note: 'Bien crocante' }
+              ]
+            },
+            {
+              id: 'ord_3',
+              code: 'BB-003',
+              num: '003',
+              channel: 'MESA',
+              table: 'Mesa 5',
+              customer: 'Sofía Méndez',
+              phone: '',
+              address: '',
+              paymentStatus: 'PENDIENTE',
+              paymentMethod: 'Por cobrar',
+              paymentRef: '',
+              status: 'LISTO_CHEF',
+              boletaNum: null,
+              createdAt: t,
+              approvedAt: t,
+              completedAt: t,
+              note: '',
+              total: 39.00,
+              items: [
+                { menuId: 'm3', name: 'Burger Cheese', station: 'COCINA', qty: 1, basePrice: 18.00, unitPrice: 18.00, extras: [], flavors: [], note: '' },
+                { menuId: 'm37', name: 'Pisco Sour', station: 'BARRA', qty: 1, basePrice: 19.00, unitPrice: 19.00, extras: [], flavors: [], note: 'Poco hielo' }
+              ]
+            }
+          ],
+          kardex: [
+            { id: 'k1', date: t, ingName: 'Carne Asado de Tira', type: 'ENTRADA', doc: 'Compra F001-00840', prev: 3500, qty: 5000, next: 8500, unit: 'g' },
+            { id: 'k2', date: t, ingName: 'Carne Asado de Tira', type: 'SALIDA', doc: 'Aprobación BB-002', prev: 8750, qty: -250, next: 8500, unit: 'g' },
+            { id: 'k3', date: t, ingName: 'Pan Brioche', type: 'SALIDA', doc: 'Aprobación BB-002', prev: 49, qty: -1, next: 48, unit: 'und' }
+          ],
+          caja: {
+            opening: 200.00,
+            movements: [
+              { id: 'cm1', time: '14:10', desc: 'Fondo inicial de turno', method: 'Efectivo', amount: 200.00, type: 'APERTURA' }
+            ]
+          },
+          boletas: []
+        };
+      }
+
+      // Fix sample ord_3 total consistency (18 + 19 = 37)
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const p = JSON.parse(raw);
+            if (p && p.orders && p.ingredients) return p;
+          }
+        } catch (e) {}
+        const def = createInitialState();
+        def.orders[2].total = 37.00;
+        return def;
+      }
+
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      let state = loadState();
+
+      const ui = {
+        role: 'cliente',
+        clientMode: 'MESA',
+        clientMesa: 'Mesa 4',
+        clientCategory: 'Todos',
+        clientSearch: '',
+        clientDelPay: 'Yape',
+        clientCart: [],
+        myOrderIds: [],
+        adminFilter: 'POR_APROBAR',
+        gestionSubtab: 'inventario',
+        activeBixolonOrder: null
+      };
+
+      // ==================== TOAST & PUSH NOTIFICATION ====================
+      function showToast(msg, tone = 'ok') {
+        const wrap = document.getElementById('toast-container');
+        const cls = {
+          ok: 'bg-slate-900 text-white border-l-4 border-emerald-400',
+          err: 'bg-rose-600 text-white border-l-4 border-rose-900',
+          info: 'bg-slate-800 text-white border-l-4 border-amber-400'
+        }[tone] || 'bg-slate-900 text-white';
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-xs font-semibold ${cls}`;
+        el.textContent = msg;
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 3400);
+      }
+
+      function triggerAdminPushNotification(order) {
+        const wrap = document.getElementById('push-banner-container');
+        const el = document.createElement('div');
+        el.className = 'pointer-events-auto bg-slate-950 text-white border border-amber-500/60 rounded-2xl p-3.5 shadow-2xl flex items-start gap-3 cursor-pointer hover:bg-slate-900 transition-all';
+        el.innerHTML = `
+          <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0">
+            <i data-lucide="bell-ring" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-extrabold text-amber-400 uppercase">Notificación al Admin</span>
+              <span class="text-[10px] text-slate-400">Ahora</span>
+            </div>
+            <div class="text-xs font-bold mt-0.5">Nuevo pedido ${order.code} — ${order.channel === 'MESA' ? order.table : 'DELIVERY (Pagado)'}</div>
+            <div class="text-[11px] text-slate-300 mt-0.5">${order.customer} • ${money(order.total)} • Toca para aprobar</div>
+          </div>
+        `;
+        el.addEventListener('click', () => {
+          el.remove();
+          ui.adminFilter = 'POR_APROBAR';
+          switchRole('admin');
+        });
+        wrap.appendChild(el);
+        lucide.createIcons();
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 7000);
+      }
+
+      // ==================== KARDEX DEDUCTION ON APPROVAL ====================
+      function deductInventoryForOrder(order) {
+        const usage = {};
+        order.items.forEach(item => {
+          const m = MENU.find(x => x.id === item.menuId);
+          if (m && m.recipe) {
+            m.recipe.forEach(r => {
+              usage[r.id] = (usage[r.id] || 0) + (r.qty * item.qty);
+            });
+          }
+          if (item.extras && item.extras.length) {
+            item.extras.forEach(ex => {
+              usage[ex.ingId] = (usage[ex.ingId] || 0) + (ex.qty * item.qty);
+            });
+          }
+        });
+
+        Object.entries(usage).forEach(([ingId, qtyUsed]) => {
+          const ing = state.ingredients.find(i => i.id === ingId);
+          if (!ing) return;
+          const prev = ing.stock;
+          const next = Math.max(0, prev - qtyUsed);
+          ing.stock = next;
+          state.counters.kardex += 1;
+          state.kardex.unshift({
+            id: 'k' + state.counters.kardex,
+            date: nowStr(),
+            ingName: ing.name,
+            type: 'SALIDA',
+            doc: `Aprobación ${order.code}`,
+            prev,
+            qty: -qtyUsed,
+            next,
+            unit: ing.unit
+          });
+        });
+      }
+
+      // ==================== BIXOLON SPP-R310BK 80MM TICKETS ====================
+      function buildComandaHTML(order) {
+        const cocinaItems = order.items.filter(i => i.station === 'COCINA');
+        const barraItems = order.items.filter(i => i.station === 'BARRA');
+
+        const renderLines = (arr) => arr.map(it => `
+          <div style="margin-bottom:6px;">
+            <div style="font-weight:800;font-size:1.08em;">${it.qty}x ${it.name}</div>
+            ${it.flavors && it.flavors.length ? `<div style="padding-left:10px;font-weight:700;">SABORES: ${it.flavors.join(', ')}</div>` : ''}
+            ${it.extras && it.extras.length ? `<div style="padding-left:10px;">+ EXTRA: ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
+            ${it.note ? `<div style="padding-left:10px;font-weight:700;text-transform:uppercase;">&gt;&gt; ${it.note}</div>` : ''}
+          </div>
+        `).join('');
+
+        return `
+          <div class="thermal-paper font-mono-ticket">
+            <div style="text-align:center;font-weight:800;font-size:1.15em;">*** COMANDA MOZO / COCINA ***</div>
+            <div style="text-align:center;font-size:1.7em;font-weight:800;border:2px solid #000;padding:4px;margin:6px 0;">
+              ${order.code}
+            </div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;">
+              <span>ORIGEN:</span>
+              <span>${order.channel === 'MESA' ? order.table.toUpperCase() + ' (QR)' : 'DELIVERY'}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;"><span>CLIENTE:</span><span>${order.customer}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>APROBADO:</span><span>${order.approvedAt || nowStr()}</span></div>
+            ${order.channel === 'DELIVERY' ? `<div style="font-weight:700;margin-top:2px;">PAGO: ${order.paymentMethod.toUpperCase()} OK (${order.paymentRef})</div>` : ''}
+            <div class="thermal-line-bold"></div>
+            ${cocinaItems.length ? `<div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN COCINA ]</div>${renderLines(cocinaItems)}` : ''}
+            ${barraItems.length ? `<div class="thermal-line"></div><div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN BARRA ]</div>${renderLines(barraItems)}` : ''}
+            ${order.note ? `<div class="thermal-line"></div><div style="font-weight:700;border:1px solid #000;padding:4px;">NOTA: ${order.note.toUpperCase()}</div>` : ''}
+            <div class="thermal-line-bold"></div>
+            <div style="display:flex;justify-content:center;margin:8px 0;">
+              ${makeQrSvgString(order.code, 3)}
+            </div>
+            <div style="text-align:center;font-size:0.9em;">CHEF: Escanea QR o ingresa <b>${order.num}</b> en App Chef</div>
+            <div style="text-align:center;font-size:0.8em;color:#444;margin-top:4px;">BIXOLON SPP-R310BK (80mm) • Avance corte manual</div>
+            <div style="height:20px;"></div>
+          </div>
+        `;
+      }
+
+      function buildBoletaHTML(order) {
+        const sub = order.total / 1.18;
+        const igv = order.total - sub;
+        const boletaNum = order.boletaNum || `BI-001-${pad(state.counters.boleta, 5)}`;
+
+        const rows = order.items.map(it => `
+          <tr>
+            <td style="padding:2px 0;vertical-align:top;">${it.qty}</td>
+            <td style="padding:2px 4px;vertical-align:top;">
+              ${it.name}
+              ${it.extras && it.extras.length ? `<div style="font-size:0.85em;">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
+            </td>
+            <td style="padding:2px 0;text-align:right;vertical-align:top;white-space:nowrap;">${(it.qty * it.unitPrice).toFixed(2)}</td>
+          </tr>
+        `).join('');
+
+        return `
+          <div class="thermal-paper font-mono-ticket">
+            <div style="text-align:center;font-weight:800;font-size:1.15em;">THE BURGERS BROTHER</div>
+            <div style="text-align:center;">PEDIDOS / WHATSAPP: 958656930</div>
+            <div style="text-align:center;">AREQUIPA - PERÚ</div>
+            <div class="thermal-line-bold"></div>
+            <div style="text-align:center;font-weight:700;">BOLETA INTERNA DE VENTA</div>
+            <div style="text-align:center;font-weight:800;">${boletaNum}</div>
+            <div class="thermal-line"></div>
+            <div>Pedido: ${order.code} (${order.channel === 'MESA' ? order.table : 'Delivery'})</div>
+            <div>Cliente: ${order.customer}</div>
+            ${order.channel === 'DELIVERY' && order.address ? `<div>Dir: ${order.address}</div>` : ''}
+            <div>Fecha: ${nowStr()}</div>
+            <div class="thermal-line"></div>
+            <table style="width:100%;border-collapse:collapse;font-size:inherit;">
+              <thead>
+                <tr style="border-bottom:1px dashed #000;">
+                  <th style="text-align:left;">CT</th>
+                  <th style="text-align:left;padding-left:4px;">DESCRIPCIÓN</th>
+                  <th style="text-align:right;">IMP.</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            <div class="thermal-line"></div>
+            <div style="display:flex;justify-content:space-between;"><span>OP. GRAVADA:</span><span>S/ ${sub.toFixed(2)}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>IGV (18%):</span><span>S/ ${igv.toFixed(2)}</span></div>
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.15em;margin-top:3px;">
+              <span>TOTAL:</span><span>S/ ${order.total.toFixed(2)}</span>
+            </div>
+            <div class="thermal-line"></div>
+            <div>PAGO: ${order.paymentMethod.toUpperCase()} (${order.paymentStatus})</div>
+            <div style="text-align:center;font-size:0.85em;margin-top:6px;">DOCUMENTO DE CONTROL INTERNO</div>
+            <div style="text-align:center;font-size:0.85em;">NO VÁLIDO COMO COMPROBANTE SUNAT</div>
+            <div style="text-align:center;font-weight:700;margin-top:4px;">¡Gracias por elegir The Burgers Brother!</div>
+            <div style="height:20px;"></div>
+          </div>
+        `;
+      }
+
+      function buildEscPosRaw(order) {
+        const sep = '------------------------------------------------\n';
+        let out = `*** COMANDA COCINA - THE BURGERS BROTHER ***\n`;
+        out += `CODIGO CHEF: ${order.code}\n`;
+        out += `ORIGEN: ${order.channel === 'MESA' ? order.table : 'DELIVERY'}\n`;
+        out += `CLIENTE: ${order.customer}\n`;
+        out += sep;
+        order.items.forEach(it => {
+          out += `${it.qty}x ${it.name} [${it.station}]\n`;
+          if (it.flavors && it.flavors.length) out += `   SABORES: ${it.flavors.join(', ')}\n`;
+          if (it.extras && it.extras.length) out += `   + EXTRA: ${it.extras.map(e => e.name).join(', ')}\n`;
+          if (it.note) out += `   >> ${it.note.toUpperCase()}\n`;
+        });
+        if (order.note) out += sep + `NOTA: ${order.note.toUpperCase()}\n`;
+        out += sep + `TOTAL: S/ ${order.total.toFixed(2)} (${order.paymentStatus})\n\n\n\n\n`;
+        return out;
+      }
+
+      function openBixolonModal(order, showBoleta = false) {
+        ui.activeBixolonOrder = order;
+        document.getElementById('bixolon-modal-title').textContent = `BIXOLON SPP-R310BK — Pedido ${order.code}`;
+        document.getElementById('bixolon-modal-body').innerHTML = `
+          <div class="flex flex-col items-center gap-2">
+            <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-extrabold">Comanda Mozo / Cocina</span>
+            ${buildComandaHTML(order)}
+          </div>
+          ${showBoleta || order.boletaNum ? `
+            <div class="flex flex-col items-center gap-2">
+              <span class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-extrabold">Boleta Interna</span>
+              ${buildBoletaHTML(order)}
+            </div>
+          ` : ''}
+        `;
+        openModal('modal-bixolon');
+      }
+
+      function printThermal(html) {
+        const area = document.getElementById('thermal-print-area');
+        area.innerHTML = html;
+        window.print();
+      }
+
+      // ==================== ROLE SWITCHER & BADGES ====================
+      function updateBadges() {
+        const pendingCount = state.orders.filter(o => o.status === 'POR_APROBAR').length;
+        const cookingCount = state.orders.filter(o => o.status === 'EN_COCINA').length;
+
+        const bAdmin = document.getElementById('badge-admin-pending');
+        bAdmin.textContent = pendingCount;
+        bAdmin.classList.toggle('hidden', pendingCount === 0);
+
+        const bChef = document.getElementById('badge-chef-cooking');
+        bChef.textContent = cookingCount;
+        bChef.classList.toggle('hidden', cookingCount === 0);
+      }
+
+      function switchRole(role) {
+        ui.role = role;
+        document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
+        document.getElementById(`view-${role}`).classList.remove('hidden');
+
+        document.querySelectorAll('.role-tab').forEach(btn => {
+          const active = btn.dataset.role === role;
+          btn.className = `role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative ${
+            active ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+          }`;
+        });
+
+        renderActiveRole();
+      }
+
+      function renderActiveRole() {
+        updateBadges();
+        if (ui.role === 'cliente') renderCliente();
+        else if (ui.role === 'admin') renderAdmin();
+        else if (ui.role === 'chef') renderChef();
+        else if (ui.role === 'gestion') renderGestion();
+        lucide.createIcons();
+      }
+
+      // ==================== RENDER 1: CLIENTE (QR / DELIVERY) ====================
+      function renderCliente() {
+        const isMesa = ui.clientMode === 'MESA';
+        document.getElementById('btn-mode-mesa').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${isMesa ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`;
+        document.getElementById('btn-mode-delivery').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${!isMesa ? 'bg-sky-500 text-white' : 'text-slate-300 hover:text-white'}`;
+        document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
+        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa);
+        document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
+        document.getElementById('client-cart-origin').textContent = isMesa ? `${ui.clientMesa} (Escaneado por QR)` : 'Delivery — Requiere Pago Previo';
+        document.getElementById('btn-submit-client-label').textContent = isMesa ? 'Enviar Pedido al Admin' : 'Confirmar Pago y Enviar Delivery';
+
+        document.querySelectorAll('.del-pay-btn').forEach(btn => {
+          const active = btn.dataset.delPay === ui.clientDelPay;
+          btn.className = `del-pay-btn py-1.5 rounded-lg font-bold border transition-colors ${active ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-sky-200 hover:bg-sky-100'}`;
+        });
+
+        // Client live order tracker
+        const tracked = state.orders.filter(o => ui.myOrderIds.includes(o.id) || o.status !== 'ENTREGADO').slice(0, 3);
+        const trackerWrap = document.getElementById('client-tracker-wrap');
+        if (tracked.length > 0) {
+          trackerWrap.classList.remove('hidden');
+          const statusMap = {
+            POR_APROBAR: { label: 'Esperando aprobación del Admin', cls: 'bg-amber-100 text-amber-800' },
+            EN_COCINA: { label: 'Aprobado • Cocinando en plancha', cls: 'bg-orange-100 text-orange-800' },
+            LISTO_CHEF: { label: '¡Completado por el Chef! Saliendo', cls: 'bg-emerald-100 text-emerald-800' },
+            RECHAZADO: { label: 'Pedido rechazado por Admin', cls: 'bg-rose-100 text-rose-800' }
+          };
+          document.getElementById('client-tracker-list').innerHTML = tracked.map(o => {
+            const st = statusMap[o.status] || { label: o.status, cls: 'bg-slate-100 text-slate-700' };
+            return `
+              <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+                <div>
+                  <div class="font-mono-ticket text-xs font-extrabold text-slate-900">${o.code} • ${o.channel === 'MESA' ? o.table : 'Delivery'}</div>
+                  <div class="text-[11px] text-slate-500">${o.customer} • ${money(o.total)}</div>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${st.cls}">${st.label}</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          trackerWrap.classList.add('hidden');
+        }
+
+        // Categories
+        const cats = ['Todos', ...new Set(MENU.map(m => m.cat))];
+        document.getElementById('client-categories').innerHTML = cats.map(c => `
+          <button type="button" data-client-cat="${c}" class="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
+            ui.clientCategory === c ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }">${c}</button>
+        `).join('');
+
+        // Filtered Menu
+        const q = ui.clientSearch.trim().toLowerCase();
+        const items = MENU.filter(m => {
+          const mCat = ui.clientCategory === 'Todos' || m.cat === ui.clientCategory;
+          const mQ = !q || m.name.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q);
+          return mCat && mQ;
+        });
+
+        document.getElementById('client-menu-grid').innerHTML = items.map(m => `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-extrabold text-sm text-slate-900 leading-snug">${m.name}</h3>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 ${m.station === 'COCINA' ? 'bg-orange-50 text-orange-700' : 'bg-sky-50 text-sky-700'}">${m.station}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">${m.desc}</p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span class="text-base font-extrabold text-slate-900">${money(m.price)}</span>
+              <button type="button" data-open-cust="${m.id}" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold transition-colors">
+                + Agregar
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        renderClientCart();
+      }
+
+      function renderClientCart() {
+        const wrap = document.getElementById('client-cart-items');
+        if (ui.clientCart.length === 0) {
+          wrap.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">Tu pedido está vacío. Selecciona platos de la carta.</div>`;
+        } else {
+          wrap.innerHTML = ui.clientCart.map((it, idx) => `
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <div class="flex items-start justify-between gap-2">
+                <div class="text-xs font-bold text-slate-900">${it.qty}x ${it.name}</div>
+                <div class="text-xs font-extrabold text-slate-900 shrink-0">${money(it.qty * it.unitPrice)}</div>
+              </div>
+              ${it.flavors.length ? `<div class="text-[11px] text-orange-700 font-semibold">Sabores: ${it.flavors.join(', ')}</div>` : ''}
+              ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
+              ${it.note ? `<div class="text-[11px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded inline-block">📝 ${it.note}</div>` : ''}
+              <div class="flex items-center justify-end gap-1.5 pt-1">
+                <button type="button" data-cc-dec="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">-</button>
+                <button type="button" data-cc-inc="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">+</button>
+                <button type="button" data-cc-del="${idx}" class="text-rose-500 text-xs font-bold px-1.5">Quitar</button>
+              </div>
+            </div>
+          `).join('');
+        }
+        const total = ui.clientCart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+        document.getElementById('client-cart-total').textContent = money(total);
+      }
+
+      // ==================== RENDER 2: ADMIN ====================
+      function renderAdmin() {
+        document.querySelectorAll('.admin-filter-btn').forEach(btn => {
+          const active = btn.dataset.adminFilter === ui.adminFilter;
+          btn.className = `admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-200'
+          }`;
+        });
+
+        const filtered = state.orders.filter(o => {
+          if (ui.adminFilter === 'ENTREGADO') return o.status === 'ENTREGADO' || o.status === 'RECHAZADO';
+          return o.status === ui.adminFilter;
+        });
+
+        const grid = document.getElementById('admin-orders-grid');
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">No hay pedidos en esta bandeja. Prueba enviar uno desde <b>1. Carta QR / Delivery</b>.</div>`;
+          return;
+        }
+
+        grid.innerHTML = filtered.map(o => {
+          const isDel = o.channel === 'DELIVERY';
+          const borderCls = o.status === 'POR_APROBAR' ? 'border-t-4 border-t-rose-500' :
+                            o.status === 'EN_COCINA' ? 'border-t-4 border-t-amber-500' :
+                            o.status === 'LISTO_CHEF' ? 'border-t-4 border-t-emerald-500' : 'border-t-4 border-t-slate-400';
+
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between ${borderCls}">
+              <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono-ticket text-base font-extrabold text-slate-900">${o.code}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isDel ? 'bg-sky-100 text-sky-800' : 'bg-orange-100 text-orange-800'}">
+                        ${isDel ? 'DELIVERY' : o.table + ' (QR)'}
+                      </span>
+                    </div>
+                    <div class="text-xs font-semibold text-slate-700 mt-0.5">${o.customer}</div>
+                    ${isDel ? `<div class="text-[11px] text-slate-500">${o.address} • ${o.phone}</div>` : ''}
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm font-extrabold text-slate-900">${money(o.total)}</div>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.paymentStatus === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                      ${o.paymentStatus === 'PAGADO' ? `${o.paymentMethod} OK` : 'Pago en Mesa'}
+                    </span>
+                  </div>
+                </div>
+
+                ${isDel && o.paymentRef ? `
+                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-semibold">
+                    ✓ Prepago verificado: ${o.paymentMethod} — Operación <span class="font-mono-ticket">${o.paymentRef}</span>
+                  </div>
+                ` : ''}
+
+                <div class="border-t border-slate-100 pt-2.5 space-y-1.5 text-xs">
+                  ${o.items.map(it => `
+                    <div>
+                      <div class="font-bold text-slate-800">${it.qty}x ${it.name} <span class="text-[10px] font-semibold text-slate-400">[${it.station}]</span></div>
+                      ${it.flavors.length ? `<div class="text-[11px] text-orange-700 pl-3">Sabores: ${it.flavors.join(', ')}</div>` : ''}
+                      ${it.extras.length ? `<div class="text-[11px] text-slate-600 pl-3">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
+                      ${it.note ? `<div class="text-[11px] text-amber-800 font-semibold pl-3">&gt;&gt; ${it.note}</div>` : ''}
+                    </div>
+                  `).join('')}
+                  ${o.note ? `<div class="p-2 rounded bg-amber-50 text-amber-900 text-[11px] font-semibold">Nota: ${o.note}</div>` : ''}
+                </div>
+              </div>
+
+              <!-- Action Footer -->
+              <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
+                ${o.status === 'POR_APROBAR' ? `
+                  <button type="button" data-admin-reject="${o.id}" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold">Rechazar</button>
+                  <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e Imprimir BIXOLON
+                  </button>
+                ` : ''}
+                ${o.status === 'EN_COCINA' ? `
+                  <button type="button" data-admin-reprint="${o.id}" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold">Reimprimir Comanda</button>
+                  <span class="text-[11px] font-bold text-amber-700">Esperando cierre del Chef (${o.code})</span>
+                ` : ''}
+                ${o.status === 'LISTO_CHEF' ? `
+                  ${o.paymentStatus !== 'PAGADO' ? `
+                    <button type="button" data-admin-pay-mesa="${o.id}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">Cobrar y Emitir Boleta</button>
+                  ` : `
+                    <button type="button" data-admin-deliver="${o.id}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">Despachar + Boleta Interna</button>
+                  `}
+                ` : ''}
+                ${o.status === 'ENTREGADO' ? `
+                  <button type="button" data-admin-reprint-boleta="${o.id}" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold">Ver Boleta ${o.boletaNum || ''}</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ==================== RENDER 3: APP MÓVIL DEL CHEF ====================
+      function renderChef() {
+        const cooking = state.orders.filter(o => o.status === 'EN_COCINA');
+        document.getElementById('chef-active-count').textContent = `${cooking.length} activos`;
+
+        const list = document.getElementById('chef-orders-list');
+        if (cooking.length === 0) {
+          list.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">No hay comandas pendientes en cocina. Cuando el Admin apruebe un pedido, aparecerá aquí con su código.</div>`;
+          return;
+        }
+
+        list.innerHTML = cooking.map(o => `
+          <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-amber-500 p-4 shadow-sm flex flex-col justify-between gap-3 transition-all">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <button type="button" data-chef-fill="${o.num}" class="font-mono-ticket text-xl font-extrabold text-orange-600 hover:underline" title="Toca para cargar código">
+                  ${o.code}
+                </button>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-900 text-amber-400">
+                  ${o.channel === 'MESA' ? o.table : 'DELIVERY'}
+                </span>
+              </div>
+              <div class="pt-3 space-y-2 text-xs">
+                ${o.items.map(it => `
+                  <div class="flex items-start gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-slate-900 text-white font-extrabold flex items-center justify-center shrink-0">${it.qty}</span>
+                    <div>
+                      <div class="font-bold text-slate-900">${it.name}</div>
+                      ${it.flavors.length ? `<div class="text-[11px] font-bold text-orange-700">Sabores: ${it.flavors.join(', ')}</div>` : ''}
+                      ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
+                      ${it.note ? `<div class="text-[11px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mt-0.5">⚡ ${it.note}</div>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+                ${o.note ? `<div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs font-bold text-amber-900">Nota: ${o.note}</div>` : ''}
+              </div>
+            </div>
+            <button type="button" data-chef-fill="${o.num}" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-800 text-xs font-bold">
+              Cargar código ${o.num} en teclado
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // ==================== RENDER 4: GESTIÓN ====================
+      function renderGestion() {
+        document.querySelectorAll('.gestion-tab').forEach(btn => {
+          const active = btn.dataset.subtab === ui.gestionSubtab;
+          btn.className = `gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold transition-colors ${active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`;
+        });
+        document.querySelectorAll('.gestion-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`subtab-${ui.gestionSubtab}`).classList.remove('hidden');
+
+        // Inventario
+        const lowCount = state.ingredients.filter(i => i.stock <= i.minStock).length;
+        const valTotal = state.ingredients.reduce((s, i) => s + i.stock * i.cost, 0);
+        document.getElementById('inv-kpis').innerHTML = `
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Insumos Controlados</div><div class="text-2xl font-extrabold mt-1">${state.ingredients.length}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Valorizado Almacén</div><div class="text-2xl font-extrabold text-emerald-600 mt-1">${money(valTotal)}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Alertas Stock Bajo</div><div class="text-2xl font-extrabold text-amber-600 mt-1">${lowCount}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Movimientos Kardex</div><div class="text-2xl font-extrabold mt-1">${state.kardex.length}</div></div>
+        `;
+
+        document.getElementById('inv-tbody').innerHTML = state.ingredients.map(i => {
+          const low = i.stock <= i.minStock;
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-mono-ticket text-slate-500">${i.code}</td>
+              <td class="py-3 px-4 font-bold text-slate-900">${i.name}</td>
+              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${i.station === 'COCINA' ? 'bg-orange-50 text-orange-700' : 'bg-sky-50 text-sky-700'}">${i.station}</span></td>
+              <td class="py-3 px-4 text-right font-extrabold ${low ? 'text-rose-600' : 'text-slate-900'}">${i.stock} ${i.unit}</td>
+              <td class="py-3 px-4 text-right text-slate-500">${i.minStock} ${i.unit}</td>
+              <td class="py-3 px-4 text-right text-slate-600">${money(i.cost)}</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${low ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'}">${low ? 'Stock Bajo' : 'Óptimo'}</span></td>
+            </tr>
+          `;
+        }).join('');
+
+        // Kardex
+        document.getElementById('kardex-tbody').innerHTML = state.kardex.map(k => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-4 text-slate-500 whitespace-nowrap">${k.date}</td>
+            <td class="py-3 px-4 font-bold text-slate-900">${k.ingName}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${k.qty >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}">${k.type}</span></td>
+            <td class="py-3 px-4 text-slate-700">${k.doc}</td>
+            <td class="py-3 px-4 text-right text-slate-500">${k.prev} ${k.unit}</td>
+            <td class="py-3 px-4 text-right font-bold ${k.qty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${k.qty >= 0 ? '+' + k.qty : k.qty} ${k.unit}</td>
+            <td class="py-3 px-4 text-right font-extrabold text-slate-900">${k.next} ${k.unit}</td>
+          </tr>
+        `).join('');
+
+        // Proveedores
+        document.getElementById('sup-tbody').innerHTML = state.suppliers.map(s => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-4"><div class="font-bold text-slate-900">${s.name}</div><div class="text-[11px] font-mono-ticket text-slate-500">RUC: ${s.ruc}</div></td>
+            <td class="py-3 px-4 text-slate-600">${s.category}</td>
+            <td class="py-3 px-4 text-slate-600">${s.contact}</td>
+          </tr>
+        `).join('');
+        document.getElementById('pur-list').innerHTML = state.purchases.map(p => `
+          <div class="p-3.5 flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-slate-900">${p.item}</div>
+              <div class="text-[11px] text-slate-500">${p.supplier} • ${p.doc}</div>
+            </div>
+            <div class="font-extrabold text-slate-900">${money(p.total)}</div>
+          </div>
+        `).join('');
+
+        // Caja & Boletas
+        let cashIn = 0, digitalIn = 0, expOut = 0;
+        state.caja.movements.forEach(m => {
+          if (m.type === 'EGRESO') expOut += Math.abs(m.amount);
+          else if (m.type === 'VENTA') {
+            if (m.method === 'Efectivo') cashIn += m.amount;
+            else digitalIn += m.amount;
+          }
+        });
+        const expectedCash = state.caja.opening + cashIn - expOut;
+        document.getElementById('caja-kpis').innerHTML = `
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Fondo Inicial</div><div class="text-xl font-extrabold mt-1">${money(state.caja.opening)}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Ventas Efectivo</div><div class="text-xl font-extrabold text-emerald-600 mt-1">${money(cashIn)}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Yape / Plin / Tarjeta</div><div class="text-xl font-extrabold text-sky-600 mt-1">${money(digitalIn)}</div></div>
+          <div class="bg-slate-900 text-white p-4 rounded-2xl"><div class="text-xs text-slate-400">Efectivo Esperado</div><div class="text-xl font-extrabold text-amber-400 mt-1">${money(expectedCash)}</div></div>
+        `;
+        document.getElementById('caja-tbody').innerHTML = state.caja.movements.map(m => `
+          <tr>
+            <td class="py-3 px-4 text-slate-500">${m.time}</td>
+            <td class="py-3 px-4 font-semibold text-slate-800">${m.desc}</td>
+            <td class="py-3 px-4 text-slate-600">${m.method}</td>
+            <td class="py-3 px-4 text-right font-bold ${m.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${m.amount >= 0 ? '+' : ''}${money(m.amount)}</td>
+          </tr>
+        `).join('');
+
+        const bList = document.getElementById('boletas-list');
+        if (state.boletas.length === 0) {
+          bList.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Aún no se emitieron boletas internas en este turno.</div>`;
+        } else {
+          bList.innerHTML = state.boletas.map(b => `
+            <div class="p-3.5 flex items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-mono-ticket font-extrabold text-slate-900">${b.boletaNum} (${b.code})</div>
+                <div class="text-[11px] text-slate-500">${b.customer} • ${b.paymentMethod} • ${b.date}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-extrabold text-slate-900">${money(b.total)}</span>
+                <button type="button" data-admin-reprint-boleta="${b.orderId}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // ==================== CUSTOMIZE ITEM MODAL ====================
+      let custSelectedFlavors = [];
+      let custSelectedExtras = [];
+
+      function openCustomizeModal(menuId) {
+        const m = MENU.find(x => x.id === menuId);
+        if (!m) return;
+        custSelectedFlavors = m.flavorsRequired === 6 ? [...WING_FLAVORS] : [];
+        custSelectedExtras = [];
+
+        document.getElementById('cust-prod-id').value = m.id;
+        document.getElementById('cust-title').textContent = m.name;
+        document.getElementById('cust-desc').textContent = m.desc;
+        document.getElementById('cust-note').value = '';
+
+        const fWrap = document.getElementById('cust-flavors-wrap');
+        if (m.flavorsRequired) {
+          fWrap.classList.remove('hidden');
+          document.getElementById('cust-flavors-req').textContent = m.flavorsRequired === 6 ? 'Todos los sabores incluidos' : `Elige ${m.flavorsRequired} sabores`;
+          renderFlavorButtons(m.flavorsRequired);
+        } else {
+          fWrap.classList.add('hidden');
+        }
+
+        const eWrap = document.getElementById('cust-extras-wrap');
+        if (m.station === 'COCINA') {
+          eWrap.classList.remove('hidden');
+          renderExtraButtons();
+        } else {
+          eWrap.classList.add('hidden');
+        }
+
+        updateCustPrice(m.price);
+        openModal('modal-customize');
+      }
+
+      function renderFlavorButtons(req) {
+        document.getElementById('cust-flavors-grid').innerHTML = WING_FLAVORS.map(fl => {
+          const on = custSelectedFlavors.includes(fl);
+          return `<button type="button" data-toggle-flavor="${fl}" data-req="${req}" class="p-2 rounded-lg border text-left font-semibold transition-colors ${on ? 'bg-orange-600 text-white border-orange-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${fl}</button>`;
+        }).join('');
+      }
+
+      function renderExtraButtons() {
+        document.getElementById('cust-extras-list').innerHTML = EXTRAS.map(ex => {
+          const on = custSelectedExtras.some(e => e.id === ex.id);
+          return `<button type="button" data-toggle-extra="${ex.id}" class="p-2 rounded-lg border text-left font-semibold transition-colors ${on ? 'bg-slate-900 text-amber-400 border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${ex.name} (+${money(ex.price)})</button>`;
+        }).join('');
+      }
+
+      function updateCustPrice(basePrice) {
+        const extraSum = custSelectedExtras.reduce((s, e) => s + e.price, 0);
+        document.getElementById('cust-price-preview').textContent = money(basePrice + extraSum);
+      }
+
+      function openModal(id) {
+        document.getElementById(id).classList.remove('hidden');
+        lucide.createIcons();
+      }
+      function closeModal(id) {
+        document.getElementById(id).classList.add('hidden');
+      }
+
+      // ==================== EVENT DELEGATION ====================
+      document.addEventListener('click', (e) => {
+        const cm = e.target.closest('[data-close-modal]');
+        if (cm) { closeModal(cm.dataset.closeModal); return; }
+
+        const rt = e.target.closest('.role-tab');
+        if (rt) { switchRole(rt.dataset.role); return; }
+
+        const cc = e.target.closest('[data-client-cat]');
+        if (cc) { ui.clientCategory = cc.dataset.clientCat; renderCliente(); return; }
+
+        const dp = e.target.closest('[data-del-pay]');
+        if (dp) { ui.clientDelPay = dp.dataset.delPay; renderCliente(); return; }
+
+        const oc = e.target.closest('[data-open-cust]');
+        if (oc) { openCustomizeModal(oc.dataset.openCust); return; }
+
+        const tf = e.target.closest('[data-toggle-flavor]');
+        if (tf) {
+          const fl = tf.dataset.toggleFlavor;
+          const req = parseInt(tf.dataset.req, 10);
+          if (req === 6) return;
+          if (custSelectedFlavors.includes(fl)) {
+            custSelectedFlavors = custSelectedFlavors.filter(x => x !== fl);
+          } else if (custSelectedFlavors.length < req) {
+            custSelectedFlavors.push(fl);
+          } else {
+            showToast(`Este combo permite máximo ${req} sabores.`, 'info');
+          }
+          renderFlavorButtons(req);
+          return;
+        }
+
+        const te = e.target.closest('[data-toggle-extra]');
+        if (te) {
+          const ex = EXTRAS.find(x => x.id === te.dataset.toggleExtra);
+          if (!ex) return;
+          if (custSelectedExtras.some(x => x.id === ex.id)) {
+            custSelectedExtras = custSelectedExtras.filter(x => x.id !== ex.id);
+          } else {
+            custSelectedExtras.push(ex);
+          }
+          const m = MENU.find(x => x.id === document.getElementById('cust-prod-id').value);
+          renderExtraButtons();
+          if (m) updateCustPrice(m.price);
+          return;
+        }
+
+        const inc = e.target.closest('[data-cc-inc]');
+        if (inc) { ui.clientCart[Number(inc.dataset.ccInc)].qty += 1; renderClientCart(); return; }
+        const dec = e.target.closest('[data-cc-dec]');
+        if (dec) {
+          const idx = Number(dec.dataset.ccDec);
+          ui.clientCart[idx].qty -= 1;
+          if (ui.clientCart[idx].qty <= 0) ui.clientCart.splice(idx, 1);
+          renderClientCart();
+          return;
+        }
+        const del = e.target.closest('[data-cc-del]');
+        if (del) { ui.clientCart.splice(Number(del.dataset.ccDel), 1); renderClientCart(); return; }
+
+        // Admin filters & actions
+        const af = e.target.closest('[data-admin-filter]');
+        if (af) { ui.adminFilter = af.dataset.adminFilter; renderAdmin(); return; }
+
+        const appBtn = e.target.closest('[data-admin-approve]');
+        if (appBtn) {
+          const order = state.orders.find(o => o.id === appBtn.dataset.adminApprove);
+          if (!order) return;
+          order.status = 'EN_COCINA';
+          order.approvedAt = nowStr();
+          deductInventoryForOrder(order);
+
+          if (order.channel === 'DELIVERY' && order.paymentStatus === 'PAGADO') {
+            state.counters.boleta += 1;
+            order.boletaNum = `BI-001-${pad(state.counters.boleta, 5)}`;
+            state.caja.movements.unshift({
+              id: 'cm_' + Date.now(),
+              time: timeStr(),
+              desc: `Delivery ${order.code} (${order.boletaNum})`,
+              method: order.paymentMethod,
+              amount: order.total,
+              type: 'VENTA'
+            });
+            state.boletas.unshift({
+              boletaNum: order.boletaNum,
+              code: order.code,
+              orderId: order.id,
+              customer: order.customer,
+              paymentMethod: order.paymentMethod,
+              total: order.total,
+              date: nowStr()
+            });
+          }
+
+          saveState();
+          renderActiveRole();
+          showToast(`Pedido ${order.code} aprobado. Comanda enviada a la BIXOLON SPP-R310BK y al Chef.`);
+          openBixolonModal(order, order.channel === 'DELIVERY');
+          return;
+        }
+
+        const rejBtn = e.target.closest('[data-admin-reject]');
+        if (rejBtn) {
+          const order = state.orders.find(o => o.id === rejBtn.dataset.adminReject);
+          if (order) {
+            order.status = 'RECHAZADO';
+            saveState();
+            renderActiveRole();
+            showToast(`Pedido ${order.code} rechazado.`, 'info');
+          }
+          return;
+        }
+
+        const repBtn = e.target.closest('[data-admin-reprint]');
+        if (repBtn) {
+          const order = state.orders.find(o => o.id === repBtn.dataset.adminReprint);
+          if (order) openBixolonModal(order, false);
+          return;
+        }
+
+        const repBol = e.target.closest('[data-admin-reprint-boleta]');
+        if (repBol) {
+          const order = state.orders.find(o => o.id === repBol.dataset.adminReprintBoleta);
+          if (order) openBixolonModal(order, true);
+          return;
+        }
+
+        const payMesaBtn = e.target.closest('[data-admin-pay-mesa]');
+        if (payMesaBtn) {
+          const order = state.orders.find(o => o.id === payMesaBtn.dataset.adminPayMesa);
+          if (!order) return;
+          document.getElementById('pay-mesa-order-id').value = order.id;
+          document.getElementById('pay-mesa-title').textContent = `Cobrar ${order.code} (${order.table})`;
+          document.getElementById('pay-mesa-amount').textContent = money(order.total);
+          openModal('modal-pay-mesa');
+          return;
+        }
+
+        const delivBtn = e.target.closest('[data-admin-deliver]');
+        if (delivBtn) {
+          const order = state.orders.find(o => o.id === delivBtn.dataset.adminDeliver);
+          if (!order) return;
+          order.status = 'ENTREGADO';
+          saveState();
+          renderActiveRole();
+          showToast(`Pedido ${order.code} despachado con Boleta Interna ${order.boletaNum}.`);
+          openBixolonModal(order, true);
+          return;
+        }
+
+        // Chef keypad & quick fill
+        const np = e.target.closest('[data-numpad]');
+        if (np) {
+          const inp = document.getElementById('chef-code-input');
+          const key = np.dataset.numpad;
+          if (key === 'CLR') inp.value = '';
+          else if (key === 'DEL') inp.value = inp.value.slice(0, -1);
+          else if (inp.value.length < 4) inp.value += key;
+          return;
+        }
+
+        const cf = e.target.closest('[data-chef-fill]');
+        if (cf) {
+          document.getElementById('chef-code-input').value = cf.dataset.chefFill;
+          return;
+        }
+
+        // Gestión subtabs
+        const gt = e.target.closest('[data-subtab]');
+        if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); return; }
+      });
+
+      // Specific listeners
+      document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; renderCliente(); });
+      document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; renderCliente(); });
+      document.getElementById('client-mesa-select').addEventListener('change', (e) => { ui.clientMesa = e.target.value; renderCliente(); });
+      document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderCliente(); });
+      document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; renderClientCart(); });
+
+      function makeQrSvgString(text, cellSize = 4) {
+        if (typeof window.qrcode !== 'function') {
+          return '<div style="font-size:11px;color:#64748b;">QR listo al cargar librería</div>';
+        }
+        try {
+          const qr = window.qrcode(0, 'M');
+          qr.addData(text);
+          qr.make();
+          return qr.createSvgTag({ cellSize, margin: 2, scalable: true });
+        } catch (e) {
+          return '<div style="font-size:11px;color:#b91c1c;">Error generando QR</div>';
+        }
+      }
+
+      function getDefaultBaseUrl() {
+        try {
+          const loc = window.location;
+          if (loc && (loc.protocol === 'https:' || loc.protocol === 'http:') && !loc.hostname.includes('googleusercontent') && loc.hostname !== 'about') {
+            return `${loc.origin}${loc.pathname}`;
+          }
+        } catch (e) {}
+        return '';
+      }
+
+      function getCurrentQrFullUrl() {
+        const target = document.getElementById('qr-target-select').value;
+        const baseInput = document.getElementById('qr-base-url').value.trim().replace(/#.*$/, '');
+        if (baseInput) {
+          return `${baseInput}#${target}`;
+        }
+        return `THE_BURGERS_BROTHER::${target}`;
+      }
+
+      function renderQrModalContent() {
+        const target = document.getElementById('qr-target-select').value;
+        const label = target.startsWith('delivery') ? 'Carta Delivery' : `Mesa ${target.split('=')[1]}`;
+        document.getElementById('qr-mesa-title').textContent = label;
+        const payload = getCurrentQrFullUrl();
+        const isPublicUrl = /^https?:\/\//i.test(payload);
+
+        document.getElementById('qr-real-box').innerHTML = makeQrSvgString(payload, 5);
+        const svg = document.querySelector('#qr-real-box svg');
+        if (svg) { svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%'); }
+
+        document.getElementById('qr-url-label').textContent = isPublicUrl
+          ? payload
+          : `Código interno (${payload}) — Pega tu URL https:// arriba para QR web`;
+        document.getElementById('qr-host-notice').classList.toggle('hidden', isPublicUrl);
+      }
+
+      document.getElementById('btn-show-qr').addEventListener('click', () => {
+        const mNum = ui.clientMesa.replace(/\D/g, '') || '1';
+        document.getElementById('qr-target-select').value = `mesa=${mNum}`;
+        const baseField = document.getElementById('qr-base-url');
+        if (!baseField.value) {
+          baseField.value = getDefaultBaseUrl();
+        }
+        renderQrModalContent();
+        openModal('modal-qr');
+      });
+
+      document.getElementById('qr-target-select').addEventListener('change', renderQrModalContent);
+      document.getElementById('qr-base-url').addEventListener('input', renderQrModalContent);
+
+      document.getElementById('btn-qr-simulate-scan').addEventListener('click', () => {
+        const target = document.getElementById('qr-target-select').value;
+        try { window.location.hash = target; } catch (e) {}
+        applyHashRoute(`#${target}`);
+        closeModal('modal-qr');
+        showToast(target.startsWith('delivery') ? 'QR escaneado: Carta Delivery abierta.' : `QR escaneado: ${ui.clientMesa} cargada automáticamente.`);
+      });
+
+      document.getElementById('btn-qr-copy-link').addEventListener('click', () => {
+        const text = getCurrentQrFullUrl();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('Enlace / código QR copiado.')).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      });
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast('Enlace / código QR copiado.'); } catch (e) {}
+        ta.remove();
+      }
+
+      document.getElementById('btn-qr-download-png').addEventListener('click', () => {
+        if (typeof window.qrcode !== 'function') return;
+        const payload = getCurrentQrFullUrl();
+        const title = document.getElementById('qr-mesa-title').textContent;
+        const qr = window.qrcode(0, 'M');
+        qr.addData(payload);
+        qr.make();
+        const count = qr.getModuleCount();
+        const scale = 8;
+        const padPx = 24;
+        const headerH = 56;
+        const size = count * scale + padPx * 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size + headerH;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 18px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('THE BURGERS BROTHER', canvas.width / 2, 28);
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 16px Inter, sans-serif';
+        ctx.fillText(title.toUpperCase(), canvas.width / 2, 50);
+        ctx.fillStyle = '#0f172a';
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (qr.isDark(r, c)) {
+              ctx.fillRect(padPx + c * scale, headerH + padPx + r * scale, scale, scale);
+            }
+          }
+        }
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `QR_TheBurgersBrother_${title.replace(/\s+/g, '_')}.png`;
+        a.click();
+        showToast(`QR real descargado (${title}).`);
+      });
+
+      document.getElementById('form-customize').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const m = MENU.find(x => x.id === document.getElementById('cust-prod-id').value);
+        if (!m) return;
+        if (m.flavorsRequired && custSelectedFlavors.length < m.flavorsRequired) {
+          showToast(`Debes elegir ${m.flavorsRequired} sabores de alitas.`, 'err');
+          return;
+        }
+        const extraSum = custSelectedExtras.reduce((s, ex) => s + ex.price, 0);
+        ui.clientCart.push({
+          menuId: m.id,
+          name: m.name,
+          station: m.station,
+          qty: 1,
+          basePrice: m.price,
+          unitPrice: m.price + extraSum,
+          extras: [...custSelectedExtras],
+          flavors: [...custSelectedFlavors],
+          note: document.getElementById('cust-note').value.trim()
+        });
+        closeModal('modal-customize');
+        renderClientCart();
+        showToast(`${m.name} agregado al pedido.`);
+      });
+
+      document.getElementById('btn-submit-client-order').addEventListener('click', () => {
+        if (ui.clientCart.length === 0) {
+          showToast('Agrega al menos un producto de la carta.', 'err');
+          return;
+        }
+        const customer = document.getElementById('client-name').value.trim() || (ui.clientMode === 'MESA' ? `Cliente ${ui.clientMesa}` : '');
+        const isDel = ui.clientMode === 'DELIVERY';
+        const phone = document.getElementById('client-phone').value.trim();
+        const address = document.getElementById('client-address').value.trim();
+        const payRef = document.getElementById('client-pay-ref').value.trim();
+
+        if (isDel) {
+          if (!customer || !phone || !address) {
+            showToast('Completa tu nombre, teléfono y dirección para Delivery.', 'err');
+            return;
+          }
+          if (!payRef) {
+            showToast('Para Delivery es obligatorio ingresar el N° de operación de pago primero.', 'err');
+            return;
+          }
+        }
+
+        state.counters.order += 1;
+        const num = pad(state.counters.order, 3);
+        const code = `BB-${num}`;
+        const total = ui.clientCart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+
+        const newOrder = {
+          id: 'ord_' + Date.now(),
+          code,
+          num,
+          channel: ui.clientMode,
+          table: isDel ? '-' : ui.clientMesa,
+          customer,
+          phone,
+          address,
+          paymentStatus: isDel ? 'PAGADO' : 'PENDIENTE',
+          paymentMethod: isDel ? ui.clientDelPay : 'Por cobrar',
+          paymentRef: isDel ? payRef : '',
+          status: 'POR_APROBAR',
+          boletaNum: null,
+          createdAt: nowStr(),
+          approvedAt: null,
+          completedAt: null,
+          note: document.getElementById('client-order-note').value.trim(),
+          total,
+          items: ui.clientCart.map(i => ({ ...i }))
+        };
+
+        state.orders.unshift(newOrder);
+        ui.myOrderIds.unshift(newOrder.id);
+        ui.clientCart = [];
+        document.getElementById('client-order-note').value = '';
+        document.getElementById('client-pay-ref').value = '';
+
+        saveState();
+        renderActiveRole();
+        showToast(`Pedido ${code} enviado. Esperando aprobación del Admin.`);
+        triggerAdminPushNotification(newOrder);
+      });
+
+      // Chef Complete by Order Code
+      document.getElementById('btn-chef-complete-code').addEventListener('click', () => {
+        const raw = document.getElementById('chef-code-input').value.trim().toUpperCase();
+        if (!raw) {
+          showToast('Ingresa el código de pedido impreso en el ticket.', 'err');
+          return;
+        }
+        const normalized = raw.startsWith('BB-') ? raw : `BB-${raw.padStart(3, '0')}`;
+        const order = state.orders.find(o => o.code === normalized || o.num === raw);
+        if (!order) {
+          showToast(`No existe el pedido ${normalized}.`, 'err');
+          return;
+        }
+        if (order.status === 'POR_APROBAR') {
+          showToast(`El pedido ${order.code} aún NO ha sido aprobado por el Admin.`, 'err');
+          return;
+        }
+        if (order.status === 'LISTO_CHEF' || order.status === 'ENTREGADO') {
+          showToast(`El pedido ${order.code} ya fue marcado como completado.`, 'info');
+          return;
+        }
+        order.status = 'LISTO_CHEF';
+        order.completedAt = nowStr();
+        document.getElementById('chef-code-input').value = '';
+        saveState();
+        renderActiveRole();
+        showToast(`¡Pedido ${order.code} COMPLETADO por el Chef! Notificado al Admin y Mozo.`);
+      });
+
+      // Pay Mesa & Emit Boleta
+      document.getElementById('form-pay-mesa').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const oid = document.getElementById('pay-mesa-order-id').value;
+        const method = document.getElementById('pay-mesa-method').value;
+        const order = state.orders.find(o => o.id === oid);
+        if (!order) return;
+
+        state.counters.boleta += 1;
+        order.boletaNum = `BI-001-${pad(state.counters.boleta, 5)}`;
+        order.paymentStatus = 'PAGADO';
+        order.paymentMethod = method;
+        order.status = 'ENTREGADO';
+
+        state.caja.movements.unshift({
+          id: 'cm_' + Date.now(),
+          time: timeStr(),
+          desc: `${order.table} ${order.code} (${order.boletaNum})`,
+          method,
+          amount: order.total,
+          type: 'VENTA'
+        });
+        state.boletas.unshift({
+          boletaNum: order.boletaNum,
+          code: order.code,
+          orderId: order.id,
+          customer: order.customer,
+          paymentMethod: method,
+          total: order.total,
+          date: nowStr()
+        });
+
+        saveState();
+        closeModal('modal-pay-mesa');
+        renderActiveRole();
+        showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`);
+        openBixolonModal(order, true);
+      });
+
+      // Bixolon print buttons
+      document.getElementById('btn-bixolon-print-comanda').addEventListener('click', () => {
+        if (ui.activeBixolonOrder) printThermal(buildComandaHTML(ui.activeBixolonOrder));
+      });
+      document.getElementById('btn-bixolon-print-boleta').addEventListener('click', () => {
+        if (ui.activeBixolonOrder) printThermal(buildBoletaHTML(ui.activeBixolonOrder));
+      });
+      document.getElementById('btn-bixolon-escpos').addEventListener('click', () => {
+        if (!ui.activeBixolonOrder) return;
+        const blob = new Blob([buildEscPosRaw(ui.activeBixolonOrder)], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bixolon_${ui.activeBixolonOrder.code}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Archivo BXL/POS descargado para BIXOLON SPP-R310BK.');
+      });
+
+      // Gestión Modals
+      document.getElementById('btn-open-adjust').addEventListener('click', () => {
+        document.getElementById('adj-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.stock} ${i.unit})</option>`).join('');
+        openModal('modal-adjust');
+      });
+      document.getElementById('form-adjust').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const ing = state.ingredients.find(i => i.id === document.getElementById('adj-ing').value);
+        const type = document.getElementById('adj-type').value;
+        const qty = parseInt(document.getElementById('adj-qty').value, 10) || 0;
+        const reason = document.getElementById('adj-reason').value.trim();
+        if (!ing || qty <= 0) return;
+        const delta = type === 'ENTRADA' ? qty : -qty;
+        const prev = ing.stock;
+        ing.stock = Math.max(0, prev + delta);
+        state.counters.kardex += 1;
+        state.kardex.unshift({ id: 'k' + state.counters.kardex, date: nowStr(), ingName: ing.name, type, doc: reason, prev, qty: delta, next: ing.stock, unit: ing.unit });
+        saveState();
+        closeModal('modal-adjust');
+        renderGestion();
+        showToast('Ajuste registrado en Kardex.');
+      });
+
+      document.getElementById('btn-open-purchase').addEventListener('click', () => {
+        document.getElementById('pur-sup').innerHTML = state.suppliers.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        document.getElementById('pur-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
+        openModal('modal-purchase');
+      });
+      document.getElementById('form-purchase').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const sup = document.getElementById('pur-sup').value;
+        const ing = state.ingredients.find(i => i.id === document.getElementById('pur-ing').value);
+        const qty = parseInt(document.getElementById('pur-qty').value, 10) || 0;
+        const total = parseFloat(document.getElementById('pur-total').value) || 0;
+        const doc = document.getElementById('pur-doc').value.trim();
+        if (!ing || qty <= 0) return;
+        const prev = ing.stock;
+        ing.stock += qty;
+        state.counters.kardex += 1;
+        state.kardex.unshift({ id: 'k' + state.counters.kardex, date: nowStr(), ingName: ing.name, type: 'ENTRADA', doc: `Compra ${doc}`, prev, qty, next: ing.stock, unit: ing.unit });
+        state.purchases.unshift({ id: 'pur_' + Date.now(), date: nowStr(), doc, supplier: sup, item: `${ing.name} (${qty} ${ing.unit})`, total });
+        saveState();
+        closeModal('modal-purchase');
+        renderGestion();
+        showToast(`Compra ingresada: +${qty} ${ing.unit} de ${ing.name}.`);
+      });
+
+      document.getElementById('btn-open-expense').addEventListener('click', () => {
+        document.getElementById('form-expense').reset();
+        openModal('modal-expense');
+      });
+      document.getElementById('form-expense').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('exp-desc').value.trim();
+        const amt = parseFloat(document.getElementById('exp-amt').value) || 0;
+        if (!desc || amt <= 0) return;
+        state.caja.movements.unshift({ id: 'cm_' + Date.now(), time: timeStr(), desc, method: 'Efectivo', amount: -amt, type: 'EGRESO' });
+        saveState();
+        closeModal('modal-expense');
+        renderGestion();
+        showToast('Egreso registrado en Caja.');
+      });
+
+      document.getElementById('btn-export-kardex').addEventListener('click', () => {
+        const rows = [['Fecha', 'Insumo', 'Tipo', 'Documento', 'Saldo Ant', 'Cantidad', 'Saldo Act', 'Unidad'], ...state.kardex.map(k => [k.date, `"${k.ingName}"`, k.type, `"${k.doc}"`, k.prev, k.qty, k.next, k.unit])];
+        const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kardex_the_burgers_brother.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Kardex exportado en CSV.');
+      });
+
+      document.getElementById('btn-reset-all').addEventListener('click', () => {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        state = loadState();
+        ui.clientCart = [];
+        ui.myOrderIds = [];
+        renderActiveRole();
+        showToast('Datos demo restaurados.', 'info');
+      });
+
+      function applyHashRoute(hashStr) {
+        const h = (hashStr || '').replace(/^#/, '');
+        if (!h) { switchRole('cliente'); return; }
+        const params = new URLSearchParams(h);
+        if (params.has('mesa')) {
+          const m = `Mesa ${params.get('mesa')}`;
+          ui.clientMode = 'MESA';
+          ui.clientMesa = m;
+          const sel = document.getElementById('client-mesa-select');
+          if (sel && Array.from(sel.options).some(o => o.value === m)) sel.value = m;
+          switchRole('cliente');
+        } else if (params.has('delivery')) {
+          ui.clientMode = 'DELIVERY';
+          switchRole('cliente');
+        } else if (params.has('chef')) {
+          switchRole('chef');
+          document.getElementById('chef-code-input').value = params.get('chef');
+        } else {
+          switchRole('cliente');
+        }
+      }
+
+      window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
+
+      
+      // ==================== CLOUDFLARE D1 LIVE SYNC ====================
+      let cloudSyncEnabled = false;
+
+      async function syncFromCloudflare() {
+        try {
+          const res = await fetch('/api/state', { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data && data.ok && data.state) {
+            cloudSyncEnabled = true;
+            const prevPending = state.orders.filter(o => o.status === 'POR_APROBAR').map(o => o.id);
+            state = data.state;
+            saveState();
+            const newPending = state.orders.filter(o => o.status === 'POR_APROBAR' && !prevPending.includes(o.id));
+            newPending.forEach(o => triggerAdminPushNotification(o));
+            renderActiveRole();
+          }
+        } catch (e) {
+          // Local/offline mode fallback
+        }
+      }
+
+      async function pushStateToCloudflare() {
+        if (!cloudSyncEnabled) return;
+        try {
+          await fetch('/api/state', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state })
+          });
+        } catch (e) {}
+      }
+
+      const _origSaveState = saveState;
+      saveState = function () {
+        _origSaveState();
+        pushStateToCloudflare();
+      };
+
+      syncFromCloudflare();
+      setInterval(syncFromCloudflare, 4000);
+
+      // Init
+      applyHashRoute(window.location.hash);
+    })();
+  </script>
+</body>
+</html>
