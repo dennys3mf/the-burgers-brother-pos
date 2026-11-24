@@ -596,7 +596,7 @@
 
         <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
           <span class="font-extrabold text-sm text-slate-900" id="cust-price-preview">S/ 0.00</span>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold">Agregar al Pedido</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold" id="customize-submit-label">Agregar al Pedido</button>
         </div>
       </form>
     </div>
@@ -726,6 +726,15 @@
     <form id="edit-order-form" class="space-y-3">
       <h2 id="edit-order-title" class="text-xl font-bold">Editar comanda</h2>
       <div id="edit-order-items" class="space-y-2"></div>
+      <div id="edit-add-products" hidden>
+        <label for="edit-add-product" class="block font-semibold">Producto de la carta</label>
+        <div class="flex flex-wrap gap-2">
+          <select id="edit-add-product" class="min-h-11 min-w-0 grow rounded-lg border p-2 text-base">
+            <option value="">Elige un producto</option>
+          </select>
+          <button id="edit-add-product-button" type="button" class="admin-tool"><i data-lucide="plus" aria-hidden="true"></i> Agregar producto</button>
+        </div>
+      </div>
       <label id="edit-takeaway-label" class="min-h-11 items-center gap-2"><input id="edit-takeaway" type="checkbox"> Para llevar</label>
       <label id="edit-tapers-label">Táperes (S/ 1.00 cada uno)
         <input id="edit-tapers" type="number" min="0" max="99" step="1" inputmode="numeric" class="block w-24 rounded-lg border p-2">
@@ -978,7 +987,7 @@
       };
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
-      function deductInventoryForOrder(order) {
+      function deductInventoryForOrder(order, action = 'Aprobación') {
         const usage = {};
         order.items.forEach(item => {
           const m = MENU.find(x => x.id === item.menuId);
@@ -1006,7 +1015,7 @@
             date: nowStr(),
             ingName: ing.name,
             type: 'SALIDA',
-            doc: `Aprobación ${order.code}`,
+            doc: `${action} ${order.code}`,
             prev,
             qty: -qtyUsed,
             next,
@@ -1762,9 +1771,12 @@
       let custSelectedFlavors = [];
       let custSelectedExtras = [];
 
-      function openCustomizeModal(menuId) {
+      let customizeForEdit = false;
+      function openCustomizeModal(menuId, forEdit = false) {
         const m = MENU.find(x => x.id === menuId);
         if (!m) return;
+        customizeForEdit = forEdit;
+        document.getElementById('customize-submit-label').textContent = forEdit ? 'Agregar a la comanda' : 'Agregar al pedido';
         custSelectedFlavors = m.flavorsRequired === 6 ? [...WING_FLAVORS] : [];
         custSelectedExtras = [];
 
@@ -2060,21 +2072,42 @@
         return order.items.find(item => item.menuId === 'taper')?.qty || 0;
       }
 
+      const editProducts = document.getElementById('edit-add-products');
+      const productPicker = document.getElementById('edit-add-product');
+      const editLines = document.getElementById('edit-order-items');
+      productPicker.append(...MENU.map(item => new Option(item.name + ' · ' + money(item.price), item.id)));
+      let addedOrderItems = [];
+
+      function editQuantityRow(item, locked) {
+        const label = document.createElement('label');
+        label.className = 'grid grid-cols-[1fr_5rem] items-center gap-2';
+        label.append(item.name);
+        const input = document.createElement('input');
+        Object.assign(input, { type: 'number', min: '0', max: '99', step: '1', value: item.qty, disabled: locked, required: true });
+        input.className = 'min-h-11 rounded-lg border p-2 text-base';
+        input.dataset.editQuantity = '';
+        label.append(input);
+        return label;
+      }
+
+      document.getElementById('edit-add-product-button').onclick = () => {
+        if (!productPicker.value) {
+          editError.textContent = 'Selecciona un producto de la carta.';
+          productPicker.focus();
+          return;
+        }
+        editError.textContent = '';
+        openCustomizeModal(productPicker.value, true);
+      };
+
       function openOrderEdit(order) {
         editingOrder = order;
-        const locked = order.status !== 'POR_APROBAR' || order.paymentStatus === 'PAGADO';
-        const lines = document.getElementById('edit-order-items');
-        lines.replaceChildren(...order.items.filter(item => !isOrderCharge(item)).map(item => {
-          const label = document.createElement('label');
-          label.className = 'grid grid-cols-[1fr_5rem] items-center gap-2';
-          label.append(item.name);
-          const input = document.createElement('input');
-          Object.assign(input, { type: 'number', min: '0', max: '99', step: '1', value: item.qty, disabled: locked, required: true });
-          input.className = 'min-h-11 rounded-lg border p-2 text-base';
-          input.dataset.editQuantity = '';
-          label.append(input);
-          return label;
-        }));
+        addedOrderItems = [];
+        productPicker.value = '';
+        const paid = order.paymentStatus === 'PAGADO' || !!order.boletaNum;
+        editProducts.hidden = paid;
+        const locked = order.status !== 'POR_APROBAR' || paid;
+        editLines.replaceChildren(...order.items.filter(item => !isOrderCharge(item)).map(item => editQuantityRow(item, locked)));
         editTakeaway.checked = !!order.takeaway;
         editTakeaway.disabled = order.paymentStatus === 'PAGADO';
         document.getElementById('edit-takeaway-label').hidden = order.channel !== 'MESA';
@@ -2094,13 +2127,14 @@
         const tapers = showTapers ? Number(editTapers.value) : 0;
         const amounts = [...editForm.querySelectorAll('[data-edit-quantity]')].map(input => Number(input.value));
         const currentItems = order.items.filter(item => !isOrderCharge(item));
-        const items = currentItems.map((item, index) => ({ ...item, qty: amounts[index] })).filter(item => item.qty > 0);
-        const pricesChanged = tapers !== taperCount(order) || currentItems.some((item, i) => item.qty !== amounts[i]);
+        const addedItems = addedOrderItems.map((item, index) => ({ ...item, qty: amounts[currentItems.length + index] })).filter(item => item.qty > 0);
+        const items = currentItems.map((item, index) => ({ ...item, qty: amounts[index] })).filter(item => item.qty > 0).concat(addedItems);
+        const pricesChanged = addedItems.length > 0 || tapers !== taperCount(order) || currentItems.some((item, i) => item.qty !== amounts[i]);
         const priced = pricesChanged && !editTapers.validity.rangeOverflow && Number.isInteger(tapers) && tapers >= 0
           ? priceOrder(items, { tapers, channel: order.channel, paymentMethod: order.paymentMethod })
           : { items: order.items, total: order.total, fee: order.fee };
         document.getElementById('edit-order-total').textContent = 'Total: ' + money(priced.total);
-        return { ...priced, takeaway, pricesChanged, itemsRemaining: items.length };
+        return { ...priced, takeaway, pricesChanged, addedItems, itemsRemaining: items.length };
       }
 
       document.getElementById('edit-order-cancel').onclick = () => editDialog.close();
@@ -2116,7 +2150,7 @@
           editError.textContent = 'El pedido cambió. Cierra y vuelve a abrir la comanda.';
           return;
         }
-        const { pricesChanged, itemsRemaining, ...changes } = updateOrderEdit();
+        const { pricesChanged, itemsRemaining, addedItems, ...changes } = updateOrderEdit();
         if (!itemsRemaining) {
           editError.textContent = 'Conserva al menos un producto en el pedido.';
           return;
@@ -2125,6 +2159,12 @@
         const note = editNote.value.trim().replace(/[<>&"']/g, char =>
           ({ '<': '‹', '>': '›', '&': '＆', '"': '”', "'": '’' })[char]);
         const updated = { ...order, ...changes, note };
+        if (addedItems.length && order.status !== 'POR_APROBAR') {
+          deductInventoryForOrder({ ...updated, items: addedItems }, 'Adición');
+          updated.status = 'EN_COCINA';
+          updated.completedAt = null;
+          ui.adminFilter = 'EN_COCINA';
+        }
         state.orders.splice(index, 1);
         state.orders.unshift(updated);
         editDialog.close();
@@ -2312,7 +2352,7 @@
         const extraSum = custSelectedExtras.reduce((s, ex) => s + ex.price, 0);
         const creams = creamBoxes.filter(box => box.checked).map(box => box.value);
         const selectedCreams = creams.length ? 'Cremas: ' + creams.join(', ') : '';
-        ui.clientCart.push({
+        const item = {
           menuId: m.id,
           name: m.name,
           station: m.station,
@@ -2326,7 +2366,19 @@
             drinkSelect.disabled ? '' : drinkSelect.value,
             document.getElementById('cust-note').value.trim()
           ].filter(Boolean).join(' · ').slice(0, 240)
-        });
+        };
+        if (customizeForEdit) {
+          item.note = item.note.replace(/[<>&"']/g, char =>
+            ({ '<': '‹', '>': '›', '&': '＆', '"': '”', "'": '’' })[char]);
+          addedOrderItems.push(item);
+          editLines.append(editQuantityRow(item, false));
+          productPicker.value = '';
+          updateOrderEdit();
+          customizeDialog.close();
+          productPicker.focus();
+          return;
+        }
+        ui.clientCart.push(item);
         customizeDialog.close();
         renderClientCart();
         showToast(`${m.name} agregado al pedido.`);
