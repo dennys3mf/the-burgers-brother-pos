@@ -1,105 +1,249 @@
-// Cloudflare Pages Function backed by Cloudflare D1 (binding: DB)
-export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const path = url.pathname;
+import { MENU, EXTRAS, WING_FLAVORS } from '../../public/catalog.js';
+import { initialState } from '../initial-state.js';
 
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json; charset=utf-8'
-  };
+const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+const sessionName = '__Host-pos_session';
+const sessionSeconds = 8 * 60 * 60;
+const encoder = new TextEncoder();
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+function json(data, status = 200, headers = {}) {
+  return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
+}
+
+function reject(error, status) {
+  return json({ ok: false, error }, status);
+}
+
+async function signature(secret, value) {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const digest = await crypto.subtle.sign('HMAC', key, encoder.encode(value));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function equal(a, b) {
+  const left = encoder.encode(a);
+  const right = encoder.encode(b);
+  return left.byteLength === right.byteLength && crypto.subtle.timingSafeEqual(left, right);
+}
+
+async function signedIn(request, secret) {
+  if (!secret) return false;
+  const cookie = (request.headers.get('Cookie') || '').split(/;\s*/).find(value => value.startsWith(sessionName + '='));
+  const [expires, token] = (cookie?.split('=')[1] || '').split('.');
+  return /^\d{10}$/.test(expires) && Number(expires) > Date.now() / 1000 &&
+    !!token && equal(token, await signature(secret, expires));
+}
+
+function sessionCookie(value, maxAge) {
+  return { 'Set-Cookie': `${sessionName}=${value}; Path=/; Max-Age=${maxAge}; Secure; HttpOnly; SameSite=Strict` };
+}
+
+async function input(request, limit) {
+  if (request.headers.get('Content-Type')?.split(';')[0] !== 'application/json') {
+    throw new RangeError('Envía los datos en JSON.');
   }
-
-  if (!env || !env.DB) {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'D1 binding DB not configured. Bind D1 database "DB" in Cloudflare Pages Settings.' }),
-      { status: 500, headers: corsHeaders }
-    );
+  const reader = request.body?.getReader();
+  if (!reader) throw new RangeError('Faltan los datos.');
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let raw = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > limit) {
+      await reader.cancel();
+      throw new RangeError('La solicitud supera el tamaño permitido.');
+    }
+    raw += decoder.decode(value, { stream: true });
   }
-
   try {
-    // GET /api/health
-    if (path === '/api/health' && request.method === 'GET') {
-      return new Response(JSON.stringify({ ok: true, service: 'the-burgers-brother-d1', ts: new Date().toISOString() }), { headers: corsHeaders });
+    return JSON.parse(raw + decoder.decode());
+  } catch {
+    throw new RangeError('Los datos enviados no son válidos.');
+  }
+}
+
+function clean(value, limit) {
+  // Existing staff screens interpolate these strings into HTML and print tickets.
+  return typeof value === 'string' ? value.trim().slice(0, limit)
+    .replace(/[<>&"'\x60]/g, char => ({ '<': '‹', '>': '›', '&': '＆', '"': '”', "'": '’', '\x60': '’' })[char]) : '';
+}
+
+function orderDraft(draft) {
+  if (!draft || typeof draft.id !== 'string' || !uuid.test(draft.id) ||
+      !['MESA', 'DELIVERY'].includes(draft.channel) ||
+      !Array.isArray(draft.items) || !draft.items.length || draft.items.length > 40) {
+    throw new RangeError('Revisa los datos y los productos del pedido.');
+  }
+  const delivery = draft.channel === 'DELIVERY';
+  if (!delivery && !/^Mesa [1-6]$/.test(draft.table)) throw new RangeError('Selecciona una mesa válida.');
+  const table = delivery ? '-' : draft.table;
+  const customer = clean(draft.customer, 100) || (!delivery ? `Cliente ${table}` : '');
+  const phone = delivery ? clean(draft.phone, 40) : '';
+  const address = delivery ? clean(draft.address, 240) : '';
+  const paymentRef = delivery ? clean(draft.payRef, 80) : '';
+  if (delivery && (!customer || !phone || !address || !paymentRef ||
+      !['Yape', 'Plin', 'Tarjeta'].includes(draft.paymentMethod))) {
+    throw new RangeError('Completa los datos de entrega y la referencia del pago.');
+  }
+
+  const items = draft.items.map(item => {
+    const product = MENU.find(entry => entry.id === item?.menuId);
+    if (!product || !Number.isInteger(item.qty) || item.qty < 1 || item.qty > 99) {
+      throw new RangeError('Uno de los productos o sus cantidades no son válidos.');
+    }
+    const extras = EXTRAS.filter(extra => Array.isArray(item.extras) && item.extras.includes(extra.id));
+    const flavors = WING_FLAVORS.filter(flavor => Array.isArray(item.flavors) && item.flavors.includes(flavor));
+    if (flavors.length !== (product.flavorsRequired || 0) ||
+        extras.length !== (item.extras?.length || 0) || (extras.length && product.station !== 'COCINA')) {
+      throw new RangeError('Revisa los extras y sabores del pedido.');
+    }
+    return {
+      menuId: product.id, name: product.name, station: product.station, qty: item.qty,
+      basePrice: product.price, unitPrice: product.price + extras.reduce((sum, extra) => sum + extra.price, 0),
+      extras, flavors, note: clean(item.note, 240)
+    };
+  });
+
+  const num = draft.id.replace(/-/g, '').slice(0, 12).toUpperCase();
+  return {
+    id: draft.id, num, code: `BB-${num}`, channel: draft.channel, table, customer, phone, address,
+    paymentStatus: 'PENDIENTE', paymentMethod: delivery ? draft.paymentMethod : 'Por cobrar', paymentRef,
+    status: 'POR_APROBAR', boletaNum: null,
+    createdAt: new Intl.DateTimeFormat('es-PE', {
+      timeZone: 'America/Lima', dateStyle: 'short', timeStyle: 'short'
+    }).format(new Date()),
+    approvedAt: null, completedAt: null,
+    note: clean(draft.note, 350),
+    total: Math.round(items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0) * 100) / 100,
+    items
+  };
+}
+
+const orderColumns = 'id, code, channel, table_name, customer, phone, address, payment_status, payment_method, payment_ref, status, boleta_num, total, items_json, note, created_at, approved_at, completed_at';
+
+function orderValues(order) {
+  return [
+    order.id, order.code, order.channel, order.table || '-', order.customer || '', order.phone || '', order.address || '',
+    order.paymentStatus || 'PENDIENTE', order.paymentMethod || '', order.paymentRef || '', order.status, order.boletaNum || null,
+    Number(order.total) || 0, JSON.stringify(order.items || []), order.note || '', order.createdAt || '',
+    order.approvedAt || null, order.completedAt || null
+  ];
+}
+
+function publicOrder(row) {
+  return {
+    id: row.id, code: row.code, channel: row.channel, table: row.table_name,
+    customer: row.customer, total: row.total, status: row.status
+  };
+}
+
+async function createOrder(db, draft) {
+  const order = orderDraft(draft);
+  await db.batch([
+    db.prepare(`INSERT INTO orders (${orderColumns}) VALUES (${'?,'.repeat(17)}?) ON CONFLICT(id) DO NOTHING`)
+      .bind(...orderValues(order)),
+    db.prepare(`INSERT INTO app_state (id, payload, revision)
+      VALUES (1, json_insert(?, '$.orders[#]', json(?)), ?)
+      ON CONFLICT(id) DO UPDATE SET
+        payload = json_set(app_state.payload, '$.orders', json('[' || json(?) ||
+          CASE WHEN json_array_length(app_state.payload, '$.orders') > 0
+            THEN ',' || substr(json_extract(app_state.payload, '$.orders'), 2)
+            ELSE ']' END)),
+        updated_at = datetime('now'), revision = excluded.revision
+      WHERE NOT EXISTS (SELECT 1 FROM json_each(app_state.payload, '$.orders') WHERE json_extract(value, '$.id') = ?)`)
+      .bind(JSON.stringify(initialState()), JSON.stringify(order), crypto.randomUUID(), JSON.stringify(order), order.id)
+  ]);
+  const row = await db.prepare('SELECT id, code, channel, table_name, customer, total, status FROM orders WHERE id = ?').bind(order.id).first();
+  return json({ ok: true, order: publicOrder(row) }, 201);
+}
+
+async function saveState(db, body, expected) {
+  const state = body?.state;
+  if (!state || !Array.isArray(state.orders) || !Array.isArray(state.ingredients) ||
+      !state.counters || !state.caja || !Array.isArray(state.boletas) || !Array.isArray(state.kardex)) {
+    return reject('Estado inválido.', 400);
+  }
+  if (!expected) return reject('Falta la versión del estado.', 428);
+  const next = crypto.randomUUID();
+  const payload = JSON.stringify(state);
+  const statements = [expected === 'none'
+    ? db.prepare('INSERT INTO app_state (id, payload, revision) VALUES (1, ?, ?) ON CONFLICT(id) DO NOTHING').bind(payload, next)
+    : db.prepare("UPDATE app_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
+      .bind(payload, next, expected)
+  ];
+  for (const order of state.orders.slice(0, 50)) {
+    statements.push(db.prepare(`INSERT INTO orders (${orderColumns})
+      SELECT ${'?,'.repeat(17)}? WHERE EXISTS (SELECT 1 FROM app_state WHERE id = 1 AND revision = ?)
+      ON CONFLICT(id) DO UPDATE SET status = excluded.status, payment_status = excluded.payment_status,
+        payment_method = excluded.payment_method, boleta_num = excluded.boleta_num,
+        approved_at = excluded.approved_at, completed_at = excluded.completed_at`).bind(...orderValues(order), next));
+  }
+  for (const ingredient of state.ingredients) {
+    statements.push(db.prepare(`INSERT INTO ingredients (id, code, name, station, unit, stock, min_stock, cost)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM app_state WHERE id = 1 AND revision = ?)
+      ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, cost = excluded.cost`)
+      .bind(ingredient.id, ingredient.code, ingredient.name, ingredient.station, ingredient.unit,
+        Number(ingredient.stock) || 0, Number(ingredient.minStock) || 0, Number(ingredient.cost) || 0, next));
+  }
+  const [result] = await db.batch(statements);
+  if (!result.meta.changes) return reject('El estado cambió. Actualiza el panel antes de reintentar.', 409);
+  return json({ ok: true, revision: next });
+}
+
+export async function onRequest({ request, env }) {
+  const url = new URL(request.url);
+  const { pathname: path } = url;
+  const { method } = request;
+  if (!['GET', 'HEAD'].includes(method) && request.headers.get('Origin') !== url.origin) {
+    return reject('Origen no autorizado.', 403);
+  }
+  try {
+    const db = env.DB;
+    if (!db) return reject('La base de datos no está disponible.', 503);
+
+    if (path === '/api/health' && method === 'GET') {
+      await db.prepare('SELECT revision FROM app_state LIMIT 1').first();
+      return json({ ok: true, service: 'the-burgers-brother-d1' });
+    }
+    if (path === '/api/session' && method === 'POST') {
+      if (!env.STAFF_PASSWORD) return reject('El acceso del personal aún no está configurado.', 503);
+      const { password } = await input(request, 1024) || {};
+      if (typeof password !== 'string' || !equal(password, env.STAFF_PASSWORD)) return reject('Clave incorrecta.', 401);
+      const expires = String(Math.floor(Date.now() / 1000) + sessionSeconds);
+      const token = await signature(env.STAFF_PASSWORD, expires);
+      return json({ ok: true }, 200, sessionCookie(`${expires}.${token}`, sessionSeconds));
+    }
+    if (path === '/api/session' && method === 'DELETE') return json({ ok: true }, 200, sessionCookie('', 0));
+    if (path === '/api/orders' && method === 'POST') return await createOrder(db, await input(request, 24000));
+
+    const id = path.startsWith('/api/orders/') ? path.slice('/api/orders/'.length) : '';
+    if (method === 'GET' && uuid.test(id)) {
+      const row = await db.prepare(`SELECT json_extract(value, '$.status') AS status
+        FROM app_state, json_each(app_state.payload, '$.orders')
+        WHERE app_state.id = 1 AND json_extract(value, '$.id') = ?`).bind(id).first();
+      return row ? json({ ok: true, status: row.status }) : reject('Pedido no encontrado.', 404);
     }
 
-    // GET /api/state -> returns synchronized state from Cloudflare D1
-    if (path === '/api/state' && request.method === 'GET') {
-      const row = await env.DB.prepare('SELECT payload, updated_at FROM app_state WHERE id = 1').first();
-      if (!row) {
-        return new Response(JSON.stringify({ ok: true, state: null }), { headers: corsHeaders });
-      }
-      return new Response(JSON.stringify({ ok: true, state: JSON.parse(row.payload), updatedAt: row.updated_at }), { headers: corsHeaders });
+    if (!await signedIn(request, env.STAFF_PASSWORD)) return reject('Inicia sesión para continuar.', 401);
+    if (path === '/api/state' && method === 'GET') {
+      const row = await db.prepare('SELECT payload, revision, updated_at FROM app_state WHERE id = 1').first();
+      return json({ ok: true, state: row ? JSON.parse(row.payload) : initialState(),
+        revision: row?.revision || null, updatedAt: row?.updated_at || null });
+    }
+    if (path === '/api/state' && method === 'PUT') {
+      return await saveState(db, await input(request, 1_500_000), request.headers.get('If-Match'));
+    }
+    if (path === '/api/orders' && method === 'GET') {
+      const { results } = await db.prepare('SELECT * FROM orders ORDER BY rowid DESC LIMIT 100').all();
+      return json({ ok: true, orders: results });
     }
 
-    // PUT /api/state -> persists full state + mirrors orders/kardex/caja into relational D1 tables
-    if (path === '/api/state' && request.method === 'PUT') {
-      const body = await request.json();
-      if (!body || !body.state) {
-        return new Response(JSON.stringify({ ok: false, error: 'Missing state payload' }), { status: 400, headers: corsHeaders });
-      }
-      const st = body.state;
-      const serialized = JSON.stringify(st);
-
-      const statements = [
-        env.DB.prepare(
-          `INSERT INTO app_state (id, payload, updated_at) VALUES (1, ?, datetime('now'))
-           ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = datetime('now')`
-        ).bind(serialized)
-      ];
-
-      if (Array.isArray(st.orders)) {
-        for (const o of st.orders.slice(0, 50)) {
-          statements.push(
-            env.DB.prepare(
-              `INSERT INTO orders (id, code, channel, table_name, customer, phone, address, payment_status, payment_method, payment_ref, status, boleta_num, total, items_json, note, created_at, approved_at, completed_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(id) DO UPDATE SET
-                 status = excluded.status,
-                 payment_status = excluded.payment_status,
-                 payment_method = excluded.payment_method,
-                 boleta_num = excluded.boleta_num,
-                 approved_at = excluded.approved_at,
-                 completed_at = excluded.completed_at`
-            ).bind(
-              o.id, o.code, o.channel, o.table || '-', o.customer || '', o.phone || '', o.address || '',
-              o.paymentStatus || 'PENDIENTE', o.paymentMethod || '', o.paymentRef || '',
-              o.status, o.boletaNum || null, Number(o.total) || 0, JSON.stringify(o.items || []),
-              o.note || '', o.createdAt || '', o.approvedAt || null, o.completedAt || null
-            )
-          );
-        }
-      }
-
-      if (Array.isArray(st.ingredients)) {
-        for (const i of st.ingredients) {
-          statements.push(
-            env.DB.prepare(
-              `INSERT INTO ingredients (id, code, name, station, unit, stock, min_stock, cost)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, cost = excluded.cost`
-            ).bind(i.id, i.code, i.name, i.station, i.unit, Number(i.stock) || 0, Number(i.minStock) || 0, Number(i.cost) || 0)
-          );
-        }
-      }
-
-      await env.DB.batch(statements);
-      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
-    }
-
-    // GET /api/orders -> relational query for reporting/integrations
-    if (path === '/api/orders' && request.method === 'GET') {
-      const { results } = await env.DB.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 100').all();
-      return new Response(JSON.stringify({ ok: true, orders: results }), { headers: corsHeaders });
-    }
-
-    return new Response(JSON.stringify({ ok: false, error: 'Route not found' }), { status: 404, headers: corsHeaders });
-  } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: err.message || String(err) }), { status: 500, headers: corsHeaders });
+    return reject('Ruta no encontrada.', 404);
+  } catch (error) {
+    if (error instanceof RangeError) return reject(error.message, 400);
+    console.error('POS API request failed', method, error.name);
+    return reject('No se pudo completar la solicitud.', 500);
   }
 }

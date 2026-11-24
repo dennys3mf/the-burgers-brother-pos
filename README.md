@@ -1,38 +1,17 @@
-# The Burgers Brother — Sistema POS QR + Admin + BIXOLON SPP-R310BK + App Chef (Cloudflare Pages + D1)
+# The Burgers Brother POS
 
-Proyecto full-stack listo para subir a **GitHub (`dennys3mf`)** y desplegar en **Cloudflare Pages** con base de datos **Cloudflare D1** para que los códigos QR de mesa, Delivery con prepago, aprobación del Admin y cierre del Chef funcionen sincronizados desde cualquier celular.
+La [carta pública](https://the-burgers-brother-pos.pages.dev/) permite generar códigos de mesa y delivery desde **Ver QR**. Los perfiles Admin, Chef y Gestión requieren la clave compartida del personal. El cliente recibe un código al guardar su pedido en D1 y puede seguir el estado en la pestaña donde lo envió.
 
-## Estructura del proyecto
-- `public/index.html` — Aplicación web completa (Carta QR/Delivery, Panel Admin, App Chef, Inventario, Kardex, Proveedores, Caja y Boletas 80 mm para BIXOLON SPP-R310BK).
-- `functions/api/[[route]].js` — API serverless en Cloudflare Pages Functions conectada a Cloudflare D1 (`env.DB`).
-- `migrations/0001_init.sql` — Esquema SQL para Cloudflare D1 (SQLite).
-- `wrangler.toml` — Configuración de Cloudflare Pages y enlace D1 (`binding = "DB"`).
+El personal verifica el prepago de delivery antes de aprobar el pedido. La referencia ingresada por el cliente queda pendiente de verificación hasta ese momento. El inventario inicial contiene los insumos de la carta con existencias en cero.
 
-## Paso 1: Subir a tu GitHub (`dennys3mf`)
-```bash
-git init
-git add .
-git commit -m "Inicial: POS The Burgers Brother en Cloudflare Pages + D1"
-git branch -M main
-git remote add origin https://github.com/dennys3mf/the-burgers-brother-pos.git
-git push -u origin main
-```
+## Desarrollo local
 
-## Paso 2: Instalar Wrangler y crear la base de datos Cloudflare D1
-```bash
-npm install
-npx wrangler login
-npm run db:create
-```
-Copia el `database_id` que te devuelve Cloudflare y pégalo en `wrangler.toml` reemplazando `REPLACE_WITH_YOUR_D1_DATABASE_ID`. Luego ejecuta la migración:
-```bash
-npm run db:migrate:remote
-```
+Instala las dependencias con `npm install` y crea un archivo local `.dev.vars` con el valor `STAFF_PASSWORD` que usarás para las pruebas. Ejecuta `npm run db:migrate:local` una vez y después `npm run dev`.
 
-## Paso 3: Desplegar en Cloudflare Pages (URL pública para tus QR)
-```bash
-npm run deploy
-```
-O conecta el repositorio `dennys3mf/the-burgers-brother-pos` desde el panel de **Cloudflare → Workers & Pages → Create → Pages → Connect to Git** (Directorio de salida: `public`, y en *Settings → Bindings* vincula tu base de datos D1 con el nombre de variable `DB`).
+## Cloudflare Pages
 
-Una vez publicado en `https://the-burgers-brother-pos.pages.dev`, abre el botón **Ver QR** dentro de la app: detectará automáticamente tu URL pública `https://...` y generará códigos QR reales descargables en PNG para pegar en cada mesa.
+El proyecto está vinculado a GitHub y usa `main` para producción. `wrangler.toml` define la salida `public` y el vínculo D1 `DB`. Las funciones de Pages viven en `functions/api`.
+
+Antes de publicar una versión con migraciones, ejecuta `npm run db:migrate:remote` desde un entorno autorizado en la cuenta de Cloudflare. Configura o rota la clave con `npx wrangler pages secret put STAFF_PASSWORD --project-name the-burgers-brother-pos` y publícala mediante un despliegue de Pages. Mantén la clave fuera de Git y compártela solamente con el personal autorizado.
+
+`GET /api/health` comprueba la conexión al esquema D1. `GET /api/state` y `GET /api/orders` requieren una sesión del personal.
