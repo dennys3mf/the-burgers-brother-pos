@@ -98,7 +98,7 @@ export function thermalReceiptText(order, issuedAt) {
     rule,
     'BOLETA INTERNA DE VENTA',
     clean(order.boletaNum),
-    ...wrap('Pedido: ' + order.code + ' (' + (order.channel === 'MESA' ? order.table : 'Delivery') + ')'),
+    ...wrap('Pedido: ' + order.code + ' (' + (order.channel === 'MESA' ? order.table + (order.takeaway ? ' · Para llevar' : '') : 'Delivery') + ')'),
     ...wrap('Cliente: ' + order.customer),
     ...(order.channel === 'DELIVERY' && order.address ? wrap('Dirección: ' + order.address) : []),
     ...(issuedAt ? wrap('Fecha: ' + issuedAt) : []),

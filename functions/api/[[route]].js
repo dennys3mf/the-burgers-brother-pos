@@ -1,4 +1,5 @@
 import { MENU, EXTRAS, WING_FLAVORS } from '../../public/catalog.js';
+import { priceOrder } from '../../public/order-pricing.js';
 import { initialState } from '../initial-state.js';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
@@ -77,6 +78,11 @@ function orderDraft(draft) {
     throw new RangeError('Revisa los datos y los productos del pedido.');
   }
   const delivery = draft.channel === 'DELIVERY';
+  const takeaway = !delivery && draft.takeaway === true;
+  const tapers = draft.tapers ?? 0;
+  if (!Number.isInteger(tapers) || tapers < 0 || tapers > 99 || (tapers && !delivery && !takeaway)) {
+    throw new RangeError('Revisa la cantidad de táperes.');
+  }
   if (!delivery && !/^Mesa [1-6]$/.test(draft.table)) throw new RangeError('Selecciona una mesa válida.');
   const table = delivery ? '-' : draft.table;
   const customer = clean(draft.customer, 100) || (!delivery ? `Cliente ${table}` : '');
@@ -116,8 +122,8 @@ function orderDraft(draft) {
     }).format(new Date()),
     approvedAt: null, completedAt: null,
     note: clean(draft.note, 350),
-    total: Math.round(items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0) * 100) / 100,
-    items
+    takeaway,
+    ...priceOrder(items, { tapers, channel: draft.channel, paymentMethod: draft.paymentMethod })
   };
 }
 
@@ -178,6 +184,7 @@ async function saveState(db, body, expected) {
       SELECT ${'?,'.repeat(17)}? WHERE EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)
       ON CONFLICT(id) DO UPDATE SET status = excluded.status, payment_status = excluded.payment_status,
         payment_method = excluded.payment_method, boleta_num = excluded.boleta_num,
+        total = excluded.total, items_json = excluded.items_json, note = excluded.note,
         approved_at = excluded.approved_at, completed_at = excluded.completed_at`).bind(...orderValues(order), next));
   }
   for (const ingredient of state.ingredients) {

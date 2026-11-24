@@ -247,6 +247,12 @@
               <input id="client-name" type="text" autocomplete="name" placeholder="Ej. Carlos Quispe" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
             </div>
 
+            <label id="client-takeaway-label" class="block py-2 font-bold">
+              <input id="client-takeaway" type="checkbox" class="h-5 w-5 accent-amber-600"> Para llevar
+            </label>
+            <label id="client-tapers-label" hidden class="font-semibold">Táperes (S/ 1.00 cada uno)
+              <input id="client-tapers" type="number" min="0" max="99" step="1" value="0" inputmode="numeric" class="mt-1 block w-24 rounded-lg border p-2">
+            </label>
             <!-- Delivery-only fields + Mandatory Prepayment -->
             <div id="client-delivery-fields" class="hidden space-y-2.5 p-3 rounded-xl bg-sky-50 border border-sky-200">
               <div class="font-bold text-sky-900 flex items-center gap-1.5">
@@ -258,7 +264,7 @@
               <div class="grid grid-cols-3 gap-1.5">
                 <button type="button" data-del-pay="Yape" class="del-pay-btn py-1.5 rounded-lg font-bold border">Yape</button>
                 <button type="button" data-del-pay="Plin" class="del-pay-btn py-1.5 rounded-lg font-bold border">Plin</button>
-                <button type="button" data-del-pay="Tarjeta" class="del-pay-btn py-1.5 rounded-lg font-bold border">Tarjeta</button>
+                <button type="button" data-del-pay="Tarjeta" class="del-pay-btn py-1.5 rounded-lg font-bold border">Tarjeta +5 %</button>
               </div>
               <div class="text-[11px] text-sky-800 bg-white/80 p-2 rounded-lg border border-sky-100">
                 Yape / Plin oficial: <b>958 656 930</b> (The Burgers Brother)
@@ -271,7 +277,7 @@
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-slate-200 text-base font-extrabold">
-              <span>Total</span>
+              <span>Total <small id="client-card-fee" class="block font-normal"></small></span>
               <span id="client-cart-total" class="text-orange-600">S/ 0.00</span>
             </div>
 
@@ -686,6 +692,26 @@
     </div>
   </div>
 
+  <dialog id="modal-edit-order" class="m-auto w-[calc(100%-1rem)] max-w-lg max-h-[90dvh] overflow-auto rounded-xl bg-white p-4 text-slate-950 shadow-xl" aria-labelledby="edit-order-title">
+    <form id="edit-order-form" class="space-y-3">
+      <h2 id="edit-order-title" class="text-xl font-bold">Editar comanda</h2>
+      <div id="edit-order-items" class="space-y-2"></div>
+      <label id="edit-takeaway-label" class="min-h-11 items-center gap-2"><input id="edit-takeaway" type="checkbox"> Para llevar</label>
+      <label id="edit-tapers-label">Táperes (S/ 1.00 cada uno)
+        <input id="edit-tapers" type="number" min="0" max="99" step="1" inputmode="numeric" class="block w-24 rounded-lg border p-2">
+      </label>
+      <label class="block">Nota general
+        <textarea id="edit-order-note" maxlength="350" class="block w-full rounded-lg border p-2"></textarea>
+      </label>
+      <p id="edit-order-total" class="font-bold"></p>
+      <p id="edit-order-error" role="alert" class="text-sm text-rose-700"></p>
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="min-h-11 rounded-lg bg-amber-500 px-4 font-bold">Guardar cambios</button>
+        <button id="edit-order-cancel" type="button" class="min-h-11 px-4">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- MODAL: COBRAR MESA & EMITIR BOLETA -->
   <div id="modal-pay-mesa" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
@@ -816,6 +842,7 @@
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
+    import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js';
@@ -970,6 +997,8 @@
             <div style="display:flex;justify-content:space-between;"><span>APROBADO:</span><span>${order.approvedAt || nowStr()}</span></div>
             ${order.channel === 'DELIVERY' ? `<div style="font-weight:700;margin-top:2px;">PAGO: ${order.paymentMethod.toUpperCase()} OK (${order.paymentRef})</div>` : ''}
             <div class="thermal-line-bold"></div>
+            ${order.takeaway ? '<div style="font-weight:800;">PARA LLEVAR</div>' : ''}
+            ${renderLines(order.items.filter(item => item.menuId === 'taper'))}
             ${cocinaItems.length ? `<div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN COCINA ]</div>${renderLines(cocinaItems)}` : ''}
             ${barraItems.length ? `<div class="thermal-line"></div><div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN BARRA ]</div>${renderLines(barraItems)}` : ''}
             ${order.note ? `<div class="thermal-line"></div><div style="font-weight:700;border:1px solid #000;padding:4px;">NOTA: ${order.note.toUpperCase()}</div>` : ''}
@@ -1009,7 +1038,7 @@
             <div style="text-align:center;font-weight:700;">BOLETA INTERNA DE VENTA</div>
             <div style="text-align:center;font-weight:800;">${boletaNum}</div>
             <div class="thermal-line"></div>
-            <div>Pedido: ${order.code} (${order.channel === 'MESA' ? order.table : 'Delivery'})</div>
+            <div>Pedido: ${order.code} (${order.channel === 'MESA' ? order.table + (order.takeaway ? ' · Para llevar' : '') : 'Delivery'})</div>
             <div>Cliente: ${order.customer}</div>
             ${order.channel === 'DELIVERY' && order.address ? `<div>Dir: ${order.address}</div>` : ''}
             <div>Fecha: ${receiptDate(order) || "—"}</div>
@@ -1047,7 +1076,8 @@
         out += `ORIGEN: ${order.channel === 'MESA' ? order.table : 'DELIVERY'}\n`;
         out += `CLIENTE: ${order.customer}\n`;
         out += sep;
-        order.items.forEach(it => {
+        if (order.takeaway) out += 'PARA LLEVAR\n';
+        order.items.filter(item => item.menuId !== 'delivery-card-fee').forEach(it => {
           out += `${it.qty}x ${it.name} [${it.station}]\n`;
           if (it.flavors && it.flavors.length) out += `   SABORES: ${it.flavors.join(', ')}\n`;
           if (it.extras && it.extras.length) out += `   + EXTRA: ${it.extras.map(e => e.name).join(', ')}\n`;
@@ -1332,7 +1362,16 @@
             </div>
           `).join('');
         }
-        const total = ui.clientCart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+        const delivery = ui.clientMode === 'DELIVERY';
+        const packaging = clientPackaging();
+        document.getElementById('client-takeaway-label').hidden = delivery;
+        clientTapers.disabled = !delivery && !packaging.takeaway;
+        document.getElementById('client-tapers-label').hidden = clientTapers.disabled;
+        const { total, fee } = priceOrder(ui.clientCart, { ...packaging, tapers: clientTapers.checkValidity() ? packaging.tapers : 0, channel: ui.clientMode, paymentMethod: ui.clientDelPay });
+        document.getElementById('client-card-fee').textContent = [
+          ui.clientCart.length && packaging.tapers > 0 && clientTapers.checkValidity() ? 'Táperes: ' + money(packaging.tapers) : '',
+          fee ? 'Recargo tarjeta: ' + money(fee) : ''
+        ].filter(Boolean).join(' · ');
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
         document.getElementById('carta-cart-link').textContent = 'Ver pedido (' + units + ')';
         document.getElementById('client-cart-total').textContent = money(total);
@@ -1372,7 +1411,7 @@
                     <div class="flex items-center gap-2">
                       <span class="font-mono-ticket text-base font-extrabold text-slate-900">${o.code}</span>
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isDel ? 'bg-sky-100 text-sky-800' : 'bg-orange-100 text-orange-800'}">
-                        ${isDel ? 'DELIVERY' : o.table + ' (QR)'}
+                        ${isDel ? 'DELIVERY' : o.table + (o.takeaway ? ' · PARA LLEVAR' : ' (QR)')}
                       </span>
                     </div>
                     <div class="text-xs font-semibold text-slate-700 mt-0.5">${o.customer}</div>
@@ -1407,6 +1446,7 @@
 
               <!-- Action Footer -->
               <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
+                ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Editar comanda</button>' : ''}
                 ${o.status === 'POR_APROBAR' ? `
                   <button type="button" data-admin-reject="${o.id}" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold">Rechazar</button>
                   <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
@@ -1791,6 +1831,12 @@
         if (del) { ui.clientCart.splice(Number(del.dataset.ccDel), 1); renderClientCart(); return; }
 
         // Admin filters & actions
+        const editButton = e.target.closest('[data-admin-edit]');
+        if (editButton) {
+          const order = state.orders.find(entry => entry.id === editButton.dataset.adminEdit);
+          if (order && canEditOrder(order)) openOrderEdit(order);
+          return;
+        }
         const af = e.target.closest('[data-admin-filter]');
         if (af) { ui.adminFilter = af.dataset.adminFilter; renderAdmin(); return; }
 
@@ -1905,6 +1951,110 @@
         const gt = e.target.closest('[data-subtab]');
         if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); return; }
       });
+
+      const clientTakeaway = document.getElementById('client-takeaway');
+      const clientTapers = document.getElementById('client-tapers');
+      function clientPackaging() {
+        const takeaway = ui.clientMode === 'MESA' && clientTakeaway.checked;
+        return { takeaway, tapers: ui.clientMode === 'DELIVERY' || takeaway ? Number(clientTapers.value) : 0 };
+      }
+      clientTakeaway.onchange = () => {
+        if (clientTakeaway.checked && !Number(clientTapers.value)) clientTapers.value = '1';
+        renderClientCart();
+      };
+      clientTapers.oninput = renderClientCart;
+
+      const editDialog = document.getElementById('modal-edit-order');
+      const editForm = document.getElementById('edit-order-form');
+      const editTakeaway = document.getElementById('edit-takeaway');
+      const editTapers = document.getElementById('edit-tapers');
+      const editNote = document.getElementById('edit-order-note');
+      const editError = document.getElementById('edit-order-error');
+      let editingOrder;
+
+      function canEditOrder(order) {
+        return ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF'].includes(order.status);
+      }
+
+      function taperCount(order) {
+        return order.items.find(item => item.menuId === 'taper')?.qty || 0;
+      }
+
+      function openOrderEdit(order) {
+        editingOrder = order;
+        const locked = order.status !== 'POR_APROBAR' || order.paymentStatus === 'PAGADO';
+        const lines = document.getElementById('edit-order-items');
+        lines.replaceChildren(...order.items.filter(item => !isOrderCharge(item)).map(item => {
+          const label = document.createElement('label');
+          label.className = 'grid grid-cols-[1fr_5rem] items-center gap-2';
+          label.append(item.name);
+          const input = document.createElement('input');
+          Object.assign(input, { type: 'number', min: '0', max: '99', step: '1', value: item.qty, disabled: locked, required: true });
+          input.className = 'min-h-11 rounded-lg border p-2 text-base';
+          input.dataset.editQuantity = '';
+          label.append(input);
+          return label;
+        }));
+        editTakeaway.checked = !!order.takeaway;
+        editTakeaway.disabled = order.paymentStatus === 'PAGADO';
+        document.getElementById('edit-takeaway-label').hidden = order.channel !== 'MESA';
+        editTapers.value = taperCount(order);
+        editNote.value = order.note || '';
+        editError.textContent = '';
+        updateOrderEdit();
+        editDialog.showModal();
+      }
+
+      function updateOrderEdit() {
+        const order = editingOrder;
+        const takeaway = order.channel === 'MESA' && editTakeaway.checked;
+        const showTapers = order.channel === 'DELIVERY' || takeaway;
+        editTapers.disabled = !showTapers || order.paymentStatus === 'PAGADO';
+        document.getElementById('edit-tapers-label').hidden = !showTapers;
+        const tapers = showTapers ? Number(editTapers.value) : 0;
+        const amounts = [...editForm.querySelectorAll('[data-edit-quantity]')].map(input => Number(input.value));
+        const currentItems = order.items.filter(item => !isOrderCharge(item));
+        const items = currentItems.map((item, index) => ({ ...item, qty: amounts[index] })).filter(item => item.qty > 0);
+        const pricesChanged = tapers !== taperCount(order) || currentItems.some((item, i) => item.qty !== amounts[i]);
+        const priced = pricesChanged && !editTapers.validity.rangeOverflow && Number.isInteger(tapers) && tapers >= 0
+          ? priceOrder(items, { tapers, channel: order.channel, paymentMethod: order.paymentMethod })
+          : { items: order.items, total: order.total, fee: order.fee };
+        document.getElementById('edit-order-total').textContent = 'Total: ' + money(priced.total);
+        return { ...priced, takeaway, pricesChanged, itemsRemaining: items.length };
+      }
+
+      document.getElementById('edit-order-cancel').onclick = () => editDialog.close();
+      editForm.addEventListener('input', event => {
+        if (event.target === editTakeaway && editTakeaway.checked && !Number(editTapers.value)) editTapers.value = '1';
+        updateOrderEdit();
+      });
+      editForm.onsubmit = async event => {
+        event.preventDefault();
+        const index = state.orders.findIndex(order => order.id === editingOrder.id);
+        const order = state.orders[index];
+        if (!order || !canEditOrder(order) || JSON.stringify(order) !== JSON.stringify(editingOrder)) {
+          editError.textContent = 'El pedido cambió. Cierra y vuelve a abrir la comanda.';
+          return;
+        }
+        const { pricesChanged, itemsRemaining, ...changes } = updateOrderEdit();
+        if (!itemsRemaining) {
+          editError.textContent = 'Conserva al menos un producto en el pedido.';
+          return;
+        }
+        if (pricesChanged && order.channel === 'DELIVERY' && !window.confirm('El total de delivery cambiará. Coordina el importe con el cliente antes de aprobar el pago. ¿Guardar el cambio?')) return;
+        const note = editNote.value.trim().replace(/[<>&"']/g, char =>
+          ({ '<': '‹', '>': '›', '&': '＆', '"': '”', "'": '’' })[char]);
+        const updated = { ...order, ...changes, note };
+        state.orders.splice(index, 1);
+        state.orders.unshift(updated);
+        editDialog.close();
+        const saved = saveState();
+        renderActiveRole();
+        if (await saved) {
+          showToast('Comanda actualizada.');
+          if (updated.status !== 'POR_APROBAR') openBixolonModal(updated);
+        }
+      };
 
       // Specific listeners
       document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; renderCliente(); });
@@ -2097,7 +2247,9 @@
           }
         }
 
+        if (!clientTapers.disabled && !clientTapers.reportValidity()) return;
         const draft = {
+          ...clientPackaging(),
           channel: ui.clientMode,
           table: ui.clientMesa,
           customer, phone, address, payRef,
@@ -2133,6 +2285,8 @@
           button.disabled = false;
         }
         ui.clientCart = [];
+        clientTakeaway.checked = false;
+        clientTapers.value = '0';
         document.getElementById('client-order-note').value = '';
         document.getElementById('client-pay-ref').value = '';
 
@@ -2443,11 +2597,13 @@
           });
           if (!response.ok) throw new Error();
           revision = (await response.json()).revision;
+          return true;
         }).catch(() => {
           staffReady = false;
           switchRole('cliente');
           showToast('No se guardó el cambio. Vuelve a abrir el panel y verifica el pedido antes de repetirlo.', 'err');
         }).finally(() => { writesPending--; });
+        return staffWrites;
       }
 
       async function pollCloudflare() {

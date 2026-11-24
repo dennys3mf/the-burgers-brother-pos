@@ -22,7 +22,7 @@ export function receiptPdf(Pdf, order, issuedAt) {
   rule();
   add('BOLETA INTERNA DE VENTA', { bold: true, center: true });
   add(order.boletaNum, { bold: true, center: true });
-  add('Pedido: ' + order.code + ' (' + (order.channel === 'MESA' ? order.table : 'Delivery') + ')');
+  add('Pedido: ' + order.code + ' (' + (order.channel === 'MESA' ? order.table + (order.takeaway ? ' · Para llevar' : '') : 'Delivery') + ')');
   add('Cliente: ' + order.customer);
   if (order.channel === 'DELIVERY' && order.address) add('Dirección: ' + order.address);
   if (issuedAt) add('Fecha: ' + issuedAt);
