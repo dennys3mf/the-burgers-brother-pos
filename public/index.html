@@ -108,9 +108,6 @@
   <!-- THERMAL PRINT TARGET (BIXOLON SPP-R310BK 80mm) -->
   <div id="thermal-print-area"></div>
 
-  <!-- SIMULATED PHONE PUSH NOTIFICATION BANNER (FOR ADMIN) -->
-  <div id="push-banner-container" class="fixed top-4 right-4 z-[90] flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0 pointer-events-none"></div>
-
   <!-- TOAST CONTAINER -->
   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[95] flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none"></div>
 
@@ -123,8 +120,14 @@
         <span class="brand-name" aria-hidden="true">THE BURGERS BROTHER</span>
       </div>
 
+      <button id="staff-access" type="button" class="min-h-11 px-2 text-xs font-semibold text-amber-400">Personal</button>
       <dialog id="staff-login" class="rounded-xl p-5 w-80 max-w-[90vw]">
         <form id="staff-login-form" class="space-y-3">
+          <label for="staff-role" class="block text-sm font-bold">Área de trabajo</label>
+          <select id="staff-role" class="w-full rounded border p-2 text-base">
+            <option value="admin">Nicol · Administración</option>
+            <option value="chef">Cocina · Chef</option>
+          </select>
           <label for="staff-password" class="block text-sm font-bold">Clave del personal</label>
           <input id="staff-password" type="password" autocomplete="current-password" required class="w-full rounded border p-2">
           <p id="staff-login-error" role="alert" class="text-sm text-rose-700"></p>
@@ -158,6 +161,10 @@
 
   <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
+    <div id="staff-alerts" hidden class="staff-alerts">
+      <p id="staff-alert-message" role="status"></p>
+      <button id="staff-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
+    </div>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
@@ -299,7 +306,7 @@
     <section id="view-admin" class="role-view hidden space-y-5">
       <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <h2 class="operator-title">Pedidos</h2>
+          <h2 class="operator-title">Panel de pedidos</h2>
           <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -316,7 +323,8 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button id="btn-admin-new-order" type="button" class="min-h-11 rounded-xl bg-amber-500 px-4 font-bold text-slate-950">Nuevo pedido</button>
+        <button id="btn-admin-new-order" type="button" class="admin-tool admin-tool-primary"><i data-lucide="plus" aria-hidden="true"></i> Nuevo pedido</button>
+        <button id="btn-chef-access" type="button" class="admin-tool"><i data-lucide="key-round" aria-hidden="true"></i> Acceso de cocina</button>
         <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas" class="min-h-11 min-w-0 grow rounded-xl border border-slate-200 bg-white px-3 text-base">
       </div>
       <p id="admin-order-search-summary" class="text-sm text-slate-600" hidden></p>
@@ -702,6 +710,18 @@
     </div>
   </div>
 
+  <dialog id="chef-access-dialog" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-4 text-slate-950" aria-labelledby="chef-access-title">
+    <form id="chef-access-form" class="space-y-3">
+      <h2 id="chef-access-title" class="text-xl font-bold">Acceso de cocina</h2>
+      <label for="chef-new-password" class="block">Clave de cocina</label>
+      <input id="chef-new-password" type="password" autocomplete="new-password" minlength="8" maxlength="100" required class="w-full rounded-lg border p-2 text-base">
+      <p class="text-sm text-slate-600">Comparte esta clave con el equipo de cocina. Si la cambias, se cerrarán sus sesiones anteriores.</p>
+      <p id="chef-access-error" role="alert" class="text-sm text-rose-700"></p>
+      <button type="submit" class="admin-tool admin-tool-primary">Guardar clave</button>
+      <button id="chef-access-cancel" type="button" class="admin-tool">Cerrar</button>
+    </form>
+  </dialog>
+
   <dialog id="modal-edit-order" class="m-auto w-[calc(100%-1rem)] max-w-lg max-h-[90dvh] overflow-auto rounded-xl bg-white p-4 text-slate-950 shadow-xl" aria-labelledby="edit-order-title">
     <form id="edit-order-form" class="space-y-3">
       <h2 id="edit-order-title" class="text-xl font-bold">Editar comanda</h2>
@@ -909,32 +929,53 @@
         setTimeout(() => el.remove(), 3400);
       }
 
-      function triggerAdminPushNotification(order) {
-        const wrap = document.getElementById('push-banner-container');
-        const el = document.createElement('div');
-        el.className = 'pointer-events-auto bg-slate-950 text-white border border-amber-500/60 rounded-2xl p-3.5 shadow-2xl flex items-start gap-3 cursor-pointer hover:bg-slate-900 transition-all';
-        el.innerHTML = `
-          <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0">
-            <i data-lucide="bell-ring" class="w-5 h-5"></i>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-[11px] font-extrabold text-amber-400 uppercase">Notificación al Admin</span>
-              <span class="text-[10px] text-slate-400">Ahora</span>
-            </div>
-            <div class="text-xs font-bold mt-0.5">Nuevo pedido ${order.code} — ${order.channel === 'MESA' ? order.table : 'DELIVERY (Pagado)'}</div>
-            <div class="text-[11px] text-slate-300 mt-0.5">${order.customer} • ${money(order.total)} • Toca para aprobar</div>
-          </div>
-        `;
-        el.addEventListener('click', () => {
-          el.remove();
-          ui.adminFilter = 'POR_APROBAR';
-          switchRole('admin');
-        });
-        wrap.appendChild(el);
-        lucide.createIcons();
-        setTimeout(() => { if (el.parentNode) el.remove(); }, 7000);
+      const alertMessage = document.getElementById('staff-alert-message');
+      const soundButton = document.getElementById('staff-sound');
+      let audio;
+      let soundEnabled = false;
+      let nextSound = 0;
+
+      function playOrderSound() {
+        if (!soundEnabled || audio?.state !== 'running') return;
+        const start = Math.max(audio.currentTime, nextSound);
+        nextSound = start + .48;
+        for (const [index, frequency] of [660, 880].entries()) {
+          const tone = audio.createOscillator();
+          const volume = audio.createGain();
+          const time = start + index * .14;
+          tone.frequency.value = frequency;
+          volume.gain.setValueAtTime(.001, time);
+          volume.gain.exponentialRampToValueAtTime(.12, time + .025);
+          volume.gain.exponentialRampToValueAtTime(.001, time + .15);
+          tone.connect(volume).connect(audio.destination);
+          tone.start(time);
+          tone.stop(time + .16);
+        }
       }
+
+      soundButton.onclick = async () => {
+        if (soundEnabled && audio?.state === 'running') {
+          soundEnabled = false;
+        } else {
+          try {
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            audio ||= new Audio();
+            await audio.resume();
+            soundEnabled = audio.state === 'running';
+            playOrderSound();
+          } catch {
+            alertMessage.textContent = 'No se pudo activar el sonido en este navegador.';
+          }
+        }
+        soundButton.setAttribute('aria-pressed', String(soundEnabled));
+        soundButton.querySelector('span').textContent = soundEnabled ? 'Silenciar' : 'Activar sonido';
+        soundButton.querySelector('svg, i')?.remove();
+        const icon = document.createElement('i');
+        icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
+        icon.setAttribute('aria-hidden', 'true');
+        soundButton.prepend(icon);
+        lucide.createIcons();
+      };
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function deductInventoryForOrder(order) {
@@ -1242,9 +1283,11 @@
       function switchRole(role) {
         if (role !== 'cliente' && !staffReady) {
           requestedRole = role;
-          document.getElementById('staff-login').showModal();
+          staffRoleSelect.value = role === 'chef' ? 'chef' : 'admin';
+          if (!login.open) login.showModal();
           return;
         }
+        if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
         ui.role = role;
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
@@ -1433,8 +1476,8 @@
               <div class="p-4 space-y-3">
                 <div class="flex items-start justify-between gap-2">
                   <div>
-                    <div class="flex items-center gap-2">
-                      <span class="font-mono-ticket text-base font-extrabold text-slate-900">${o.code}</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-mono-ticket break-all text-base font-extrabold text-slate-900">${o.code}</span>
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isDel ? 'bg-sky-100 text-sky-800' : 'bg-orange-100 text-orange-800'}">
                         ${isDel ? 'DELIVERY' : o.table + (o.takeaway ? ' · PARA LLEVAR' : ' (QR)')}
                       </span>
@@ -1457,7 +1500,7 @@
                   </div>
                 ` : ''}
 
-                <div class="border-t border-slate-100 pt-2.5 space-y-1.5 text-xs">
+                <div class="admin-order-items border-t border-slate-100 pt-2.5 space-y-1.5 text-xs">
                   ${o.items.map(it => `
                     <div>
                       <div class="font-bold text-slate-800">${it.qty}x ${it.name} <span class="text-[10px] font-semibold text-slate-400">[${it.station}]</span></div>
@@ -1471,17 +1514,17 @@
               </div>
 
               <!-- Action Footer -->
-              <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
-                <button type="button" data-admin-reprint="${o.id}" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Ver comanda</button>
-                ${canCancelOrder(o) ? '<button type="button" data-admin-cancel="' + o.id + '" class="min-h-11 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-700">Cancelar pedido</button>' : ''}
-                ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Editar comanda</button>' : ''}
+              <div class="admin-order-actions p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
+                <button type="button" data-admin-reprint="${o.id}" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold"><i data-lucide="clipboard-list" aria-hidden="true"></i> Ver comanda</button>
+                ${canCancelOrder(o) ? '<button type="button" data-admin-cancel="' + o.id + '" class="min-h-11 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-700"><i data-lucide="x-circle" aria-hidden="true"></i> Cancelar pedido</button>' : ''}
+                ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold"><i data-lucide="pencil" aria-hidden="true"></i> Editar comanda</button>' : ''}
                 ${o.status === 'POR_APROBAR' ? `
                   <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
                     <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e Imprimir BIXOLON
                   </button>
                 ` : ''}
                 ${o.status === 'EN_COCINA' ? `
-                  <span class="text-[11px] font-bold text-amber-700">Esperando cierre del Chef (${o.code})</span>
+                  <span class="text-[11px] font-bold text-amber-700">Pendiente de cocina</span>
                 ` : ''}
                 ${o.status === 'LISTO_CHEF' ? `
                   ${o.paymentStatus !== 'PAGADO' ? `
@@ -1529,7 +1572,7 @@
                       <div class="font-bold text-slate-900">${it.name}</div>
                       ${it.flavors.length ? `<div class="text-[11px] font-bold text-orange-700">Sabores: ${it.flavors.join(', ')}</div>` : ''}
                       ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
-                      ${it.note ? `<div class="text-[11px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mt-0.5">⚡ ${it.note}</div>` : ''}
+                      ${it.note ? `<div class="text-[11px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mt-0.5"><i data-lucide="message-square" class="inline h-3 w-3" aria-hidden="true"></i> ${it.note}</div>` : ''}
                     </div>
                   </div>
                 `).join('')}
@@ -2369,7 +2412,7 @@
       });
 
       // Chef Complete by Order Code
-      document.getElementById('btn-chef-complete-code').addEventListener('click', () => {
+      document.getElementById('btn-chef-complete-code').addEventListener('click', async (event) => {
         const raw = document.getElementById('chef-code-input').value.trim().toUpperCase();
         if (!raw) {
           showToast('Ingresa el código de pedido impreso en el ticket.', 'err');
@@ -2393,12 +2436,23 @@
           showToast('Este pedido no está en cocina.', 'err');
           return;
         }
-        order.status = 'LISTO_CHEF';
-        order.completedAt = nowStr();
-        document.getElementById('chef-code-input').value = '';
-        saveState();
-        renderActiveRole();
-        showToast(`¡Pedido ${order.code} COMPLETADO por el Chef! Notificado al Admin y Mozo.`);
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          await staffWrites;
+          const response = await fetch('/api/kitchen/complete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error);
+          document.getElementById('chef-code-input').value = '';
+          await syncStaff();
+          showToast('Pedido ' + order.code + ' listo.');
+        } catch (error) {
+          showToast(error.message || 'No se pudo completar el pedido.', 'err');
+        } finally {
+          button.disabled = false;
+        }
       });
 
       // Pay Mesa & Emit Boleta
@@ -2599,6 +2653,8 @@
 
       
       let staffReady = false;
+      let staffArea = null;
+      let observedOrders = null;
       let requestedRole = 'admin';
       let revision = null;
       let pendingOrder = null;
@@ -2609,7 +2665,8 @@
 
       async function syncStaff() {
         const generation = writeGeneration;
-        const response = await fetch('/api/state');
+        let response = await fetch(staffArea === 'chef' ? '/api/kitchen' : '/api/state');
+        if (response.status === 403 && !staffArea) response = await fetch('/api/kitchen');
         if (response.status === 401) {
           if (staffReady) location.reload();
           return false;
@@ -2617,18 +2674,68 @@
         if (!response.ok || writesPending) return false;
         const data = await response.json();
         if (writesPending || generation !== writeGeneration) return false;
-        const previous = new Set(state.orders.map(order => order.id));
-        state = data.state;
+        staffArea = data.role || 'admin';
+        state = staffArea === 'chef' ? { orders: data.orders } : data.state;
         revision = data.revision;
         staffReady = true;
+        document.getElementById('staff-access').hidden = true;
         document.getElementById('staff-logout').hidden = false;
-        state.orders.filter(order => order.status === 'POR_APROBAR' && !previous.has(order.id))
-          .forEach(triggerAdminPushNotification);
+        updateStaffNavigation();
+        document.getElementById('staff-alerts').hidden = false;
+        const nextOrders = new Map(state.orders.map(order => [order.id, order.status]));
+        if (observedOrders) {
+          const arrivals = state.orders.filter(order => !observedOrders.has(order.id) && ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF'].includes(order.status));
+          if (arrivals.length) {
+            alertMessage.textContent = arrivals.length === 1
+              ? 'Nuevo pedido ' + arrivals[0].code + ' · ' + (arrivals[0].channel === 'DELIVERY' ? 'Delivery' : arrivals[0].table)
+              : arrivals.length + ' pedidos nuevos';
+            arrivals.forEach(playOrderSound);
+          }
+        } else {
+          alertMessage.textContent = staffArea === 'chef' ? 'Cocina' : 'Administración · Nicol';
+        }
+        observedOrders = nextOrders;
         if (ui.role !== 'cliente') renderActiveRole();
         return true;
       }
 
       const login = document.getElementById('staff-login');
+      function updateStaffNavigation() {
+        document.querySelectorAll('#role-tabs [data-role]').forEach(button => {
+          const role = button.dataset.role;
+          button.hidden = role !== 'cliente' && (!staffReady || (staffArea === 'chef' && role !== 'chef'));
+        });
+      }
+      updateStaffNavigation();
+      const staffRoleSelect = document.getElementById('staff-role');
+      document.getElementById('staff-access').onclick = () => switchRole('admin');
+      const chefAccessDialog = document.getElementById('chef-access-dialog');
+      const chefAccessForm = document.getElementById('chef-access-form');
+      document.getElementById('btn-chef-access').onclick = () => {
+        chefAccessForm.reset();
+        document.getElementById('chef-access-error').textContent = '';
+        chefAccessDialog.showModal();
+      };
+      document.getElementById('chef-access-cancel').onclick = () => chefAccessDialog.close();
+      chefAccessForm.onsubmit = async event => {
+        event.preventDefault();
+        const password = document.getElementById('chef-new-password');
+        const errorText = document.getElementById('chef-access-error');
+        const button = chefAccessForm.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+          const response = await fetch('/api/access/chef', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: password.value }) });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error);
+          chefAccessDialog.close();
+          showToast('Clave de cocina actualizada.');
+        } catch (error) {
+          errorText.textContent = error.message;
+        } finally {
+          button.disabled = false;
+          password.value = '';
+        }
+      };
       document.getElementById('staff-login-cancel').onclick = () => login.close();
       document.getElementById('staff-login-form').onsubmit = async (event) => {
         event.preventDefault();
@@ -2638,12 +2745,15 @@
         try {
           const response = await fetch('/api/session', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: password.value })
+            body: JSON.stringify({ password: password.value, role: staffRoleSelect.value })
           });
           if (response.status === 401) throw new Error('La clave es incorrecta.');
-          if (!response.ok || !await syncStaff()) throw new Error('No se pudo iniciar sesión.');
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'No se pudo iniciar sesión.');
+          staffArea = result.role;
+          if (!await syncStaff()) throw new Error('No se pudo abrir el panel.');
           login.close();
-          switchRole(requestedRole);
+          switchRole(staffArea === 'chef' ? 'chef' : requestedRole);
         } catch (failure) {
           error.textContent = failure.message;
         } finally {
@@ -2658,7 +2768,7 @@
       };
 
       function saveState() {
-        if (!staffReady) return;
+        if (!staffReady || staffArea !== 'admin') return;
         const snapshot = JSON.stringify({ state });
         writesPending++;
         writeGeneration++;
@@ -2704,7 +2814,9 @@
       syncStaff().then((ready) => {
         if (ready && login.open) {
           login.close();
-          switchRole(requestedRole);
+          switchRole(staffArea === 'chef' ? 'chef' : requestedRole);
+        } else if (ready && !location.hash) {
+          switchRole(staffArea === 'chef' ? 'chef' : 'admin');
         }
       }).catch(() => {});
       setInterval(pollCloudflare, 4000);

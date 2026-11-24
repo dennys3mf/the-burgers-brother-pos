@@ -27,12 +27,25 @@ function equal(a, b) {
   return left.byteLength === right.byteLength && crypto.subtle.timingSafeEqual(left, right);
 }
 
-async function signedIn(request, secret) {
-  if (!secret) return false;
+async function chefCredential(db) {
+  return db.prepare('SELECT salt, digest FROM pos_chef_access WHERE id = 1').first();
+}
+
+async function passwordDigest(password, salt) {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const digest = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: encoder.encode(salt), iterations: 100000 }, key, 256);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function signedRole(request, secret, db) {
+  if (!secret) return null;
   const cookie = (request.headers.get('Cookie') || '').split(/;\s*/).find(value => value.startsWith(sessionName + '='));
-  const [expires, token] = (cookie?.split('=')[1] || '').split('.');
-  return /^\d{10}$/.test(expires) && Number(expires) > Date.now() / 1000 &&
-    !!token && equal(token, await signature(secret, expires));
+  const [role, expires, token] = (cookie?.split('=')[1] || '').split('.');
+  if (!['admin', 'chef'].includes(role) || !/^\d{10}$/.test(expires) || Number(expires) <= Date.now() / 1000 || !token) return null;
+  const credential = role === 'chef' ? await chefCredential(db) : null;
+  if (role === 'chef' && !credential) return null;
+  const signed = await signature(secret, [role, expires, credential?.digest || ''].join('.'));
+  return equal(token, signed) ? role : null;
 }
 
 function sessionCookie(value, maxAge) {
@@ -216,11 +229,15 @@ export async function onRequest({ request, env }) {
     }
     if (path === '/api/session' && method === 'POST') {
       if (!env.STAFF_PASSWORD) return reject('El acceso del personal aún no está configurado.', 503);
-      const { password } = await input(request, 1024) || {};
-      if (typeof password !== 'string' || !equal(password, env.STAFF_PASSWORD)) return reject('Clave incorrecta.', 401);
+      const { password, role = 'admin' } = await input(request, 1024) || {};
+      if (typeof password !== 'string' || !['admin', 'chef'].includes(role)) return reject('Acceso inválido.', 400);
+      const credential = role === 'chef' ? await chefCredential(db) : null;
+      if (role === 'chef' && !credential) return reject('Nicol aún debe configurar la clave de cocina.', 403);
+      const valid = credential ? equal(await passwordDigest(password, credential.salt), credential.digest) : equal(password, env.STAFF_PASSWORD);
+      if (!valid) return reject('Clave incorrecta.', 401);
       const expires = String(Math.floor(Date.now() / 1000) + sessionSeconds);
-      const token = await signature(env.STAFF_PASSWORD, expires);
-      return json({ ok: true }, 200, sessionCookie(`${expires}.${token}`, sessionSeconds));
+      const token = await signature(env.STAFF_PASSWORD, [role, expires, credential?.digest || ''].join('.'));
+      return json({ ok: true, role }, 200, sessionCookie(`${role}.${expires}.${token}`, sessionSeconds));
     }
     if (path === '/api/session' && method === 'DELETE') return json({ ok: true }, 200, sessionCookie('', 0));
     if (path === '/api/orders' && method === 'POST') return await createOrder(db, await input(request, 24000));
@@ -233,10 +250,52 @@ export async function onRequest({ request, env }) {
       return row ? json({ ok: true, status: row.status }) : reject('Pedido no encontrado.', 404);
     }
 
-    if (!await signedIn(request, env.STAFF_PASSWORD)) return reject('Inicia sesión para continuar.', 401);
+    const role = await signedRole(request, env.STAFF_PASSWORD, db);
+    if (!role) return reject('Inicia sesión para continuar.', 401);
+    if (path === '/api/kitchen' && method === 'GET') {
+      const row = await db.prepare('SELECT payload FROM pos_state WHERE id = 1').first();
+      const orders = row ? JSON.parse(row.payload).orders : [];
+      return json({ ok: true, role, orders: orders.filter(order => ['POR_APROBAR','EN_COCINA','LISTO_CHEF'].includes(order.status))
+        .map(({ id, code, num, table, channel, status, takeaway, items, note }) => ({
+          id, code, num, table, channel, status, takeaway, note: status === 'POR_APROBAR' ? '' : note,
+          items: status === 'POR_APROBAR' ? [] : items.filter(item => item.menuId !== 'delivery-card-fee').map(({ name, qty, flavors, extras, note }) => ({
+            name, qty, flavors: flavors || [], extras: (extras || []).map(({ name }) => ({ name })), note
+          }))
+        })) });
+    }
+    if (path === '/api/kitchen/complete' && method === 'POST') {
+      const { id } = await input(request, 1024) || {};
+      if (typeof id !== 'string') return reject('Pedido inválido.', 400);
+      const row = await db.prepare('SELECT payload, revision FROM pos_state WHERE id = 1').first();
+      if (!row) return reject('Pedido no encontrado.', 404);
+      const state = JSON.parse(row.payload);
+      const order = state.orders.find(entry => entry.id === id);
+      if (order?.status !== 'EN_COCINA') return reject('El pedido ya no está en cocina.', 409);
+      order.status = 'LISTO_CHEF';
+      order.completedAt = new Date().toISOString();
+      const next = crypto.randomUUID();
+      const [result] = await db.batch([
+        db.prepare("UPDATE pos_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
+          .bind(JSON.stringify(state), next, row.revision),
+        db.prepare("UPDATE pos_orders SET status = 'LISTO_CHEF', completed_at = ? WHERE id = ? AND EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)")
+          .bind(order.completedAt, order.id, next)
+      ]);
+      return result.meta.changes ? json({ ok: true }) : reject('El pedido cambió. Vuelve a intentarlo.', 409);
+    }
+    if (role !== 'admin') return reject('Solo Admin puede acceder a esta sección.', 403);
+    if (path === '/api/access/chef' && method === 'PUT') {
+      const { password } = await input(request, 1024) || {};
+      if (typeof password !== 'string' || password.length < 8 || password.length > 100 ||
+          equal(password, env.STAFF_PASSWORD)) return reject('Usa una clave distinta a la de Admin, de 8 a 100 caracteres.', 400);
+      const salt = crypto.randomUUID();
+      const digest = await passwordDigest(password, salt);
+      await db.prepare('INSERT INTO pos_chef_access (id, salt, digest) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET salt = excluded.salt, digest = excluded.digest')
+        .bind(salt, digest).run();
+      return json({ ok: true });
+    }
     if (path === '/api/state' && method === 'GET') {
       const row = await db.prepare('SELECT payload, revision, updated_at FROM pos_state WHERE id = 1').first();
-      return json({ ok: true, state: row ? JSON.parse(row.payload) : initialState(),
+      return json({ ok: true, role, state: row ? JSON.parse(row.payload) : initialState(),
         revision: row?.revision || null, updatedAt: row?.updated_at || null });
     }
     if (path === '/api/state' && method === 'PUT') {
