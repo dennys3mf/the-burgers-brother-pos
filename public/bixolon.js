@@ -35,7 +35,13 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     functions.func2 = { setCharacterset: [1252] };
     const printText = value => ({ printText: [value, 0, 0, false, false, false, 0, 0] });
     const feed = '\n\n\n\n';
-    functions.func3 = printText(text.trimEnd() + (qrCode ? '\n' : feed));
+    const heading = "THE BURGERS BROTHER\n";
+    const brandedReceipt = !qrCode && text.startsWith(heading);
+    if (brandedReceipt) {
+      functions.func3 = { printText: ["THE BURGERS\nBROTHER\n", 1, 1, true, false, false, 0, 1] };
+    }
+    const body = brandedReceipt ? text.slice(heading.length) : text;
+    functions[brandedReceipt ? "func4" : "func3"] = printText(body.trimEnd() + (qrCode ? '\n' : feed));
     if (qrCode) {
       functions.func4 = { printQRCode: [qrCode, 1, 1, 6, 1] };
       functions.func5 = printText(feed);

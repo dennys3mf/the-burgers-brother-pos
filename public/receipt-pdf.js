@@ -14,7 +14,8 @@ export function receiptPdf(Pdf, order, issuedAt) {
     });
   }
   const rule = () => lines.push({ rule: true });
-  add('THE BURGERS BROTHER', { bold: true, center: true, size: 12 });
+  add('THE BURGERS', { bold: true, center: true, size: 17 });
+  add('BROTHER', { bold: true, center: true, size: 17 });
   add('Pedidos / WhatsApp: 958656930', { center: true });
   add('Arequipa, Perú', { center: true });
   rule();
