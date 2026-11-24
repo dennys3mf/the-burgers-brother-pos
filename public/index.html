@@ -89,11 +89,11 @@
       display: none;
     }
     @media print {
-      @page { margin: 0; size: 80mm auto; }
+      @page { margin: 0; size: auto; }
       html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
       body > *:not(#thermal-print-area) { display: none !important; }
-      #thermal-print-area { display: block !important; width: 78mm !important; }
-      #thermal-print-area .thermal-paper { box-shadow: none !important; width: 76mm !important; padding: 4mm 2mm !important; font-size: 11px !important; }
+      #thermal-print-area { display: block !important; width: 80mm !important; }
+      #thermal-print-area .thermal-paper { box-shadow: none !important; width: 80mm !important; box-sizing: border-box; padding: 4mm !important; font-size: 11px !important; }
     }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
@@ -611,7 +611,7 @@
       <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
         <div>
           <h3 id="bixolon-modal-title" class="font-extrabold text-sm text-slate-900">Impresión Térmica — BIXOLON SPP-R310BK (80 mm)</h3>
-          <p class="text-xs text-slate-500">Formato BXL/POS 72 mm útiles • 5 saltos finales para corte manual</p>
+          <p class="text-xs text-slate-500">Imprime con el sistema o comparte el PDF con BIXOLON mPrint por Bluetooth.</p>
         </div>
         <button type="button" data-close-modal="modal-bixolon" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
@@ -622,6 +622,9 @@
         </button>
         <button type="button" id="btn-bixolon-print-boleta" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5">
           <i data-lucide="receipt" class="w-4 h-4"></i> Imprimir Boleta Interna
+        </button>
+        <button type="button" id="btn-bixolon-share-boleta" hidden disabled class="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold">
+          Compartir / descargar PDF
         </button>
         <button type="button" id="btn-bixolon-escpos" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
           BXL/POS (.txt)
@@ -762,6 +765,7 @@
 
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
+    import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js';
 
     (function () {
@@ -925,7 +929,7 @@
       function buildBoletaHTML(order) {
         const sub = order.total / 1.18;
         const igv = order.total - sub;
-        const boletaNum = order.boletaNum || `BI-001-${pad(state.counters.boleta, 5)}`;
+        const boletaNum = order.boletaNum;
 
         const rows = order.items.map(it => `
           <tr>
@@ -950,7 +954,7 @@
             <div>Pedido: ${order.code} (${order.channel === 'MESA' ? order.table : 'Delivery'})</div>
             <div>Cliente: ${order.customer}</div>
             ${order.channel === 'DELIVERY' && order.address ? `<div>Dir: ${order.address}</div>` : ''}
-            <div>Fecha: ${nowStr()}</div>
+            <div>Fecha: ${receiptDate(order) || "—"}</div>
             <div class="thermal-line"></div>
             <table style="width:100%;border-collapse:collapse;font-size:inherit;">
               <thead>
@@ -996,15 +1000,49 @@
         return out;
       }
 
-      function openBixolonModal(order, showBoleta = false) {
+      function receiptDate(order) {
+        return state.boletas.find(receipt => receipt.boletaNum === order.boletaNum)?.date;
+      }
+
+      const shareReceipt = document.getElementById('btn-bixolon-share-boleta');
+      const printReceipt = document.getElementById('btn-bixolon-print-boleta');
+      let pdfLibrary;
+      function loadPdf() {
+        pdfLibrary ||= new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = './vendor/jspdf.umd.min.js';
+          script.onload = () => window.jspdf?.jsPDF ? resolve(window.jspdf.jsPDF) : reject(new Error('PDF'));
+          script.onerror = () => reject(new Error('PDF'));
+          document.head.append(script);
+        }).catch(error => {
+          pdfLibrary = null;
+          throw error;
+        });
+        return pdfLibrary;
+      }
+
+      function openBixolonModal(order) {
         ui.activeBixolonOrder = order;
+        printReceipt.classList.toggle('hidden', !order.boletaNum);
+        shareReceipt.hidden = !order.boletaNum;
+        shareReceipt.disabled = true;
+        if (order.boletaNum) {
+          loadPdf().then(() => {
+            if (ui.activeBixolonOrder === order) shareReceipt.disabled = false;
+          }).catch(() => {
+            if (ui.activeBixolonOrder === order) {
+              shareReceipt.hidden = true;
+              showToast('No se pudo cargar el PDF. Puedes usar Imprimir boleta.', 'err');
+            }
+          });
+        }
         document.getElementById('bixolon-modal-title').textContent = `BIXOLON SPP-R310BK — Pedido ${order.code}`;
         document.getElementById('bixolon-modal-body').innerHTML = `
           <div class="flex flex-col items-center gap-2">
             <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-extrabold">Comanda Mozo / Cocina</span>
             ${buildComandaHTML(order)}
           </div>
-          ${showBoleta || order.boletaNum ? `
+          ${order.boletaNum ? `
             <div class="flex flex-col items-center gap-2">
               <span class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-extrabold">Boleta Interna</span>
               ${buildBoletaHTML(order)}
@@ -1660,8 +1698,8 @@
 
           saveState();
           renderActiveRole();
-          showToast(`Pedido ${order.code} aprobado. Comanda enviada a la BIXOLON SPP-R310BK y al Chef.`);
-          openBixolonModal(order, order.channel === 'DELIVERY');
+          showToast(`Pedido ${order.code} aprobado. Comanda disponible para imprimir y enviada al Chef.`);
+          openBixolonModal(order);
           return;
         }
 
@@ -1680,14 +1718,14 @@
         const repBtn = e.target.closest('[data-admin-reprint]');
         if (repBtn) {
           const order = state.orders.find(o => o.id === repBtn.dataset.adminReprint);
-          if (order) openBixolonModal(order, false);
+          if (order) openBixolonModal(order);
           return;
         }
 
         const repBol = e.target.closest('[data-admin-reprint-boleta]');
         if (repBol) {
           const order = state.orders.find(o => o.id === repBol.dataset.adminReprintBoleta);
-          if (order) openBixolonModal(order, true);
+          if (order) openBixolonModal(order);
           return;
         }
 
@@ -1710,7 +1748,7 @@
           saveState();
           renderActiveRole();
           showToast(`Pedido ${order.code} despachado con Boleta Interna ${order.boletaNum}.`);
-          openBixolonModal(order, true);
+          openBixolonModal(order);
           return;
         }
 
@@ -2029,7 +2067,7 @@
         closeModal('modal-pay-mesa');
         renderActiveRole();
         showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`);
-        openBixolonModal(order, true);
+        openBixolonModal(order);
       });
 
       // Bixolon print buttons
@@ -2037,7 +2075,32 @@
         if (ui.activeBixolonOrder) printThermal(buildComandaHTML(ui.activeBixolonOrder));
       });
       document.getElementById('btn-bixolon-print-boleta').addEventListener('click', () => {
-        if (ui.activeBixolonOrder) printThermal(buildBoletaHTML(ui.activeBixolonOrder));
+        if (ui.activeBixolonOrder?.boletaNum) printThermal(buildBoletaHTML(ui.activeBixolonOrder));
+      });
+      shareReceipt.addEventListener('click', async () => {
+        const order = ui.activeBixolonOrder;
+        if (!order?.boletaNum || !window.jspdf?.jsPDF) return;
+        try {
+          const blob = receiptPdf(window.jspdf.jsPDF, order, receiptDate(order));
+          const name = 'boleta-' + order.boletaNum + '.pdf';
+          const file = new File([blob], name, { type: 'application/pdf' });
+          if (navigator.canShare?.({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file] });
+              return;
+            } catch (error) {
+              if (error.name === 'AbortError') return;
+            }
+          }
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = name;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        } catch {
+          showToast('No se pudo crear el PDF. Puedes usar Imprimir boleta.', 'err');
+        }
       });
       document.getElementById('btn-bixolon-escpos').addEventListener('click', () => {
         if (!ui.activeBixolonOrder) return;
