@@ -1,3 +1,5 @@
+import { receiptLogo } from './receipt-logo.js';
+
 const statusCommand = { checkPrinterStatus: [] };
 
 async function request(url, data) {
@@ -38,7 +40,7 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     const heading = "THE BURGERS BROTHER\n";
     const brandedReceipt = !qrCode && text.startsWith(heading);
     if (brandedReceipt) {
-      functions.func3 = { printText: ["THE BURGERS\nBROTHER\n", 1, 1, true, false, false, 0, 1] };
+      functions.func3 = { printBitmap: [receiptLogo, 384, 1, false] };
     }
     const body = brandedReceipt ? text.slice(heading.length) : text;
     functions[brandedReceipt ? "func4" : "func3"] = printText(body.trimEnd() + (qrCode ? '\n' : feed));

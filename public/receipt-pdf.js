@@ -1,3 +1,5 @@
+import { receiptLogo } from './receipt-logo.js';
+
 // BIXOLON paper is 80 mm wide, with a 72 mm printable area.
 export function receiptPdf(Pdf, order, issuedAt) {
   const total = Number(order.total);
@@ -14,8 +16,7 @@ export function receiptPdf(Pdf, order, issuedAt) {
     });
   }
   const rule = () => lines.push({ rule: true });
-  add('THE BURGERS', { bold: true, center: true, size: 17 });
-  add('BROTHER', { bold: true, center: true, size: 17 });
+  lines.push({ logo: true });
   add('Pedidos / WhatsApp: 958656930', { center: true });
   add('Arequipa, Perú', { center: true });
   rule();
@@ -40,7 +41,7 @@ export function receiptPdf(Pdf, order, issuedAt) {
   add('No válido como comprobante SUNAT', { center: true, size: 8 });
 
   // Keep long receipts within limits of mobile PDF viewers and print services.
-  const heightOf = row => row.rule ? 4 : row.size * .46;
+  const heightOf = row => row.logo ? 32 : row.rule ? 4 : row.size * .46;
   const chunks = [[]];
   let height = 0;
   for (const row of lines) {
@@ -57,7 +58,9 @@ export function receiptPdf(Pdf, order, issuedAt) {
     if (page) doc.addPage(format(rows), 'portrait');
     let y = 7;
     for (const row of rows) {
-      if (row.rule) {
+      if (row.logo) {
+        doc.addImage(receiptLogo, 'PNG', 16, y - 3, 48, 48 * 235 / 384);
+      } else if (row.rule) {
         doc.setDrawColor(0);
         doc.line(4, y - 1.5, 76, y - 1.5);
       } else {
