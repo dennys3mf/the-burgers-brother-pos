@@ -538,6 +538,24 @@
         </div>
         <p id="cust-error" role="alert" class="text-sm text-rose-700" hidden></p>
 
+        <fieldset id="cust-creams" hidden class="space-y-2">
+          <legend class="font-bold text-slate-800">Cremas para las papas</legend>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
+              <input type="checkbox" name="cream" value="Mayonesa" class="h-4 w-4 accent-amber-600"> Mayonesa
+            </label>
+            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
+              <input type="checkbox" name="cream" value="Kétchup" class="h-4 w-4 accent-amber-600"> Kétchup
+            </label>
+            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
+              <input type="checkbox" name="cream" value="Mostaza" class="h-4 w-4 accent-amber-600"> Mostaza
+            </label>
+            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
+              <input type="checkbox" name="cream" value="Ají" class="h-4 w-4 accent-amber-600"> Ají
+            </label>
+          </div>
+        </fieldset>
+
         <!-- Kitchen Note -->
         <div>
           <label for="cust-note" class="block font-bold text-slate-800 mb-1">Indicaciones para cocina / barra</label>
@@ -1615,6 +1633,8 @@
 
       // ==================== CUSTOMIZE ITEM MODAL ====================
       const customizeDialog = document.getElementById('modal-customize');
+      const creamPicker = document.getElementById('cust-creams');
+      const creamBoxes = [...creamPicker.querySelectorAll('input')];
       const drinkSelect = document.getElementById('cust-drink');
       const customizeError = document.getElementById('cust-error');
       let custSelectedFlavors = [];
@@ -1630,6 +1650,10 @@
         document.getElementById('cust-title').textContent = m.name;
         document.getElementById('cust-desc').textContent = m.desc;
         document.getElementById('cust-note').value = '';
+        const hasFries = m.recipe?.some(({ id }) => id === 'ing_papas');
+        creamPicker.hidden = !hasFries;
+        creamPicker.disabled = !hasFries;
+        creamBoxes.forEach(box => { box.checked = false; });
         customizeError.hidden = true;
         const options = drinkOptions[m.id];
         document.getElementById('cust-drink-wrap').hidden = !options;
@@ -2016,6 +2040,8 @@
           return;
         }
         const extraSum = custSelectedExtras.reduce((s, ex) => s + ex.price, 0);
+        const creams = creamBoxes.filter(box => box.checked).map(box => box.value);
+        const selectedCreams = creams.length ? 'Cremas: ' + creams.join(', ') : '';
         ui.clientCart.push({
           menuId: m.id,
           name: m.name,
@@ -2025,7 +2051,11 @@
           unitPrice: m.price + extraSum,
           extras: [...custSelectedExtras],
           flavors: [...custSelectedFlavors],
-          note: [drinkSelect.disabled ? '' : drinkSelect.value, document.getElementById('cust-note').value.trim()].filter(Boolean).join(' · ')
+          note: [
+            creamPicker.disabled ? '' : selectedCreams,
+            drinkSelect.disabled ? '' : drinkSelect.value,
+            document.getElementById('cust-note').value.trim()
+          ].filter(Boolean).join(' · ').slice(0, 240)
         });
         customizeDialog.close();
         renderClientCart();
