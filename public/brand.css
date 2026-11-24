@@ -126,3 +126,44 @@ body { background: var(--paper); color: var(--ink); }
 @media print {
   body { background: #fff; color: #000; }
 }
+
+@media screen and (max-width: 767px), screen and (max-height: 500px) {
+  .brand-bar { padding-top: env(safe-area-inset-top); }
+  .brand-bar, main {
+    padding-inline-start: env(safe-area-inset-left);
+    padding-inline-end: env(safe-area-inset-right);
+  }
+  main { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  #toast-container { bottom: max(1rem, env(safe-area-inset-bottom)); }
+  #role-tabs .role-tab, #staff-logout,
+  #admin-filter-tabs button, .gestion-tab,
+  #view-admin button, #view-chef button, #view-gestion button,
+  #client-cart button, #client-categories button, #client-menu-grid button,
+  [id^="modal-"] button { min-height: 44px; }
+  [data-close-modal] { min-width: 44px; }
+  #client-cart :is([data-cc-inc], [data-cc-dec]) { width: 44px; height: 44px; }
+  #client-cart-items { max-height: none; }
+  #client-cart :is(input, select), #staff-login input,
+  [id^="modal-"] :is(input:not([type="checkbox"]):not([type="hidden"]), select, textarea) {
+    font-size: 16px;
+    min-width: 0;
+  }
+  #role-tabs, .role-view, #client-cart, #view-cliente .grid > div,
+  #view-chef .grid > div, .gestion-panel .grid > div { min-width: 0; }
+  .gestion-panel [role="region"] { max-width: 100%; }
+  .gestion-panel table { min-width: 30rem; }
+  div[id^="modal-"].fixed {
+    padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right))
+      max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left));
+  }
+  div[id^="modal-"].fixed > div {
+    max-height: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  #bixolon-modal-body { flex: 0 0 auto; padding: .75rem; }
+  #bixolon-modal-body > div, #bixolon-modal-body .thermal-paper { max-width: 100%; overflow-wrap: anywhere; }
+  #modal-customize { max-height: calc(100dvh - 1rem); overscroll-behavior: contain; }
+  #form-customize { max-height: none; overflow: visible; font-size: .875rem; }
+  #cust-flavors-grid button, #cust-extras-list button { min-height: 44px; }
+}
