@@ -1,0 +1,128 @@
+:root {
+  --ink: #181311;
+  --charcoal: #241a15;
+  --paper: #f5ecdc;
+  --cream: #fff9ec;
+  --line: #e1d0b8;
+  --gold: #ffc346;
+  --rust: #a93f22;
+  --display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+}
+
+body { background: var(--paper); color: var(--ink); }
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #a7521c;
+  outline-offset: 3px;
+}
+:where(button):not(:disabled) { cursor: pointer; }
+:where(button):disabled { opacity: .65; cursor: wait; }
+
+.brand-bar { background: var(--ink); border-color: #4c3425; box-shadow: none; }
+.brand-lockup { display: flex; align-items: center; gap: .75rem; color: var(--cream); }
+.brand-mark {
+  display: grid; place-items: center; width: 38px; height: 38px;
+  border: 1px solid #805731; color: var(--gold); border-radius: 50%;
+}
+.brand-name { font: 800 1.32rem/.95 var(--display); letter-spacing: .04em; }
+#role-tabs { min-width: 0; scrollbar-width: thin; }
+#role-tabs .role-tab { min-height: 40px; padding-inline: .75rem; font-size: .82rem; transition: none; }
+#role-tabs .role-tab[aria-current="page"] { background: var(--gold); color: var(--ink); }
+#role-tabs .role-tab:focus-visible, .customer-hero :focus-visible, .menu-browser :focus-visible {
+  outline-color: var(--gold);
+}
+#staff-logout { color: var(--cream); text-decoration: underline; text-underline-offset: .25em; }
+#staff-login { margin: auto; }
+#staff-login::backdrop, #modal-customize::backdrop { background: rgb(24 19 17 / 77%); }
+#staff-login button, #modal-customize button[type="submit"] { min-height: 44px; }
+
+.customer-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap;
+  min-height: 203px; gap: 1rem 1.5rem; padding: clamp(1rem, 2.8vw, 2rem);
+  border: 1px solid #684424; border-radius: 18px;
+  background: #1e1510; color: var(--cream);
+}
+.customer-hero::before {
+  content: ''; position: absolute; z-index: -2; inset: 0 0 0 auto;
+  width: min(61%, 650px); background: url('./carta/burger-carta.webp') 68% 26% / cover no-repeat;
+  mask-image: linear-gradient(90deg, transparent, black 29%);
+}
+.customer-hero::after {
+  content: ''; position: absolute; z-index: -1; inset: 0;
+  background: linear-gradient(90deg, #1c130f 27%, rgb(28 19 15 / .86) 49%, rgb(28 19 15 / .17) 100%);
+}
+.customer-hero h1 { font: 800 clamp(2.6rem, 5.8vw, 5rem)/.88 var(--display); text-transform: uppercase; max-width: 10ch; }
+.customer-hero p { margin-top: .65rem; font-size: .83rem; color: #f4d8ac; }
+.customer-hero-controls { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.order-modes { display: flex; padding: 3px; gap: 3px; border-radius: 11px; background: #2b1e16; }
+.customer-hero-controls button, .customer-hero-controls select { min-height: 44px; }
+.customer-hero-controls select { background: #2b1e16; color: #ffdc8f; border-color: #845332; }
+#btn-show-qr { background: #2b1e16; border: 1px solid #845332; color: var(--cream); }
+#btn-show-qr:hover { background: #483020; }
+.order-modes button[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+
+.menu-browser {
+  background: var(--charcoal); color: var(--cream); border-color: #4a3123;
+  padding: clamp(.75rem, 2.2vw, 1.5rem);
+}
+.menu-title, .operator-title, .cart-heading { font: 800 clamp(1.75rem, 3vw, 2.65rem)/1 var(--display); }
+.menu-modes { padding-block: .5rem; border-top: 1px solid #573b2b; border-bottom: 1px solid #573b2b; }
+.menu-browser .carta-controls button { background: #34241b; color: #fff2d7; }
+.menu-browser .carta-controls button[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+.menu-browser .carta-controls button:hover:not([aria-pressed="true"]) { background: #4a3326; }
+.menu-browser .carta-cart-link { color: #281a10; background: var(--gold); }
+.menu-browser .carta-caption { font-size: .825rem; color: #f1d8b7; }
+.menu-browser #carta-page-select { background: #34241b; color: var(--cream); border: 1px solid #8a6449; }
+.menu-browser .carta-sheet { max-width: 650px; border-radius: 7px; outline: 1px solid #674934; }
+.menu-browser .carta-spot { border-inline-start-color: var(--gold); }
+.menu-browser .carta-spot:focus-visible { outline-color: white; }
+#client-cart { border-color: var(--line); background: var(--cream); }
+#client-cart .cart-heading { font-size: 1.8rem; }
+#client-cart [data-cc-inc], #client-cart [data-cc-dec] { width: 36px; height: 36px; }
+#btn-submit-client-order, #btn-chef-complete-code {
+  background: var(--gold); color: var(--ink); box-shadow: none; min-height: 48px; font-weight: 800;
+}
+#btn-submit-client-order:hover, #btn-chef-complete-code:hover { background: #ffda82; }
+#view-cliente input:not([type="hidden"]), #view-cliente select, #modal-customize input, #modal-customize select { font-size: 1rem; }
+#client-cart input::placeholder, #client-cart textarea::placeholder { color: #785f4b; }
+
+.operator-head { border-left: 4px solid #c77c31; box-shadow: none; }
+.operator-title { color: var(--ink); }
+.operator-caption { font-size: .875rem; line-height: 1.5; }
+#admin-filter-tabs { flex-wrap: wrap; }
+#admin-filter-tabs button, .gestion-tab { min-height: 40px; }
+#admin-orders-grid > div, #chef-orders-list > div { box-shadow: none; }
+.chef-keypad { background: var(--ink); border-color: #5d432e; color: var(--cream); box-shadow: none; }
+.chef-keypad h2 { color: var(--cream); }
+.chef-keypad .numpad-btn { min-height: 50px; }
+.chef-keypad input { color: var(--gold); }
+.management-nav .gestion-tab { display: flex; align-items: center; gap: .45rem; white-space: nowrap; }
+.management-nav svg { width: 16px; height: 16px; }
+.gestion-panel table th, .gestion-panel table td { padding-block: .75rem; }
+.gestion-panel table tbody tr:hover { background: #f8ecda; }
+.gestion-panel table thead { color: #564333; }
+#modal-customize, #staff-login { background: var(--cream); color: var(--ink); border: 1px solid var(--line); }
+
+@media (max-width: 600px) {
+  .brand-bar > div { height: auto; min-height: 60px; gap: .4rem; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-name { display: none; }
+  #role-tabs .role-tab { padding-inline: .5rem; }
+  #role-tabs .role-tab svg { display: none; }
+  #staff-logout { font-size: .69rem; }
+  .customer-hero { min-height: 0; gap: .85rem; }
+  .customer-hero::before { width: 65%; }
+  .customer-hero::after { background: linear-gradient(90deg, #1c130f 10%, rgb(28 19 15 / .82) 47%, rgb(28 19 15 / .22) 100%); }
+  .customer-hero h1 { max-width: 8em; font-size: clamp(2.55rem, 10.5vw, 3.4rem); }
+  .customer-hero p { margin-top: .4rem; }
+  .customer-hero-controls { gap: .35rem; }
+  .customer-hero-controls button, .customer-hero-controls select { font-size: .73rem; }
+  .menu-browser #carta-page-select { display: block; }
+  .menu-browser .carta-controls button, .menu-browser .carta-cart-link { padding-inline: .65rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+@media print {
+  body { background: #fff; color: #000; }
+}

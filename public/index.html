@@ -5,11 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Burgers Brother — Sistema QR, Admin, BIXOLON SPP-R310 y Chef</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            white: '#fff9ec',
+            slate: {
+              50: '#fcf3e5', 100: '#f5e9d7', 200: '#e5d3bd', 300: '#d4bba0',
+              400: '#a78a6e', 500: '#785f4b', 600: '#654d3d', 700: '#523b2d',
+              800: '#38271e', 900: '#271b15', 950: '#181311'
+            },
+            amber: { 400: '#ffd374', 500: '#ffc346', 600: '#a95812', 700: '#87400e' },
+            orange: { 500: '#c65c31', 600: '#a93f22', 700: '#8c331c' },
+            sky: { 50: '#ecf1df', 100: '#e0ebd0', 200: '#bed1ae', 500: '#507754',
+                   600: '#366444', 700: '#2d5439', 800: '#22432e', 900: '#193324' }
+          }
+        }
+      }
+    };
+  </script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -78,8 +98,9 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
+<link rel="stylesheet" href="./brand.css">
 </head>
-<body class="bg-slate-100 text-slate-900 antialiased overflow-x-hidden">
+<body class="antialiased overflow-x-hidden">
 
   <!-- THERMAL PRINT TARGET (BIXOLON SPP-R310BK 80mm) -->
   <div id="thermal-print-area"></div>
@@ -91,17 +112,14 @@
   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[95] flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none"></div>
 
   <!-- TOP NAVIGATION BAR (4-ACTOR SWITCHER) -->
-  <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-md">
+  <header class="brand-bar sticky top-0 z-40 border-b">
     <div class="max-w-7xl mx-auto px-3 sm:px-5 h-16 flex items-center justify-between gap-3">
       <!-- Brand -->
-      <div class="flex items-center gap-2.5 shrink-0">
-        <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold shadow-sm">
+      <div class="brand-lockup shrink-0">
+        <div class="brand-mark" aria-hidden="true">
           <i data-lucide="flame" class="w-5 h-5"></i>
         </div>
-        <div class="leading-tight hidden sm:block">
-          <div class="font-extrabold text-sm tracking-tight text-amber-400">THE BURGERS BROTHER</div>
-          <div class="text-[11px] text-slate-400">QR • Admin • BIXOLON SPP-R310 • Chef</div>
-        </div>
+        <span class="brand-name">THE BURGERS BROTHER</span>
       </div>
 
       <dialog id="staff-login" class="rounded-xl p-5 w-80 max-w-[90vw]">
@@ -114,24 +132,24 @@
         </form>
       </dialog>
       <button id="staff-logout" hidden type="button" class="text-xs font-semibold">Cerrar sesión</button>
-      <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1" id="role-tabs">
+      <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1" id="role-tabs" aria-label="Secciones del POS">
         <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
           <i data-lucide="qr-code" class="w-4 h-4"></i>
-          <span>1. Carta QR / Delivery</span>
+          <span>Carta</span>
         </button>
         <button type="button" data-role="admin" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
           <i data-lucide="bell-ring" class="w-4 h-4"></i>
-          <span>2. Admin</span>
+          <span>Admin</span>
           <span id="badge-admin-pending" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-extrabold">0</span>
         </button>
         <button type="button" data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
           <i data-lucide="chef-hat" class="w-4 h-4"></i>
-          <span>3. App Chef</span>
+          <span>Chef</span>
           <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
         </button>
         <button type="button" data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
           <i data-lucide="database" class="w-4 h-4"></i>
-          <span>4. Gestión y Caja</span>
+          <span>Gestión</span>
         </button>
       </nav>
     </div>
@@ -143,18 +161,18 @@
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
       <!-- Mode Banner -->
-      <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div class="customer-hero">
         <div>
-          <h1 class="text-lg sm:text-xl font-extrabold">The Burgers Brother</h1>
-          <p class="text-xs text-slate-300 mt-0.5">Mesa o delivery con prepago</p>
+          <h1>The Burgers Brother</h1>
+          <p>Carta y pedidos</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="bg-slate-800 p-1 rounded-xl flex items-center gap-1">
-            <button type="button" id="btn-mode-mesa" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">🍽️ En Mesa (QR)</button>
-            <button type="button" id="btn-mode-delivery" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">🛵 Delivery (Prepago)</button>
+        <div class="customer-hero-controls">
+          <div class="order-modes" aria-label="Tipo de pedido">
+            <button type="button" id="btn-mode-mesa" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">En mesa</button>
+            <button type="button" id="btn-mode-delivery" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">Delivery</button>
           </div>
-          <select id="client-mesa-select" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400 focus:outline-none">
+          <select id="client-mesa-select" aria-label="Número de mesa" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400 focus:outline-none">
             <option value="Mesa 1">Mesa 1</option>
             <option value="Mesa 2">Mesa 2</option>
             <option value="Mesa 3">Mesa 3</option>
@@ -178,21 +196,21 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         <!-- Menu Catalog -->
         <div class="lg:col-span-8 space-y-4">
-          <section class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 space-y-3" aria-labelledby="carta-title">
+          <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="carta-title" class="text-lg font-extrabold">Elige de la carta</h2>
+              <h2 id="carta-title" class="menu-title">La carta</h2>
               <a id="carta-cart-link" class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
             </div>
-            <div class="carta-controls" aria-label="Formato de la carta">
+            <div class="carta-controls menu-modes" aria-label="Formato de la carta">
               <button type="button" data-menu-format="visual" aria-pressed="true">Carta ilustrada</button>
               <button type="button" data-menu-format="list" aria-pressed="false">Buscar en la carta</button>
             </div>
             <div id="carta-visual" class="space-y-3">
               <div id="carta-pages" class="carta-controls" aria-label="Páginas de la carta"></div>
               <select id="carta-page-select" aria-label="Categoría de la carta" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 font-semibold"></select>
-              <p class="text-sm text-slate-600">Toca el nombre, la descripción o el precio para elegir.</p>
+              <p class="carta-caption">Toca un plato para personalizarlo.</p>
               <div id="carta-sheet" class="carta-sheet"></div>
-              <p id="carta-drinks-note" class="text-sm text-slate-600" hidden>Las bebidas de 300 ml y los frost se consultan con el personal.</p>
+              <p id="carta-drinks-note" class="carta-caption" hidden>Las bebidas de 300 ml y los frost se consultan con el personal.</p>
             </div>
           </section>
           <div id="carta-list" hidden class="space-y-3">
@@ -212,7 +230,7 @@
         <div id="client-cart" class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-20">
           <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div>
-              <h2 class="font-extrabold text-sm text-slate-900">Tu Pedido</h2>
+              <h2 class="cart-heading">Tu pedido</h2>
               <p id="client-cart-origin" class="text-xs text-amber-700 font-semibold">Mesa 4 (Escaneado por QR)</p>
             </div>
             <button type="button" id="btn-client-clear" class="text-xs font-semibold text-rose-600 hover:underline">Vaciar</button>
@@ -257,7 +275,7 @@
 
             <button type="button" id="btn-submit-client-order" class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 transition-all">
               <i data-lucide="send" class="w-4 h-4"></i>
-              <span id="btn-submit-client-label">Enviar Pedido al Admin</span>
+              <span id="btn-submit-client-label">Enviar pedido</span>
             </button>
           </div>
         </div>
@@ -266,14 +284,10 @@
 
     <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
     <section id="view-admin" class="role-view hidden space-y-5">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <div class="inline-flex items-center gap-2 text-xs font-bold text-orange-600 mb-1">
-            <i data-lucide="bell-ring" class="w-4 h-4"></i>
-            <span>TELÉFONO DEL ADMIN — APROBACIÓN Y BOLETERA BIXOLON SPP-R310BK</span>
-          </div>
-          <h2 class="text-lg font-extrabold text-slate-900">Bandeja de Pedidos Entrantes</h2>
-          <p class="text-xs text-slate-500">Ningún pedido pasa a cocina ni se imprime en la boletera hasta que presiones <b>Aprobar e Imprimir</b>.</p>
+          <h2 class="operator-title">Pedidos</h2>
+          <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
@@ -295,11 +309,11 @@
     <section id="view-chef" class="role-view hidden">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <!-- Mobile Chef Keypad (Left 5 cols) -->
-        <div class="lg:col-span-5 bg-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+        <div class="chef-keypad lg:col-span-5 rounded-2xl p-5 sm:p-6 border space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Interfaz Móvil del Chef</div>
-              <h2 class="text-lg font-extrabold">Completar por Código</h2>
+              <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Cocina</div>
+              <h2 class="operator-title">Completar comanda</h2>
             </div>
             <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
               <i data-lucide="chef-hat" class="w-5 h-5"></i>
@@ -340,8 +354,8 @@
         <div class="lg:col-span-7 space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between">
             <div>
-              <h3 class="font-extrabold text-slate-900 text-sm">Comandas Aprobadas en Cocina</h3>
-              <p class="text-xs text-slate-500">Solo aparecen pedidos ya aprobados por el Admin e impresos en la boletera. Toca cualquier código para cargarlo en el teclado.</p>
+              <h3 class="operator-title">Comandas activas</h3>
+              <p class="text-xs text-slate-500">Toca una comanda para cargar su código.</p>
             </div>
             <span id="chef-active-count" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">0 activos</span>
           </div>
@@ -353,12 +367,13 @@
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
     <section id="view-gestion" class="role-view hidden space-y-5">
-      <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-1.5 overflow-x-auto">
-          <button type="button" data-subtab="inventario" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">📦 Inventario (Insumos)</button>
-          <button type="button" data-subtab="kardex" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">🔄 Kardex</button>
-          <button type="button" data-subtab="proveedores" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">🚚 Proveedores y Compras</button>
-          <button type="button" data-subtab="caja" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold">💰 Caja y Boletas Internas</button>
+      <div class="operator-head management-nav bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-3">
+        <h2 class="operator-title">Gestión</h2>
+        <div class="flex flex-wrap items-center gap-1.5" aria-label="Módulos de gestión">
+          <button type="button" data-subtab="inventario" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="package"></i> Inventario</button>
+          <button type="button" data-subtab="kardex" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="list-restart"></i> Kardex</button>
+          <button type="button" data-subtab="proveedores" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="truck"></i> Proveedores</button>
+          <button type="button" data-subtab="caja" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="wallet"></i> Caja</button>
         </div>
       </div>
 
@@ -1031,6 +1046,7 @@
 
         document.querySelectorAll('.role-tab').forEach(btn => {
           const active = btn.dataset.role === role;
+          btn.setAttribute('aria-current', active ? 'page' : 'false');
           btn.className = `role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative ${
             active ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
           }`;
@@ -1053,6 +1069,8 @@
         const isMesa = ui.clientMode === 'MESA';
         document.getElementById('btn-mode-mesa').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${isMesa ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`;
         document.getElementById('btn-mode-delivery').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${!isMesa ? 'bg-sky-500 text-white' : 'text-slate-300 hover:text-white'}`;
+        document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
+        document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
         document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
         document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa);
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
@@ -1172,7 +1190,7 @@
 
         const grid = document.getElementById('admin-orders-grid');
         if (filtered.length === 0) {
-          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">No hay pedidos en esta bandeja. Prueba enviar uno desde <b>1. Carta QR / Delivery</b>.</div>`;
+          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">Esta bandeja está vacía.</div>`;
           return;
         }
 
@@ -1199,7 +1217,7 @@
                   <div class="text-right">
                     <div class="text-sm font-extrabold text-slate-900">${money(o.total)}</div>
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.paymentStatus === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
-                      ${o.paymentStatus === 'PAGADO' ? `${o.paymentMethod} OK` : 'Pago en Mesa'}
+                      ${o.paymentStatus === 'PAGADO' ? `${o.paymentMethod} OK` : (isDel ? 'Pago por verificar' : 'Pago en mesa')}
                     </span>
                   </div>
                 </div>
@@ -1429,7 +1447,7 @@
         const image = new Image(559, 790);
         image.alt = `Carta original de The Burgers Brother, ${page.title}`;
         const path = `./carta/carta-${index + 1}`;
-        image.sizes = '(max-width: 600px) calc(100vw - 54px), 560px';
+        image.sizes = '(max-width: 600px) calc(100vw - 54px), 650px';
         image.srcset = `${path}-720.webp 720w, ${path}-1120.webp 1120w`;
         image.src = `${path}-720.webp`;
         image.addEventListener('error', () => showMenuFormat('list'), { once: true });
