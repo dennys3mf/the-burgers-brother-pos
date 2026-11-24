@@ -161,6 +161,12 @@
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
+      <div id="admin-order-entry" hidden class="rounded-xl border border-slate-200 bg-white p-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="font-bold">Nuevo pedido de mostrador</p>
+          <button id="btn-admin-exit-entry" type="button" class="min-h-11 rounded-lg border px-3 text-sm font-bold">Volver a Admin</button>
+        </div>
+      </div>
       <!-- Mode Banner -->
       <div class="customer-hero">
         <div>
@@ -309,6 +315,11 @@
         </div>
       </div>
 
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-admin-new-order" type="button" class="min-h-11 rounded-xl bg-amber-500 px-4 font-bold text-slate-950">Nuevo pedido</button>
+        <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas" class="min-h-11 min-w-0 grow rounded-xl border border-slate-200 bg-white px-3 text-base">
+      </div>
+      <p id="admin-order-search-summary" class="text-sm text-slate-600" hidden></p>
       <div id="admin-orders-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
     </section>
 
@@ -877,6 +888,7 @@
         clientDelPay: 'Yape',
         clientCart: [],
         receivedOrders: [],
+        staffOrderEntry: false,
         adminFilter: 'POR_APROBAR',
         gestionSubtab: 'inventario',
         activeBixolonOrder: null
@@ -1260,15 +1272,17 @@
       // ==================== RENDER 1: CLIENTE (QR / DELIVERY) ====================
       function renderCliente() {
         const isMesa = ui.clientMode === 'MESA';
+        document.getElementById('admin-order-entry').hidden = !ui.staffOrderEntry;
+        document.getElementById('btn-mode-delivery').hidden = ui.staffOrderEntry;
         document.getElementById('btn-mode-mesa').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${isMesa ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`;
         document.getElementById('btn-mode-delivery').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${!isMesa ? 'bg-sky-500 text-white' : 'text-slate-300 hover:text-white'}`;
         document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
         document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
         document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
-        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa);
+        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry);
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
-        document.getElementById('client-cart-origin').textContent = isMesa ? `${ui.clientMesa} (Escaneado por QR)` : 'Delivery — Requiere Pago Previo';
-        document.getElementById('btn-submit-client-label').textContent = isMesa ? 'Enviar Pedido al Admin' : 'Confirmar Pago y Enviar Delivery';
+        document.getElementById('client-cart-origin').textContent = isMesa ? `${ui.clientMesa} (${ui.staffOrderEntry ? 'Mostrador' : 'QR'})` : 'Delivery — Requiere Pago Previo';
+        document.getElementById('btn-submit-client-label').textContent = ui.staffOrderEntry ? 'Crear pedido' : isMesa ? 'Enviar Pedido al Admin' : 'Confirmar Pago y Enviar Delivery';
 
         document.querySelectorAll('.del-pay-btn').forEach(btn => {
           const active = btn.dataset.delPay === ui.clientDelPay;
@@ -1284,6 +1298,7 @@
             POR_APROBAR: { label: 'Esperando aprobación del Admin', cls: 'bg-amber-100 text-amber-800' },
             EN_COCINA: { label: 'Aprobado • Cocinando en plancha', cls: 'bg-orange-100 text-orange-800' },
             LISTO_CHEF: { label: '¡Completado por el Chef! Saliendo', cls: 'bg-emerald-100 text-emerald-800' },
+            CANCELADO: { label: 'Pedido cancelado', cls: 'bg-rose-100 text-rose-800' },
             RECHAZADO: { label: 'Pedido rechazado por Admin', cls: 'bg-rose-100 text-rose-800' }
           };
           document.getElementById('client-tracker-list').innerHTML = tracked.map(o => {
@@ -1377,6 +1392,11 @@
       }
 
       // ==================== RENDER 2: ADMIN ====================
+      const adminStatus = {
+        POR_APROBAR: 'Por aprobar', EN_COCINA: 'En cocina', LISTO_CHEF: 'Listo',
+        ENTREGADO: 'Entregado', RECHAZADO: 'Rechazado', CANCELADO: 'Cancelado'
+      };
+
       function renderAdmin() {
         document.querySelectorAll('.admin-filter-btn').forEach(btn => {
           const active = btn.dataset.adminFilter === ui.adminFilter;
@@ -1385,10 +1405,16 @@
           }`;
         });
 
-        const filtered = state.orders.filter(o => {
-          if (ui.adminFilter === 'ENTREGADO') return o.status === 'ENTREGADO' || o.status === 'RECHAZADO';
-          return o.status === ui.adminFilter;
+        const query = document.getElementById('admin-order-search').value.trim().toLocaleLowerCase('es');
+        const filtered = state.orders.filter(order => {
+          if (query) return [order.code, order.customer, order.table, order.boletaNum]
+            .some(value => value?.toLocaleLowerCase('es').includes(query));
+          if (ui.adminFilter === 'ENTREGADO') return ['ENTREGADO', 'RECHAZADO', 'CANCELADO'].includes(order.status);
+          return order.status === ui.adminFilter;
         });
+        const summary = document.getElementById('admin-order-search-summary');
+        summary.hidden = !query;
+        summary.textContent = filtered.length + ' pedidos encontrados en todas las bandejas';
 
         const grid = document.getElementById('admin-orders-grid');
         if (filtered.length === 0) {
@@ -1414,6 +1440,7 @@
                       </span>
                     </div>
                     <div class="text-xs font-semibold text-slate-700 mt-0.5">${o.customer}</div>
+                    <div class="text-xs font-semibold text-slate-600">${adminStatus[o.status] || 'Estado desconocido'}</div>
                     ${isDel ? `<div class="text-[11px] text-slate-500">${o.address} • ${o.phone}</div>` : ''}
                   </div>
                   <div class="text-right">
@@ -1445,15 +1472,15 @@
 
               <!-- Action Footer -->
               <div class="p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
+                <button type="button" data-admin-reprint="${o.id}" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Ver comanda</button>
+                ${canCancelOrder(o) ? '<button type="button" data-admin-cancel="' + o.id + '" class="min-h-11 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-700">Cancelar pedido</button>' : ''}
                 ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Editar comanda</button>' : ''}
                 ${o.status === 'POR_APROBAR' ? `
-                  <button type="button" data-admin-reject="${o.id}" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold">Rechazar</button>
                   <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
                     <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e Imprimir BIXOLON
                   </button>
                 ` : ''}
                 ${o.status === 'EN_COCINA' ? `
-                  <button type="button" data-admin-reprint="${o.id}" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold">Reimprimir Comanda</button>
                   <span class="text-[11px] font-bold text-amber-700">Esperando cierre del Chef (${o.code})</span>
                 ` : ''}
                 ${o.status === 'LISTO_CHEF' ? `
@@ -1880,15 +1907,10 @@
           return;
         }
 
-        const rejBtn = e.target.closest('[data-admin-reject]');
-        if (rejBtn) {
-          const order = state.orders.find(o => o.id === rejBtn.dataset.adminReject);
-          if (order) {
-            order.status = 'RECHAZADO';
-            saveState();
-            renderActiveRole();
-            showToast(`Pedido ${order.code} rechazado.`, 'info');
-          }
+        const cancelButton = e.target.closest('[data-admin-cancel]');
+        if (cancelButton) {
+          const order = state.orders.find(entry => entry.id === cancelButton.dataset.adminCancel);
+          if (order && canCancelOrder(order)) cancelOrder(order);
           return;
         }
 
@@ -1970,6 +1992,22 @@
       const editNote = document.getElementById('edit-order-note');
       const editError = document.getElementById('edit-order-error');
       let editingOrder;
+
+      function canCancelOrder(order) {
+        return canEditOrder(order) && !order.boletaNum && order.paymentStatus !== 'PAGADO';
+      }
+
+      async function cancelOrder(order) {
+        const kitchenNote = order.status === 'POR_APROBAR' ? '' : ' El consumo registrado en inventario se conservará.';
+        if (!window.confirm('¿Cancelar el pedido ' + order.code + '?' + kitchenNote)) return;
+        const index = state.orders.indexOf(order);
+        if (index < 0 || !canCancelOrder(order)) return;
+        state.orders.splice(index, 1);
+        state.orders.unshift({ ...order, status: 'CANCELADO' });
+        const saved = saveState();
+        renderActiveRole();
+        if (await saved) showToast('Pedido ' + order.code + ' cancelado.', 'info');
+      }
 
       function canEditOrder(order) {
         return ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF'].includes(order.status);
@@ -2053,6 +2091,33 @@
           showToast('Comanda actualizada.');
           if (updated.status !== 'POR_APROBAR') openBixolonModal(updated);
         }
+      };
+
+      function resetOrderEntry() {
+        ui.clientCart = [];
+        ui.clientMode = 'MESA';
+        clientTakeaway.checked = false;
+        clientTapers.value = '0';
+        for (const id of ['client-name', 'client-order-note', 'client-pay-ref']) {
+          document.getElementById(id).value = '';
+        }
+      }
+
+      document.getElementById('admin-order-search').addEventListener('input', renderActiveRole);
+      document.getElementById('btn-admin-new-order').onclick = () => {
+        if (!staffReady) return;
+        if (!ui.staffOrderEntry && ui.clientCart.length &&
+            !window.confirm('¿Descartar el carrito actual para crear un pedido de mostrador?')) return;
+        if (!ui.staffOrderEntry) resetOrderEntry();
+        ui.staffOrderEntry = true;
+        switchRole('cliente');
+        document.getElementById('admin-order-entry').scrollIntoView();
+      };
+      document.getElementById('btn-admin-exit-entry').onclick = () => {
+        if (ui.clientCart.length && !window.confirm('¿Descartar este pedido sin guardar?')) return;
+        resetOrderEntry();
+        ui.staffOrderEntry = false;
+        switchRole('admin');
       };
 
       // Specific listeners
@@ -2275,7 +2340,7 @@
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
           newOrder = result.order;
-          ui.receivedOrders.unshift(newOrder);
+          if (!ui.staffOrderEntry) ui.receivedOrders.unshift(newOrder);
           pendingOrder = null;
         } catch (error) {
           showToast(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.', 'err');
@@ -2289,6 +2354,16 @@
         document.getElementById('client-order-note').value = '';
         document.getElementById('client-pay-ref').value = '';
 
+        if (ui.staffOrderEntry) {
+          resetOrderEntry();
+          ui.staffOrderEntry = false;
+          ui.adminFilter = 'POR_APROBAR';
+          document.getElementById('admin-order-search').value = '';
+          switchRole('admin');
+          try { await syncStaff(); } catch {}
+          showToast('Pedido ' + newOrder.code + ' creado.');
+          return;
+        }
         renderActiveRole();
         showToast(`Pedido ${newOrder.code} enviado. Esperando aprobación del Admin.`);
       });
