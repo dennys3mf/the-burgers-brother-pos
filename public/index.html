@@ -14,6 +14,36 @@
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
+    .carta-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .carta-controls button, .carta-cart-link {
+      min-height: 44px; padding: .55rem .85rem; border-radius: .65rem;
+      font-size: .875rem; font-weight: 700;
+    }
+    .carta-controls button { background: #f1f5f9; color: #1e293b; }
+    .carta-controls button[aria-pressed="true"] { background: #171717; color: #fff7e6; }
+    #carta-page-select { display: none; }
+    @media (max-width: 600px) {
+      #carta-pages { display: none; }
+      #carta-page-select { display: block; }
+    }
+    .carta-cart-link { display: inline-flex; align-items: center; background: #fef3c7; color: #78350f; }
+    .carta-sheet {
+      position: relative; max-width: 560px; margin-inline: auto; overflow: hidden;
+      border-radius: .75rem; background: #121212;
+    }
+    .carta-sheet img { display: block; width: 100%; height: auto; aspect-ratio: 559 / 790; }
+    .carta-spot {
+      position: absolute; border: 1px solid transparent;
+      border-inline-start: 2px solid #fbbf24; border-radius: .3rem;
+    }
+    .carta-spot:hover { border-color: #fbbf24; background: rgb(251 191 36 / 12%); }
+    .carta-spot:focus-visible, .carta-controls button:focus-visible, .carta-cart-link:focus-visible {
+      outline: 3px solid #d97706; outline-offset: 2px;
+    }
+    .carta-spot:focus-visible { outline: 2px solid #fff; z-index: 1; }
+    #client-cart { scroll-margin-top: 7rem; }
+    #modal-customize { width: calc(100% - 2rem); max-height: min(94dvh, 46rem); }
+    #modal-customize::backdrop { background: rgb(2 6 23 / 72%); }
     .font-mono-ticket {
       font-family: 'JetBrains Mono', 'Courier New', monospace;
     }
@@ -115,12 +145,8 @@
       <!-- Mode Banner -->
       <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div>
-          <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 mb-1">
-            <i data-lucide="smartphone" class="w-4 h-4"></i>
-            <span>VISTA DEL CLIENTE EN SU CELULAR</span>
-          </div>
-          <h1 class="text-lg sm:text-xl font-extrabold">Carta Digital — The Burgers Brother</h1>
-          <p class="text-xs text-slate-300 mt-0.5">Pedidos: 958656930 • Elige Mesa (QR) o Delivery (pago previo obligatorio).</p>
+          <h1 class="text-lg sm:text-xl font-extrabold">The Burgers Brother</h1>
+          <p class="text-xs text-slate-300 mt-0.5">Mesa o delivery con prepago</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -152,19 +178,38 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         <!-- Menu Catalog -->
         <div class="lg:col-span-8 space-y-4">
+          <section class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 space-y-3" aria-labelledby="carta-title">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="carta-title" class="text-lg font-extrabold">Elige de la carta</h2>
+              <a id="carta-cart-link" class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
+            </div>
+            <div class="carta-controls" aria-label="Formato de la carta">
+              <button type="button" data-menu-format="visual" aria-pressed="true">Carta ilustrada</button>
+              <button type="button" data-menu-format="list" aria-pressed="false">Buscar en la carta</button>
+            </div>
+            <div id="carta-visual" class="space-y-3">
+              <div id="carta-pages" class="carta-controls" aria-label="Páginas de la carta"></div>
+              <select id="carta-page-select" aria-label="Categoría de la carta" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 font-semibold"></select>
+              <p class="text-sm text-slate-600">Toca el nombre, la descripción o el precio para elegir.</p>
+              <div id="carta-sheet" class="carta-sheet"></div>
+              <p id="carta-drinks-note" class="text-sm text-slate-600" hidden>Las bebidas de 300 ml y los frost se consultan con el personal.</p>
+            </div>
+          </section>
+          <div id="carta-list" hidden class="space-y-3">
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
             <div class="relative">
               <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-              <input id="client-search" type="text" placeholder="Buscar en la carta (ej. Burger Royal, Alitas, Salchipapa, Mojito)..." class="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              <input id="client-search" type="search" aria-label="Buscar productos" placeholder="Buscar en la carta (ej. Burger Royal, Alitas, Salchipapa, Mojito)..." class="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" />
             </div>
             <div id="client-categories" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
           </div>
 
           <div id="client-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          </div>
         </div>
 
         <!-- Client Cart & Checkout -->
-        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-20">
+        <div id="client-cart" class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-20">
           <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h2 class="font-extrabold text-sm text-slate-900">Tu Pedido</h2>
@@ -442,14 +487,14 @@
   <!-- ==================== MODALS ==================== -->
 
   <!-- MODAL: CUSTOMIZE ITEM (EXTRAS / ALITAS FLAVORS / NOTES) -->
-  <div id="modal-customize" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
+  <dialog id="modal-customize" aria-labelledby="cust-title" aria-describedby="cust-desc" class="m-auto max-w-md rounded-2xl shadow-2xl">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
       <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
         <div>
           <h3 id="cust-title" class="font-extrabold text-sm text-slate-900">Personalizar</h3>
           <p id="cust-desc" class="text-xs text-slate-500"></p>
         </div>
-        <button type="button" data-close-modal="modal-customize" class="p-1 text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" data-close-modal="modal-customize" aria-label="Cerrar personalización" class="min-w-11 min-h-11 grid place-items-center text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form id="form-customize" class="p-4 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
         <input type="hidden" id="cust-prod-id" />
@@ -469,9 +514,15 @@
           <div id="cust-extras-list" class="grid grid-cols-2 gap-1.5"></div>
         </div>
 
+        <div id="cust-drink-wrap" hidden>
+          <label for="cust-drink" class="block font-bold text-slate-800 mb-1">Elige la bebida o el sabor</label>
+          <select id="cust-drink" class="w-full rounded-lg border border-slate-200 min-h-11 px-3"></select>
+        </div>
+        <p id="cust-error" role="alert" class="text-sm text-rose-700" hidden></p>
+
         <!-- Kitchen Note -->
         <div>
-          <label class="block font-bold text-slate-800 mb-1">Indicaciones para cocina / barra</label>
+          <label for="cust-note" class="block font-bold text-slate-800 mb-1">Indicaciones para cocina / barra</label>
           <input id="cust-note" type="text" placeholder="Ej. Término 3/4, sin cebolla, poco hielo..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
         </div>
 
@@ -481,7 +532,7 @@
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 
   <!-- MODAL: REAL SCANNABLE TABLE QR CODE -->
   <div id="modal-qr" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
@@ -696,6 +747,7 @@
 
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
+    import { menuPages, drinkOptions } from './visual-menu.js';
 
     (function () {
       'use strict';
@@ -1089,7 +1141,7 @@
               </div>
               ${it.flavors.length ? `<div class="text-[11px] text-orange-700 font-semibold">Sabores: ${it.flavors.join(', ')}</div>` : ''}
               ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
-              ${it.note ? `<div class="text-[11px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded inline-block">📝 ${it.note}</div>` : ''}
+              ${it.note ? `<div class="text-[11px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded inline-block">${it.note.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</div>` : ''}
               <div class="flex items-center justify-end gap-1.5 pt-1">
                 <button type="button" data-cc-dec="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">-</button>
                 <button type="button" data-cc-inc="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">+</button>
@@ -1099,6 +1151,8 @@
           `).join('');
         }
         const total = ui.clientCart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+        const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
+        document.getElementById('carta-cart-link').textContent = 'Ver pedido (' + units + ')';
         document.getElementById('client-cart-total').textContent = money(total);
       }
 
@@ -1350,7 +1404,68 @@
         }
       }
 
+      const cartaPages = document.getElementById('carta-pages');
+      const cartaSheet = document.getElementById('carta-sheet');
+      const pageSelect = document.getElementById('carta-page-select');
+      const menuById = new Map(MENU.map(item => [item.id, item]));
+
+      menuPages.forEach((page, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = page.title;
+        button.addEventListener('click', () => showCartaPage(index));
+        cartaPages.append(button);
+        pageSelect.add(new Option(page.title, index));
+      });
+      pageSelect.addEventListener('change', () => showCartaPage(Number(pageSelect.value)));
+
+      function showCartaPage(index) {
+        const page = menuPages[index];
+        pageSelect.value = index;
+        Array.from(cartaPages.children).forEach((button, position) => {
+          button.setAttribute('aria-pressed', String(position === index));
+        });
+        document.getElementById('carta-drinks-note').hidden = index !== 2;
+        const image = new Image(559, 790);
+        image.alt = `Carta original de The Burgers Brother, ${page.title}`;
+        const path = `./carta/carta-${index + 1}`;
+        image.sizes = '(max-width: 600px) calc(100vw - 54px), 560px';
+        image.srcset = `${path}-720.webp 720w, ${path}-1120.webp 1120w`;
+        image.src = `${path}-720.webp`;
+        image.addEventListener('error', () => showMenuFormat('list'), { once: true });
+        const buttons = page.spots.map(({ id, left, right, top, bottom }) => {
+          const item = menuById.get(id);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'carta-spot';
+          button.dataset.openCust = id;
+          button.setAttribute('aria-label', `${item.name}, ${money(item.price)}. Personalizar`);
+          button.style.left = `${left / 559 * 100}%`;
+          button.style.top = `${top / 790 * 100}%`;
+          button.style.width = `${(right - left) / 559 * 100}%`;
+          button.style.height = `${(bottom - top) / 790 * 100}%`;
+          return button;
+        });
+        cartaSheet.replaceChildren(image, ...buttons);
+      }
+
+      const formatButtons = document.querySelectorAll('[data-menu-format]');
+      function showMenuFormat(format) {
+        document.getElementById('carta-visual').hidden = format !== 'visual';
+        document.getElementById('carta-list').hidden = format !== 'list';
+        formatButtons.forEach(button => {
+          button.setAttribute('aria-pressed', String(button.dataset.menuFormat === format));
+        });
+      }
+      formatButtons.forEach(button => {
+        button.addEventListener('click', () => showMenuFormat(button.dataset.menuFormat));
+      });
+      showCartaPage(0);
+
       // ==================== CUSTOMIZE ITEM MODAL ====================
+      const customizeDialog = document.getElementById('modal-customize');
+      const drinkSelect = document.getElementById('cust-drink');
+      const customizeError = document.getElementById('cust-error');
       let custSelectedFlavors = [];
       let custSelectedExtras = [];
 
@@ -1364,6 +1479,14 @@
         document.getElementById('cust-title').textContent = m.name;
         document.getElementById('cust-desc').textContent = m.desc;
         document.getElementById('cust-note').value = '';
+        customizeError.hidden = true;
+        const options = drinkOptions[m.id];
+        document.getElementById('cust-drink-wrap').hidden = !options;
+        drinkSelect.disabled = !options;
+        drinkSelect.required = !!options;
+        drinkSelect.replaceChildren(new Option('Selecciona una opción', ''));
+        options?.forEach(option => drinkSelect.add(new Option(option, option)));
+        drinkSelect.value = '';
 
         const fWrap = document.getElementById('cust-flavors-wrap');
         if (m.flavorsRequired) {
@@ -1383,7 +1506,8 @@
         }
 
         updateCustPrice(m.price);
-        openModal('modal-customize');
+        lucide.createIcons();
+        customizeDialog.showModal();
       }
 
       function renderFlavorButtons(req) {
@@ -1416,7 +1540,11 @@
       // ==================== EVENT DELEGATION ====================
       document.addEventListener('click', (e) => {
         const cm = e.target.closest('[data-close-modal]');
-        if (cm) { closeModal(cm.dataset.closeModal); return; }
+        if (cm) {
+          if (cm.dataset.closeModal === customizeDialog.id) customizeDialog.close();
+          else closeModal(cm.dataset.closeModal);
+          return;
+        }
 
         const rt = e.target.closest('.role-tab');
         if (rt) { switchRole(rt.dataset.role); return; }
@@ -1732,7 +1860,8 @@
         const m = MENU.find(x => x.id === document.getElementById('cust-prod-id').value);
         if (!m) return;
         if (m.flavorsRequired && custSelectedFlavors.length < m.flavorsRequired) {
-          showToast(`Debes elegir ${m.flavorsRequired} sabores de alitas.`, 'err');
+          customizeError.textContent = 'Selecciona ' + m.flavorsRequired + ' sabores de alitas.';
+          customizeError.hidden = false;
           return;
         }
         const extraSum = custSelectedExtras.reduce((s, ex) => s + ex.price, 0);
@@ -1745,9 +1874,9 @@
           unitPrice: m.price + extraSum,
           extras: [...custSelectedExtras],
           flavors: [...custSelectedFlavors],
-          note: document.getElementById('cust-note').value.trim()
+          note: [drinkSelect.disabled ? '' : drinkSelect.value, document.getElementById('cust-note').value.trim()].filter(Boolean).join(' · ')
         });
-        closeModal('modal-customize');
+        customizeDialog.close();
         renderClientCart();
         showToast(`${m.name} agregado al pedido.`);
       });
@@ -2002,6 +2131,13 @@
         }
       }
 
+      document.getElementById('carta-cart-link').addEventListener('click', event => {
+        event.preventDefault();
+        const cart = document.getElementById('client-cart');
+        cart.tabIndex = -1;
+        cart.focus({ preventScroll: true });
+        cart.scrollIntoView({ block: 'start' });
+      });
       window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
 
       
