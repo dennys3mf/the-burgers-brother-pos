@@ -934,7 +934,7 @@
 
         const renderLines = (arr) => arr.map(it => `
           <div style="margin-bottom:6px;">
-            <div style="font-weight:800;font-size:1.08em;">${it.qty}x ${it.name}</div>
+            <div style="font-weight:800;font-size:1.35em;overflow-wrap:anywhere;">${it.qty}x ${it.name}</div>
             ${it.flavors && it.flavors.length ? `<div style="padding-left:10px;font-weight:700;">SABORES: ${it.flavors.join(', ')}</div>` : ''}
             ${it.extras && it.extras.length ? `<div style="padding-left:10px;">+ EXTRA: ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
             ${it.note ? `<div style="padding-left:10px;font-weight:700;text-transform:uppercase;">&gt;&gt; ${it.note}</div>` : ''}
