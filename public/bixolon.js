@@ -42,11 +42,18 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     if (brandedReceipt) {
       functions.func3 = { printBitmap: [receiptLogo, 384, 1, false] };
     }
-    const body = brandedReceipt ? text.slice(heading.length) : text;
-    functions[brandedReceipt ? "func4" : "func3"] = printText(body.trimEnd() + (qrCode ? '\n' : feed));
+    const comandaHeading = "COMANDA DE SERVICIO\n";
+    const brandedComanda = qrCode && text.startsWith(comandaHeading);
+    const body = brandedReceipt ? text.slice(heading.length) :
+      brandedComanda ? text.slice(comandaHeading.length) : text;
+    if (brandedComanda) {
+      functions.func3 = { printBitmap: [receiptLogo, 272, 1, false] };
+      functions.func4 = { printText: [comandaHeading, 0, 1, true, false, false, 0, 1] };
+    }
+    functions[brandedComanda ? "func5" : brandedReceipt ? "func4" : "func3"] = printText(body.trimEnd() + (qrCode ? '\n' : feed));
     if (qrCode) {
-      functions.func4 = { printQRCode: [qrCode, 1, 1, 6, 1] };
-      functions.func5 = printText(feed);
+      functions[brandedComanda ? "func6" : "func4"] = { printQRCode: [qrCode, 1, 1, 6, 1] };
+      functions[brandedComanda ? "func7" : "func5"] = printText(feed);
     }
   }
   let result = await request(url, { id, functions });

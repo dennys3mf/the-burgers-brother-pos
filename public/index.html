@@ -78,6 +78,8 @@
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08);
     }
     .thermal-brand { display: block; width: 48mm; height: auto; max-width: 100%; margin: 0 auto 2mm; }
+    .thermal-comanda-brand { width: 34mm; }
+    .thermal-comanda-title { text-align: center; font-size: 1.2em; font-weight: 800; letter-spacing: .04em; }
     .thermal-line {
       border-top: 1px dashed #000;
       margin: 6px 0;
@@ -924,7 +926,8 @@
 
         return `
           <div class="thermal-paper font-mono-ticket">
-            <div style="text-align:center;font-weight:800;font-size:1.15em;">*** COMANDA MOZO / COCINA ***</div>
+            <img class="thermal-brand thermal-comanda-brand" width="384" height="235" src="${receiptLogo}" alt="The Burgers Brother">
+            <div class="thermal-comanda-title">COMANDA DE SERVICIO</div>
             <div style="text-align:center;font-size:1.7em;font-weight:800;border:2px solid #000;padding:4px;margin:6px 0;">
               ${order.code}
             </div>
@@ -1008,7 +1011,7 @@
 
       function buildEscPosRaw(order) {
         const sep = '------------------------------------------------\n';
-        let out = `*** COMANDA COCINA - THE BURGERS BROTHER ***\n`;
+        let out = `COMANDA DE SERVICIO\n`;
         out += `CODIGO CHEF: ${order.code}\n`;
         out += `ORIGEN: ${order.channel === 'MESA' ? order.table : 'DELIVERY'}\n`;
         out += `CLIENTE: ${order.customer}\n`;
