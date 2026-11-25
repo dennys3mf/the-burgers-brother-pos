@@ -1,0 +1,51 @@
+{
+  "name": "burgers-brother-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplicación de escritorio de The Burgers Brother POS",
+  "author": "The Burgers Brother",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis --x64",
+    "build:mac": "electron-builder --mac dmg --universal"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "pe.theburgersbrother.pos",
+    "productName": "The Burgers Brother",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "build/icon.png",
+      "package.json",
+      {
+        "from": "../public",
+        "to": "printing",
+        "filter": [
+          "bixolon.js",
+          "receipt-logo.js"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.business",
+      "hardenedRuntime": true
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

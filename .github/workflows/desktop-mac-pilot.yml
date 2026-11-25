@@ -1,0 +1,32 @@
+name: Build macOS desktop pilot
+on:
+  push:
+    branches: [codex/desktop-mac-pilot]
+permissions:
+  contents: read
+jobs:
+  mac-pilot:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npm run build:mac -- --publish never
+      - name: Check exported disk image
+        run: |
+          dmg="$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
+          test -n "$dmg"
+          hdiutil verify "$dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: The-Burgers-Brother-macOS-pilot
+          path: desktop/dist/*.dmg
+          if-no-files-found: error
