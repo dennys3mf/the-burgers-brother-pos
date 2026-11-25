@@ -363,19 +363,19 @@
           <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
         </div>
       </header>
-      <details id="prep-scan" class="prep-scan">
-        <summary>Cargar código de comanda</summary>
-      <form id="chef-code-form" class="prep-code">
-        <label for="chef-code-input">Código de comanda</label>
-        <div>
-          <input id="chef-code-input" type="text" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="BB-…">
-          <button type="submit" id="btn-chef-complete-code"><i data-lucide="check" aria-hidden="true"></i> Marcar estación lista</button>
+      <div class="prep-tools">
+        <div class="prep-filters" role="group" aria-label="Estado en la estación">
+          <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
+          <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
         </div>
-      </form>
-      </details>
-      <div class="prep-filters" role="group" aria-label="Estado en la estación">
-        <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
-        <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
+        <details id="prep-scan" class="prep-scan">
+          <summary><i data-lucide="qr-code" aria-hidden="true"></i> Cargar código <i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+          <form id="chef-code-form" class="prep-code">
+            <label for="chef-code-input">Código de comanda</label>
+            <input id="chef-code-input" type="text" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="BB-…">
+            <button type="submit" id="btn-chef-complete-code"><i data-lucide="check" aria-hidden="true"></i> Marcar estación lista</button>
+          </form>
+        </details>
       </div>
       <div id="chef-orders-list" class="prep-grid"></div>
     </section>
@@ -1583,7 +1583,11 @@
       function updatePrepTimers() {
         document.querySelectorAll('[data-prep-start]').forEach(timer => {
           const minutes = Math.max(0, Math.floor((Date.now() - Number(timer.dataset.prepStart)) / 60000));
-          timer.querySelector('span').textContent = minutes ? minutes + ' min' : '< 1 min';
+          const hours = Math.floor(minutes / 60);
+          const remaining = minutes % 60;
+          timer.querySelector('span').textContent = hours
+            ? hours + ' h' + (remaining ? ' ' + remaining + ' min' : '')
+            : minutes ? minutes + ' min' : '< 1 min';
           timer.classList.toggle('prep-late', minutes >= 15);
         });
       }
@@ -1617,7 +1621,7 @@
                 <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}${order.takeaway ? ' · Para llevar' : ''}</h3>
                   <p class="font-mono-ticket">${order.code}</p></div>
                 ${done ? '<span class="prep-done">Lista</span>' : Number.isFinite(start) ? `
-                  <div class="prep-clock" data-prep-start="${start}" aria-label="Tiempo desde la aprobación">
+                  <div class="prep-clock" data-prep-start="${start}" title="Tiempo desde la aprobación">
                     <i data-lucide="clock" aria-hidden="true"></i><span></span>
                   </div>` : ''}
               </header>
