@@ -54,6 +54,9 @@ export const MENU = [
   { id: 'm29', name: 'Infusión (Maracuyá / Mango / Cherry / Emoliente)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 7.00, desc: 'Infusión artesanal caliente o fría.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
   { id: 'm30', name: 'Frappe (Oreo / Fresa / Café)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 17.00, desc: 'Frappe cremoso preparado al momento.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
 
+  { id: 'm42', name: 'Chicha Frost', cat: 'Bebidas y Frappes', station: 'BARRA', price: 8.00, desc: 'Bebida helada de chicha.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
+  { id: 'm43', name: 'Limonada Frost', cat: 'Bebidas y Frappes', station: 'BARRA', price: 8.00, desc: 'Bebida helada de limón.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
+
   // Page 5: Cocteles (Barra)
   { id: 'm31', name: 'The Brothers (Especialidad)', cat: 'Cocteles (Barra)', station: 'BARRA', price: 25.00, desc: 'Especialidad de la casa, leche condensada y pulpa de maracuyá.', recipe: [{ id: 'ing_pisco', qty: 2 }, { id: 'ing_pulpa', qty: 1 }] },
   { id: 'm32', name: 'Piña Colada', cat: 'Cocteles (Barra)', station: 'BARRA', price: 18.00, desc: 'Ron blanco, rodajas de piña, crema de coco y leche.', recipe: [{ id: 'ing_ron', qty: 2 }] },
