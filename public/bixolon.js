@@ -63,7 +63,7 @@ export async function runBixolon({ name, secure }, text, qrCode) {
       append(printText(body.trimEnd() + (qrCode ? '\n' : feed)));
     }
     if (qrCode) {
-      append({ printQRCode: [qrCode, 1, 1, 6, 1] });
+      append({ printQRCode: [qrCode, 1, 1, brandedComanda ? 5 : 6, 1] });
       append(printText(feed));
     }
   }

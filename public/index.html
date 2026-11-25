@@ -80,6 +80,8 @@
     }
     .thermal-brand { display: block; width: 48mm; height: auto; max-width: 100%; margin: 0 auto 2mm; }
     .thermal-comanda-title { text-align: center; font-size: 1.2em; font-weight: 800; letter-spacing: .04em; }
+    .thermal-comanda-qr { width: 28mm; max-width: 100%; margin: 2mm auto; }
+    .thermal-comanda-qr svg { display: block; width: 100%; height: auto; }
     .thermal-line {
       border-top: 1px dashed #000;
       margin: 6px 0;
@@ -1080,8 +1082,8 @@
             ${barraItems.length ? `<div class="thermal-line"></div><div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN BARRA ]</div>${renderLines(barraItems)}` : ''}
             ${order.note ? `<div class="thermal-line"></div><div style="font-weight:700;border:1px solid #000;padding:4px;">NOTA: ${order.note.toUpperCase()}</div>` : ''}
             <div class="thermal-line-bold"></div>
-            <div style="display:flex;justify-content:center;margin:8px 0;">
-              ${makeQrSvgString(serviceTicketUrl(order), 3)}
+            <div class="thermal-comanda-qr">
+              ${makeQrSvgString(serviceTicketUrl(order), 3, 4)}
             </div>
             <div style="text-align:center;font-size:0.9em;">CHEF: Escanea el QR para cargar el pedido o ingresa <b>${order.num}</b> en App Chef</div>
             <div style="text-align:center;font-size:0.8em;color:#444;margin-top:4px;">BIXOLON SPP-R310BK (80mm) • Avance corte manual</div>
@@ -2242,7 +2244,7 @@
       document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderCliente(); });
       document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; renderClientCart(); });
 
-      function makeQrSvgString(text, cellSize = 4) {
+      function makeQrSvgString(text, cellSize = 4, margin = 2) {
         if (typeof window.qrcode !== 'function') {
           return '<div style="font-size:11px;color:#64748b;">QR listo al cargar librería</div>';
         }
@@ -2250,7 +2252,7 @@
           const qr = window.qrcode(0, 'M');
           qr.addData(text);
           qr.make();
-          return qr.createSvgTag({ cellSize, margin: 2, scalable: true });
+          return qr.createSvgTag({ cellSize, margin, scalable: true });
         } catch (e) {
           return '<div style="font-size:11px;color:#b91c1c;">Error generando QR</div>';
         }
