@@ -949,18 +949,19 @@
       function playOrderSound() {
         if (!soundEnabled || audio?.state !== 'running') return;
         const start = Math.max(audio.currentTime, nextSound);
-        nextSound = start + .48;
-        for (const [index, frequency] of [660, 880].entries()) {
+        nextSound = start + .95;
+        for (const [index, frequency] of [740, 980, 1240].entries()) {
           const tone = audio.createOscillator();
           const volume = audio.createGain();
-          const time = start + index * .14;
+          const time = start + index * .23;
+          tone.type = 'triangle';
           tone.frequency.value = frequency;
           volume.gain.setValueAtTime(.001, time);
-          volume.gain.exponentialRampToValueAtTime(.12, time + .025);
-          volume.gain.exponentialRampToValueAtTime(.001, time + .15);
+          volume.gain.exponentialRampToValueAtTime(.42, time + .025);
+          volume.gain.exponentialRampToValueAtTime(.001, time + .21);
           tone.connect(volume).connect(audio.destination);
           tone.start(time);
-          tone.stop(time + .16);
+          tone.stop(time + .22);
         }
       }
 
