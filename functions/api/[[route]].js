@@ -1,3 +1,4 @@
+import { STATIONS, orderStations, stationReady } from '../../public/preparation.js';
 import { MENU, EXTRAS, WING_FLAVORS } from '../../public/catalog.js';
 import { priceOrder } from '../../public/order-pricing.js';
 import { initialState } from '../initial-state.js';
@@ -256,31 +257,45 @@ export async function onRequest({ request, env }) {
       const row = await db.prepare('SELECT payload FROM pos_state WHERE id = 1').first();
       const orders = row ? JSON.parse(row.payload).orders : [];
       return json({ ok: true, role, orders: orders.filter(order => ['POR_APROBAR','EN_COCINA','LISTO_CHEF'].includes(order.status))
-        .map(({ id, code, num, table, channel, status, takeaway, items, note }) => ({
-          id, code, num, table, channel, status, takeaway, note: status === 'POR_APROBAR' ? '' : note,
-          items: status === 'POR_APROBAR' ? [] : items.filter(item => item.menuId !== 'delivery-card-fee').map(({ name, qty, flavors, extras, note }) => ({
-            name, qty, flavors: flavors || [], extras: (extras || []).map(({ name }) => ({ name })), note
+        .map(({ id, code, num, table, channel, status, takeaway, items, note, approvedAt, preparationStartedAt, stationCompletedAt }) => ({
+          id, code, num, table, channel, status, takeaway, approvedAt, preparationStartedAt, stationCompletedAt, note: status === 'POR_APROBAR' ? '' : note,
+          items: status === 'POR_APROBAR' ? [] : items.filter(item => item.menuId !== 'delivery-card-fee').map(({ name, qty, station, menuId, flavors, extras, note }) => ({
+            name, qty, station, menuId, flavors: flavors || [], extras: (extras || []).map(({ name }) => ({ name })), note
           }))
         })) });
     }
     if (path === '/api/kitchen/complete' && method === 'POST') {
-      const { id } = await input(request, 1024) || {};
-      if (typeof id !== 'string') return reject('Pedido inválido.', 400);
-      const row = await db.prepare('SELECT payload, revision FROM pos_state WHERE id = 1').first();
-      if (!row) return reject('Pedido no encontrado.', 404);
-      const state = JSON.parse(row.payload);
-      const order = state.orders.find(entry => entry.id === id);
-      if (order?.status !== 'EN_COCINA') return reject('El pedido ya no está en cocina.', 409);
-      order.status = 'LISTO_CHEF';
-      order.completedAt = new Date().toISOString();
-      const next = crypto.randomUUID();
-      const [result] = await db.batch([
-        db.prepare("UPDATE pos_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
-          .bind(JSON.stringify(state), next, row.revision),
-        db.prepare("UPDATE pos_orders SET status = 'LISTO_CHEF', completed_at = ? WHERE id = ? AND EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)")
-          .bind(order.completedAt, order.id, next)
-      ]);
-      return result.meta.changes ? json({ ok: true }) : reject('El pedido cambió. Vuelve a intentarlo.', 409);
+      const { id, station } = await input(request, 1024) || {};
+      if (typeof id !== 'string' || !STATIONS.includes(station)) return reject('Selecciona una estación válida.', 400);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const row = await db.prepare('SELECT payload, revision FROM pos_state WHERE id = 1').first();
+        if (!row) return reject('Pedido no encontrado.', 404);
+        const state = JSON.parse(row.payload);
+        const order = state.orders.find(entry => entry.id === id);
+        if (!order || !orderStations(order).includes(station)) return reject('El pedido no corresponde a esta estación.', 404);
+        if (['EN_COCINA', 'LISTO_CHEF'].includes(order.status) && stationReady(order, station)) {
+          return json({ ok: true, ready: order.status === 'LISTO_CHEF' });
+        }
+        if (order.status !== 'EN_COCINA') return reject('El pedido ya no está en preparación.', 409);
+        const completedAt = new Date().toISOString();
+        order.stationCompletedAt = { ...order.stationCompletedAt, [station]: completedAt };
+        const ready = orderStations(order).every(area => stationReady(order, area));
+        const next = crypto.randomUUID();
+        const statements = [];
+        if (ready) {
+          order.status = 'LISTO_CHEF';
+          order.completedAt = completedAt;
+        }
+        statements.push(db.prepare("UPDATE pos_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
+          .bind(JSON.stringify(state), next, row.revision));
+        if (ready) {
+          statements.push(db.prepare("UPDATE pos_orders SET status = 'LISTO_CHEF', completed_at = ? WHERE id = ? AND EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)")
+            .bind(order.completedAt, order.id, next));
+        }
+        const [result] = await db.batch(statements);
+        if (result.meta.changes) return json({ ok: true, ready });
+      }
+      return reject('El pedido cambió. Vuelve a intentarlo.', 409);
     }
     if (role !== 'admin') return reject('Solo Admin puede acceder a esta sección.', 403);
     if (path === '/api/access/chef' && method === 'PUT') {

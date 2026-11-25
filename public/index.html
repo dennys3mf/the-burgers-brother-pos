@@ -357,63 +357,29 @@
     </section>
 
     <!-- ==================== VIEW 3: INTERFAZ MÓVIL DEL CHEF ==================== -->
-    <section id="view-chef" class="role-view hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <!-- Mobile Chef Keypad (Left 5 cols) -->
-        <div class="chef-keypad lg:col-span-5 rounded-2xl p-5 sm:p-6 border space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Cocina</div>
-              <h2 class="operator-title">Completar comanda</h2>
-            </div>
-            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-              <i data-lucide="chef-hat" class="w-5 h-5"></i>
-            </div>
-          </div>
-
-          <p class="text-xs text-slate-400">Escanea el QR de la comanda o escribe el código del pedido. Luego confirma que está listo.</p>
-
-          <!-- Code Display -->
-          <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 flex items-center justify-between">
-            <span class="font-mono-ticket text-xl font-bold text-slate-500">BB-</span>
-            <input id="chef-code-input" type="text" maxlength="12" placeholder="000" aria-label="Código del pedido sin el prefijo BB" autocapitalize="characters" autocomplete="off" spellcheck="false" class="w-full min-w-0 bg-transparent text-right font-mono-ticket text-xl sm:text-3xl font-extrabold text-amber-400 tracking-widest focus:outline-none" />
-          </div>
-
-          <!-- Touch Numeric Keypad -->
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" data-numpad="1" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">1</button>
-            <button type="button" data-numpad="2" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">2</button>
-            <button type="button" data-numpad="3" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">3</button>
-            <button type="button" data-numpad="4" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">4</button>
-            <button type="button" data-numpad="5" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">5</button>
-            <button type="button" data-numpad="6" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">6</button>
-            <button type="button" data-numpad="7" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">7</button>
-            <button type="button" data-numpad="8" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">8</button>
-            <button type="button" data-numpad="9" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">9</button>
-            <button type="button" data-numpad="CLR" class="numpad-btn py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-xs font-bold text-rose-400">BORRAR</button>
-            <button type="button" data-numpad="0" class="numpad-btn py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-extrabold">0</button>
-            <button type="button" data-numpad="DEL" class="numpad-btn py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-xs font-bold text-slate-300">←</button>
-          </div>
-
-          <button type="button" id="btn-chef-complete-code" class="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all">
-            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-            MARCAR PEDIDO COMPLETADO
-          </button>
+    <section id="view-chef" class="role-view hidden prep-board">
+      <header class="prep-header">
+        <div><h2 class="operator-title">Preparación</h2><p id="chef-active-count" aria-live="polite"></p></div>
+        <div class="prep-switch" role="group" aria-label="Estación de preparación">
+          <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="chef-hat" aria-hidden="true"></i> Cocina</button>
+          <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
         </div>
-
-        <!-- Active Approved Tickets in Kitchen (Right 7 cols) -->
-        <div class="lg:col-span-7 space-y-4">
-          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between">
-            <div>
-              <h3 class="operator-title">Comandas activas</h3>
-              <p class="text-xs text-slate-500">Toca una comanda para cargar su código.</p>
-            </div>
-            <span id="chef-active-count" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">0 activos</span>
-          </div>
-
-          <div id="chef-orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </header>
+      <details id="prep-scan" class="prep-scan">
+        <summary>Cargar código de comanda</summary>
+      <form id="chef-code-form" class="prep-code">
+        <label for="chef-code-input">Código de comanda</label>
+        <div>
+          <input id="chef-code-input" type="text" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="BB-…">
+          <button type="submit" id="btn-chef-complete-code"><i data-lucide="check" aria-hidden="true"></i> Marcar estación lista</button>
         </div>
+      </form>
+      </details>
+      <div class="prep-filters" role="group" aria-label="Estado en la estación">
+        <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
+        <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
       </div>
+      <div id="chef-orders-list" class="prep-grid"></div>
     </section>
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
@@ -908,6 +874,7 @@
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
+    import { orderStations, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
@@ -1547,6 +1514,8 @@
                   <div class="admin-order-identity">
                     <p class="admin-order-customer">${o.customer}</p>
                     <p class="admin-order-code font-mono-ticket">${o.code}</p>
+                    ${o.status === 'EN_COCINA' ? `<p class="admin-order-code">${orderStations(o).map(area =>
+                      stationName(area) + (stationReady(o, area) ? ': lista' : ': pendiente')).join(' · ')}</p>` : ''}
                   </div>
                   <div class="admin-order-payment">
                     <p class="admin-order-total">${money(o.total)}</p>
@@ -1606,48 +1575,84 @@
       }
 
       // ==================== RENDER 3: APP MÓVIL DEL CHEF ====================
-      function renderChef() {
-        const cooking = state.orders.filter(o => o.status === 'EN_COCINA');
-        document.getElementById('chef-active-count').textContent = `${cooking.length} activos`;
+      let prepStation = localStorage.getItem('pos-prep-station') === 'BARRA' ? 'BARRA' : 'COCINA';
+      let prepFilter = 'pending';
+      const stationName = station => station === 'BARRA' ? 'Barra' : 'Cocina';
+      const prepBusy = new Set();
 
+      function updatePrepTimers() {
+        document.querySelectorAll('[data-prep-start]').forEach(timer => {
+          const minutes = Math.max(0, Math.floor((Date.now() - Number(timer.dataset.prepStart)) / 60000));
+          timer.querySelector('span').textContent = minutes ? minutes + ' min' : '< 1 min';
+          timer.classList.toggle('prep-late', minutes >= 15);
+        });
+      }
+      setInterval(updatePrepTimers, 15000);
+
+      function renderChef() {
+        const station = prepStation;
+        const belongs = state.orders.filter(order =>
+          ['EN_COCINA', 'LISTO_CHEF'].includes(order.status) && orderStations(order).includes(station));
+        const pending = belongs.filter(order => !stationReady(order, station));
+        const ready = belongs.filter(order => stationReady(order, station));
+        for (const button of document.querySelectorAll('[data-prep-station], [data-prep-filter]')) {
+          button.setAttribute('aria-pressed', String(button.dataset.prepStation === station || button.dataset.prepFilter === prepFilter));
+        }
+        document.getElementById('chef-active-count').textContent = pending.length + ' por preparar en ' + stationName(station);
+        const orders = prepFilter === 'ready' ? ready : [...pending].sort((a, b) =>
+          (preparationStartedAt(a) || Infinity) - (preparationStartedAt(b) || Infinity));
         const list = document.getElementById('chef-orders-list');
-        if (cooking.length === 0) {
-          list.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">No hay comandas pendientes en cocina. Cuando el Admin apruebe un pedido, aparecerá aquí con su código.</div>`;
+        if (!orders.length) {
+          list.innerHTML = '<p class="prep-empty">' + (prepFilter === 'ready' ? 'Todavía no hay comandas terminadas en esta estación.' : 'No hay pedidos por preparar en esta estación.') + '</p>';
           return;
         }
-
-        list.innerHTML = cooking.map(o => `
-          <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-amber-500 p-4 shadow-sm flex flex-col justify-between gap-3 transition-all">
-            <div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <button type="button" data-chef-fill="${o.num}" class="font-mono-ticket text-xl font-extrabold text-orange-600 hover:underline" title="Toca para cargar código">
-                  ${o.code}
-                </button>
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-900 text-amber-400">
-                  ${o.channel === 'MESA' ? o.table : 'DELIVERY'}
-                </span>
-              </div>
-              <div class="pt-3 space-y-2 text-xs">
-                ${o.items.map(it => `
-                  <div class="flex items-start gap-2">
-                    <span class="w-6 h-6 rounded-lg bg-slate-900 text-white font-extrabold flex items-center justify-center shrink-0">${it.qty}</span>
-                    <div>
-                      <div class="font-bold text-slate-900">${it.name}</div>
-                      ${it.flavors.length ? `<div class="text-[11px] font-bold text-orange-700">Sabores: ${it.flavors.join(', ')}</div>` : ''}
-                      ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
-                      ${it.note ? `<div class="text-[11px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded mt-0.5"><i data-lucide="message-square" class="inline h-3 w-3" aria-hidden="true"></i> ${it.note}</div>` : ''}
-                    </div>
+        list.innerHTML = orders.map(order => {
+          const done = stationReady(order, station);
+          const start = preparationStartedAt(order);
+          const items = order.items.filter(item => item.station === station ||
+            (station === orderStations(order)[0] && item.menuId === 'taper'));
+          return `
+            <article class="prep-card">
+              <header>
+                <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}${order.takeaway ? ' · Para llevar' : ''}</h3>
+                  <p class="font-mono-ticket">${order.code}</p></div>
+                ${done ? '<span class="prep-done">Lista</span>' : Number.isFinite(start) ? `
+                  <div class="prep-clock" data-prep-start="${start}" aria-label="Tiempo desde la aprobación">
+                    <i data-lucide="clock" aria-hidden="true"></i><span></span>
+                  </div>` : ''}
+              </header>
+              <ul>
+                ${items.map(item => `<li>
+                  <b class="prep-qty">${item.qty}×</b>
+                  <div><strong>${item.name}</strong>
+                    ${item.flavors?.length ? `<p>Sabores: ${item.flavors.join(', ')}</p>` : ''}
+                    ${item.extras?.length ? `<p>Extras: ${item.extras.map(extra => extra.name).join(', ')}</p>` : ''}
+                    ${item.note ? `<p class="prep-note">${item.note}</p>` : ''}
                   </div>
-                `).join('')}
-                ${o.note ? `<div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-xs font-bold text-amber-900">Nota: ${o.note}</div>` : ''}
-              </div>
-            </div>
-            <button type="button" data-chef-fill="${o.num}" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-800 text-xs font-bold">
-              Cargar código ${o.num} en teclado
-            </button>
-          </div>
-        `).join('');
+                </li>`).join('')}
+              </ul>
+              ${order.note ? `<p class="prep-note prep-order-note">Nota: ${order.note}</p>` : ''}
+              ${done ? '' : `<button type="button" data-prep-complete="${order.id}" ${prepBusy.has(order.id + station) ? 'disabled' : ''}>
+                <i data-lucide="check" aria-hidden="true"></i> Marcar ${stationName(station).toLowerCase()} lista
+              </button>`}
+            </article>`;
+        }).join('');
+        updatePrepTimers();
       }
+
+      document.querySelectorAll('[data-prep-station], [data-prep-filter]').forEach(button => {
+        button.onclick = () => {
+          if (button.dataset.prepStation) {
+            prepStation = button.dataset.prepStation;
+            localStorage.setItem('pos-prep-station', prepStation);
+          } else prepFilter = button.dataset.prepFilter;
+          renderActiveRole();
+        };
+      });
+      document.getElementById('chef-orders-list').onclick = event => {
+        const button = event.target.closest('[data-prep-complete]');
+        if (button) completePrep(state.orders.find(order => order.id === button.dataset.prepComplete), prepStation, button);
+      };
 
       // ==================== RENDER 4: GESTIÓN ====================
       function renderGestion() {
@@ -1994,6 +1999,7 @@
           }
           order.status = 'EN_COCINA';
           order.approvedAt = nowStr();
+          order.preparationStartedAt = new Date().toISOString();
           deductInventoryForOrder(order);
 
           if (order.channel === 'DELIVERY' && order.paymentStatus === 'PAGADO') {
@@ -2070,22 +2076,6 @@
         }
 
         // Chef keypad & quick fill
-        const np = e.target.closest('[data-numpad]');
-        if (np) {
-          const inp = document.getElementById('chef-code-input');
-          const key = np.dataset.numpad;
-          if (key === 'CLR') inp.value = '';
-          else if (key === 'DEL') inp.value = inp.value.slice(0, -1);
-          else if (inp.value.length < 4) inp.value += key;
-          return;
-        }
-
-        const cf = e.target.closest('[data-chef-fill]');
-        if (cf) {
-          document.getElementById('chef-code-input').value = cf.dataset.chefFill;
-          return;
-        }
-
         // Gestión subtabs
         const gt = e.target.closest('[data-subtab]');
         if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); return; }
@@ -2226,6 +2216,13 @@
           deductInventoryForOrder({ ...updated, items: addedItems }, 'Adición');
           updated.status = 'EN_COCINA';
           updated.completedAt = null;
+          updated.stationCompletedAt = { ...order.stationCompletedAt };
+          if (order.status === 'LISTO_CHEF') {
+            for (const area of orderStations(order)) {
+              updated.stationCompletedAt[area] ||= order.completedAt || updated.approvedAt || new Date().toISOString();
+            }
+          }
+          for (const area of orderStations({ items: addedItems })) delete updated.stationCompletedAt[area];
           ui.adminFilter = 'EN_COCINA';
         }
         state.orders.splice(index, 1);
@@ -2527,49 +2524,48 @@
         showToast(`Pedido ${newOrder.code} enviado. Esperando aprobación del Admin.`);
       });
 
-      // Chef Complete by Order Code
-      document.getElementById('btn-chef-complete-code').addEventListener('click', async (event) => {
-        const raw = document.getElementById('chef-code-input').value.trim().toUpperCase();
-        if (!raw) {
-          showToast('Ingresa el código de pedido impreso en el ticket.', 'err');
-          return;
-        }
-        const normalized = raw.startsWith('BB-') ? raw : `BB-${raw.padStart(3, '0')}`;
-        const order = state.orders.find(o => o.code === normalized || o.num === raw);
+      const chefInput = document.getElementById('chef-code-input');
+      document.getElementById('chef-code-form').onsubmit = event => {
+        event.preventDefault();
+        const code = chefInput.value.trim().toUpperCase().replace(/^BB-/, '');
+        const order = code && state.orders.find(entry => entry.num === code || entry.code === 'BB-' + code.padStart(3, '0'));
         if (!order) {
-          showToast(`No existe el pedido ${normalized}.`, 'err');
+          showToast('No se encontró esa comanda.', 'err');
           return;
         }
-        if (order.status === 'POR_APROBAR') {
-          showToast(`El pedido ${order.code} aún NO ha sido aprobado por el Admin.`, 'err');
+        const areas = orderStations(order);
+        const station = areas.length === 1 ? areas[0] : prepStation;
+        completePrep(order, station, document.getElementById('btn-chef-complete-code'));
+      };
+
+      async function completePrep(order, station, button) {
+        if (!order || order.status !== 'EN_COCINA' || !orderStations(order).includes(station) || stationReady(order, station)) {
+          showToast('La comanda no está pendiente en ' + stationName(station) + '.', 'info');
           return;
         }
-        if (order.status === 'LISTO_CHEF' || order.status === 'ENTREGADO') {
-          showToast(`El pedido ${order.code} ya fue marcado como completado.`, 'info');
-          return;
-        }
-        if (order.status !== 'EN_COCINA') {
-          showToast('Este pedido no está en cocina.', 'err');
-          return;
-        }
-        const button = event.currentTarget;
+        const key = order.id + station;
+        if (prepBusy.has(key)) return;
+        prepBusy.add(key);
         button.disabled = true;
         try {
           await staffWrites;
           const response = await fetch('/api/kitchen/complete', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: order.id })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: order.id, station })
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
-          document.getElementById('chef-code-input').value = '';
+          if (button.id === 'btn-chef-complete-code') chefInput.value = '';
           await syncStaff();
-          showToast('Pedido ' + order.code + ' listo.');
+          showToast(result.ready ? 'Pedido ' + order.code + ' listo.' : stationName(station) + ' lista para ' + order.code + '.');
         } catch (error) {
-          showToast(error.message || 'No se pudo completar el pedido.', 'err');
+          showToast(error.message || 'No se pudo terminar la preparación.', 'err');
         } finally {
+          prepBusy.delete(key);
           button.disabled = false;
+          if (ui.role === 'chef') renderActiveRole();
         }
-      });
+      }
 
       // Pay Mesa & Emit Boleta
       document.getElementById('form-pay-mesa').addEventListener('submit', (e) => {
@@ -2733,6 +2729,12 @@
       function applyHashRoute(hashStr) {
         const h = (hashStr || '').replace(/^#/, '');
         const params = new URLSearchParams(h);
+        if (params.get('estacion') === 'barra' || params.get('estacion') === 'cocina') {
+          prepStation = params.get('estacion') === 'barra' ? 'BARRA' : 'COCINA';
+          prepFilter = 'pending';
+          switchRole('chef');
+          return;
+        }
         if (params.has('personal')) {
           switchRole(staffArea === 'chef' ? 'chef' : 'admin');
           return;
@@ -2756,6 +2758,7 @@
             switchRole('cliente');
             return;
           }
+          document.getElementById('prep-scan').open = true;
           document.getElementById('chef-code-input').value = scannedCode;
           switchRole('chef');
         } else {
