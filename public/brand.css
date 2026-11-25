@@ -424,3 +424,16 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
 @media screen and (max-width: 767px) {
   body[data-public-menu][data-cart-in-view] #carta-cart-link:not([hidden]) { display: none; }
 }
+
+/* Format controls use cream; amber identifies the selected menu category. */
+.menu-browser .menu-modes button {
+  background: transparent;
+  color: var(--cream);
+  box-shadow: inset 0 0 0 1px #a99077;
+}
+.menu-browser .menu-modes button:hover:not([aria-pressed="true"]) { background: #4a3326; }
+.menu-browser .menu-modes button[aria-pressed="true"] {
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: none;
+}
