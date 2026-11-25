@@ -1509,32 +1509,26 @@
 
         grid.innerHTML = filtered.map(o => {
           const isDel = o.channel === 'DELIVERY';
-          const borderCls = o.status === 'POR_APROBAR' ? 'border-t-4 border-t-rose-500' :
-                            o.status === 'EN_COCINA' ? 'border-t-4 border-t-amber-500' :
-                            o.status === 'LISTO_CHEF' ? 'border-t-4 border-t-emerald-500' : 'border-t-4 border-t-slate-400';
-
           return `
-            <div class="admin-order-card ${borderCls}">
-              <div class="p-4 space-y-3">
-                <div class="flex items-start justify-between gap-2">
-                  <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span class="font-mono-ticket break-all text-base font-extrabold text-slate-900">${o.code}</span>
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isDel ? 'bg-sky-100 text-sky-800' : 'bg-orange-100 text-orange-800'}">
-                        ${isDel ? 'DELIVERY' : o.table + (o.takeaway ? ' · PARA LLEVAR' : ' (QR)')}
-                      </span>
-                    </div>
-                    <div class="text-xs font-semibold text-slate-700 mt-0.5">${o.customer}</div>
-                    <div class="admin-order-status">${adminStatus[o.status] || 'Estado desconocido'}</div>
-                    ${isDel ? `<div class="text-[11px] text-slate-500">${o.address} • ${o.phone}</div>` : ''}
+            <div class="admin-order-card">
+              <div class="admin-card-content">
+                <div class="admin-card-summary">
+                  <span class="admin-order-channel"><i data-lucide="${isDel ? 'bike' : o.takeaway ? 'shopping-bag' : 'utensils'}" aria-hidden="true"></i>
+                    ${isDel ? 'Delivery' : o.table + (o.takeaway ? ' · Para llevar' : '')}
+                  </span>
+                  <span class="admin-order-status" data-status="${o.status}">${adminStatus[o.status] || 'Estado desconocido'}</span>
+                  <div class="admin-order-identity">
+                    <p class="admin-order-customer">${o.customer}</p>
+                    <p class="admin-order-code font-mono-ticket">${o.code}</p>
                   </div>
-                  <div class="text-right">
-                    <div class="text-sm font-extrabold text-slate-900">${money(o.total)}</div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${o.paymentStatus === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
-                      ${o.paymentStatus === 'PAGADO' ? `${o.paymentMethod} OK` : (isDel ? 'Pago por verificar' : 'Pago en mesa')}
+                  <div class="admin-order-payment">
+                    <p class="admin-order-total">${money(o.total)}</p>
+                    <span data-paid="${o.paymentStatus === 'PAGADO'}">
+                      ${o.paymentStatus === 'PAGADO' ? o.paymentMethod + ' pagado' : (isDel ? 'Pago por verificar' : 'Pago en mesa')}
                     </span>
                   </div>
                 </div>
+                ${isDel ? `<p class="admin-order-address">${o.address} · ${o.phone}</p>` : ''}
 
                 ${isDel && o.paymentRef ? `
                   <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-semibold">
@@ -1542,17 +1536,20 @@
                   </div>
                 ` : ''}
 
-                <div class="admin-order-items border-t border-slate-100 pt-2.5 space-y-1.5 text-xs">
+                <ul class="admin-order-items">
                   ${o.items.map(it => `
-                    <div>
-                      <div class="font-bold text-slate-800">${it.qty}x ${it.name} <span class="text-[10px] font-semibold text-slate-400">[${it.station}]</span></div>
-                      ${it.flavors.length ? `<div class="text-[11px] text-orange-700 pl-3">Sabores: ${it.flavors.join(', ')}</div>` : ''}
-                      ${it.extras.length ? `<div class="text-[11px] text-slate-600 pl-3">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
-                      ${it.note ? `<div class="text-[11px] text-amber-800 font-semibold pl-3">&gt;&gt; ${it.note}</div>` : ''}
-                    </div>
+                    <li class="admin-order-line">
+                      <span class="admin-item-qty">${it.qty}×</span>
+                      <div>
+                        <div class="admin-item-heading"><strong>${it.name}</strong><small>${it.station}</small></div>
+                        ${it.flavors?.length ? `<p>Sabores: ${it.flavors.join(', ')}</p>` : ''}
+                        ${it.extras?.length ? `<p>Extras: ${it.extras.map(e => e.name).join(', ')}</p>` : ''}
+                        ${it.note ? `<p class="admin-item-note">${it.note}</p>` : ''}
+                      </div>
+                    </li>
                   `).join('')}
-                  ${o.note ? `<div class="p-2 rounded bg-amber-50 text-amber-900 text-[11px] font-semibold">Nota: ${o.note}</div>` : ''}
-                </div>
+                </ul>
+                ${o.note ? `<p class="admin-item-note admin-general-note"><strong>Nota del pedido</strong> ${o.note}</p>` : ''}
               </div>
 
               <!-- Action Footer -->
@@ -1562,11 +1559,8 @@
                 ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold"><i data-lucide="pencil" aria-hidden="true"></i> Editar comanda</button>' : ''}
                 ${o.status === 'POR_APROBAR' ? `
                   <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
-                    <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e Imprimir BIXOLON
+                    <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e imprimir
                   </button>
-                ` : ''}
-                ${o.status === 'EN_COCINA' ? `
-                  <span class="text-[11px] font-bold text-amber-700">Pendiente de cocina</span>
                 ` : ''}
                 ${o.status === 'LISTO_CHEF' ? `
                   ${o.paymentStatus !== 'PAGADO' ? `
