@@ -134,7 +134,7 @@
         </button>
         <button type="button" hidden data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
           <i data-lucide="chef-hat" class="w-4 h-4"></i>
-          <span>Chef</span>
+          <span>Preparación</span>
           <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
         </button>
         <button type="button" hidden data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
@@ -163,7 +163,6 @@
   <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
-      <span id="staff-avatar" class="staff-avatar" aria-hidden="true"></span>
       <p id="staff-alert-message" role="status"></p>
       <button id="staff-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
     </div>
@@ -357,10 +356,13 @@
     <!-- ==================== VIEW 3: INTERFAZ MÓVIL DEL CHEF ==================== -->
     <section id="view-chef" class="role-view hidden prep-board">
       <header class="prep-header">
-        <div><h2 class="operator-title">Preparación</h2><p id="chef-active-count" aria-live="polite"></p></div>
+        <div class="prep-heading">
+          <button type="button" id="prep-back" aria-label="Volver" title="Volver"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
+          <div><h2 class="operator-title">Preparación</h2><p id="chef-active-count" aria-live="polite"></p></div>
+        </div>
         <div class="prep-header-actions">
           <div class="prep-switch" role="group" aria-label="Estación de preparación">
-            <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="chef-hat" aria-hidden="true"></i> Cocina</button>
+            <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="cooking-pot" aria-hidden="true"></i> Cocina</button>
             <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
           </div>
           <details id="prep-menu" class="prep-menu">
@@ -423,6 +425,7 @@
           </fieldset>
         </div>
       </dialog>
+      <p id="prep-alert-message" class="prep-alert-message" role="status"></p>
       <div id="chef-orders-list" class="prep-grid"></div>
     </section>
 
@@ -442,12 +445,16 @@
       <div id="subtab-inventario" class="gestion-panel space-y-4">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="inv-kpis"></div>
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex items-center justify-between gap-2">
+          <div class="inventory-toolbar">
             <div>
-              <h3 class="font-bold text-sm text-slate-900">Inventario de Insumos Clave (Descuento por Receta)</h3>
-              <p class="text-xs text-slate-500">Cada pedido aprobado descuenta asado de tira (g), alitas (und), papas nativas, pan brioche y botellas/onzas.</p>
+              <h3 class="font-bold text-sm text-slate-900">Inventario de insumos</h3>
+              <p class="text-xs text-slate-500">Al aprobar un pedido, se descuentan los insumos de su receta y el movimiento queda en el Kardex.</p>
             </div>
-            <button type="button" id="btn-open-adjust" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold">Ajustar Stock</button>
+            <div class="inventory-actions">
+              <button type="button" id="btn-open-ingredient" class="admin-tool"><i data-lucide="package-plus" aria-hidden="true"></i> Nuevo insumo</button>
+              <button type="button" id="btn-open-recipes" class="admin-tool"><i data-lucide="clipboard-list" aria-hidden="true"></i> Recetas de la carta</button>
+              <button type="button" id="btn-open-adjust" class="admin-tool admin-tool-primary"><i data-lucide="sliders-horizontal" aria-hidden="true"></i> Ajustar stock</button>
+            </div>
           </div>
           <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
             <table class="w-full text-left text-xs border-collapse">
@@ -478,6 +485,10 @@
           <button type="button" id="btn-export-kardex" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5">
             <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
           </button>
+        </div>
+        <div class="inventory-search">
+          <label for="kardex-search">Buscar movimientos</label>
+          <input id="kardex-search" type="search" placeholder="Código de pedido o insumo">
         </div>
         <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
           <table class="w-full text-left text-xs border-collapse">
@@ -821,6 +832,44 @@
   </div>
 
   <!-- MODAL: STOCK ADJUST / PURCHASE / EXPENSE -->
+  <dialog id="inventory-recipes" class="prep-dialog inventory-dialog" aria-labelledby="inventory-recipes-title">
+    <header>
+      <h3 id="inventory-recipes-title">Recetas de la carta</h3>
+      <button type="button" data-close-inventory aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+    </header>
+    <form id="inventory-recipe-form" class="inventory-form">
+      <label for="recipe-product">Producto de la carta</label>
+      <select id="recipe-product"></select>
+      <ul id="recipe-current" aria-label="Insumos por porción"></ul>
+      <p id="recipe-status" role="status"></p>
+      <label for="recipe-ingredient">Insumo</label>
+      <select id="recipe-ingredient"></select>
+      <label for="recipe-quantity">Cantidad por porción <span id="recipe-unit"></span></label>
+      <input id="recipe-quantity" type="number" min="0" max="1000000" required>
+      <p>Usa 0 para quitar el insumo. El cambio se aplica a los próximos consumos.</p>
+      <button type="submit" class="admin-tool admin-tool-primary">Guardar cantidad</button>
+    </form>
+  </dialog>
+
+  <dialog id="inventory-ingredient" class="prep-dialog inventory-dialog" aria-labelledby="inventory-ingredient-title">
+    <header>
+      <h3 id="inventory-ingredient-title">Nuevo insumo</h3>
+      <button type="button" data-close-inventory aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+    </header>
+    <form id="inventory-ingredient-form" class="inventory-form">
+      <label for="ingredient-name">Nombre</label>
+      <input id="ingredient-name" type="text" maxlength="80" required>
+      <label for="ingredient-station">Estación</label>
+      <select id="ingredient-station"><option value="COCINA">Cocina</option><option value="BARRA">Barra</option></select>
+      <label for="ingredient-unit">Unidad de control</label>
+      <select id="ingredient-unit"><option value="und">Unidades</option><option value="g">Gramos</option><option value="ml">Mililitros</option><option value="porc">Porciones</option><option value="bot">Botellas</option><option value="oz">Onzas</option></select>
+      <label for="ingredient-minimum">Stock mínimo</label>
+      <input id="ingredient-minimum" type="number" min="0" value="0" max="1000000" required>
+      <p id="ingredient-error" role="alert"></p>
+      <button type="submit" class="admin-tool admin-tool-primary">Crear insumo</button>
+    </form>
+  </dialog>
+
   <div id="modal-adjust" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
@@ -837,12 +886,13 @@
             <label class="block font-bold text-slate-700 mb-1">Tipo</label>
             <select id="adj-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
               <option value="ENTRADA">Entrada (+)</option>
+              <option value="CONTEO">Conteo físico</option>
               <option value="MERMA">Merma / Salida (-)</option>
             </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Cantidad</label>
-            <input id="adj-qty" type="number" min="1" required value="5" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <label id="adj-quantity-label" for="adj-qty" class="block font-bold text-slate-700 mb-1">Cantidad</label>
+            <input id="adj-qty" type="number" min="1" max="1000000" required value="5" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
           </div>
         </div>
         <div>
@@ -979,6 +1029,7 @@
       }
 
       const alertMessage = document.getElementById('staff-alert-message');
+      const prepAlertMessage = document.getElementById('prep-alert-message');
       const soundButton = document.getElementById('staff-sound');
       let audio;
       let soundEnabled = false;
@@ -1043,41 +1094,48 @@
       soundButton.onclick = prepSoundButton.onclick = toggleSound;
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
-      function deductInventoryForOrder(order, action = 'Aprobación') {
-        const usage = {};
-        order.items.forEach(item => {
-          const m = MENU.find(x => x.id === item.menuId);
-          if (m && m.recipe) {
-            m.recipe.forEach(r => {
-              usage[r.id] = (usage[r.id] || 0) + (r.qty * item.qty);
-            });
-          }
-          if (item.extras && item.extras.length) {
-            item.extras.forEach(ex => {
-              usage[ex.ingId] = (usage[ex.ingId] || 0) + (ex.qty * item.qty);
-            });
-          }
-        });
+      function recipeIngredients(product) {
+        if (!product) return new Map();
+        const recipe = new Map((product.recipe || []).map(({ id, qty }) => [id, qty]));
+        for (const [id, qty] of Object.entries(state.recipeQuantities?.[product.id] || {})) recipe.set(id, qty);
+        return recipe;
+      }
 
-        Object.entries(usage).forEach(([ingId, qtyUsed]) => {
-          const ing = state.ingredients.find(i => i.id === ingId);
-          if (!ing) return;
-          const prev = ing.stock;
-          const next = Math.max(0, prev - qtyUsed);
-          ing.stock = next;
-          state.counters.kardex += 1;
-          state.kardex.unshift({
-            id: 'k' + state.counters.kardex,
-            date: nowStr(),
-            ingName: ing.name,
-            type: 'SALIDA',
-            doc: `${action} ${order.code}`,
-            prev,
-            qty: -qtyUsed,
-            next,
-            unit: ing.unit
-          });
+      function stockQuantity(value) {
+        return Math.round(value * 1000) / 1000;
+      }
+
+      function recordStockChange(ingredient, next, type, doc, orderId) {
+        const prev = ingredient.stock;
+        ingredient.stock = stockQuantity(next);
+        state.counters.kardex += 1;
+        state.kardex.unshift({
+          id: 'k' + state.counters.kardex,
+          date: nowStr(),
+          ingName: ingredient.name,
+          ingredientId: ingredient.id,
+          orderId,
+          type, doc, prev, qty: stockQuantity(ingredient.stock - prev),
+          next: ingredient.stock, unit: ingredient.unit
         });
+      }
+
+      function deductInventoryForOrder(order, action = 'Aprobación') {
+        const usage = new Map();
+        const add = (id, qty) => usage.set(id, (usage.get(id) || 0) + qty);
+        for (const item of order.items) {
+          for (const [id, qty] of recipeIngredients(menuById.get(item.menuId))) {
+            if (qty > 0) add(id, qty * item.qty);
+          }
+          for (const selected of item.extras || []) {
+            const extra = EXTRAS.find(entry => entry.id === selected.id);
+            if (extra) add(extra.ingId, extra.qty * item.qty);
+          }
+        }
+        for (const ingredient of state.ingredients) {
+          if (!usage.has(ingredient.id)) continue;
+          recordStockChange(ingredient, ingredient.stock - usage.get(ingredient.id), 'SALIDA', action + ' ' + order.code, order.id);
+        }
       }
 
       function serviceTicketUrl(order) {
@@ -1349,6 +1407,7 @@
       }
 
       let staffMenu = false;
+      let prepReturnRole = 'admin';
 
       function updateMenuLayout(role) {
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
@@ -1368,6 +1427,7 @@
         }
         if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
         if (role !== 'cliente') staffMenu = true;
+        if (role === 'chef' && ['admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
         ui.role = role;
         document.body.toggleAttribute('data-prep-view', role === 'chef');
         updateMenuLayout(role);
@@ -1716,6 +1776,13 @@
         renderPrepPreferences();
         openPrepDialog(prepSettings);
       };
+      document.getElementById('prep-back').onclick = () => {
+        prepAlertMessage.textContent = '';
+        switchRole(staffArea === 'chef' ? 'cliente' : prepReturnRole);
+        const landing = location.hash ? (staffArea === 'chef' ? '' : '#personal') : '';
+        if (location.hash !== landing) history.replaceState(null, '', location.pathname + location.search + landing);
+        document.querySelector('#role-tabs [aria-current="page"]')?.focus();
+      };
       document.getElementById('prep-code-open').onclick = () => openPrepCode();
       document.getElementById('prep-logout').onclick = () => document.getElementById('staff-logout').click();
       document.querySelectorAll('[data-close-prep]').forEach(button => {
@@ -1739,7 +1806,7 @@
           && now - preparationStartedAt(order) >= prepTarget(order) * 60000);
         if (overdue.length && playOrderSound()) {
           overdue.forEach(order => prepReminderKeys.add(prepStation + order.id));
-          alertMessage.textContent = overdue.length === 1
+          prepAlertMessage.textContent = overdue.length === 1
             ? 'Comanda demorada · ' + overdue[0].code
             : overdue.length + ' comandas superaron su tiempo de preparación.';
         }
@@ -1771,7 +1838,9 @@
         for (const button of document.querySelectorAll('[data-prep-station], [data-prep-filter]')) {
           button.setAttribute('aria-pressed', String(button.dataset.prepStation === station || button.dataset.prepFilter === prepFilter));
         }
-        document.getElementById('chef-active-count').textContent = pending.length + ' por preparar en ' + stationName(station);
+        const count = document.getElementById('chef-active-count');
+        const description = prepFilter === 'ready' ? ready.length + ' en Terminados' : pending.length + ' por preparar';
+        if (count.textContent !== description) count.textContent = description;
         const orders = prepFilter === 'ready' ? ready : [...pending].sort((a, b) =>
           (preparationStartedAt(a) || Infinity) - (preparationStartedAt(b) || Infinity));
         const list = document.getElementById('chef-orders-list');
@@ -1785,15 +1854,16 @@
           const items = order.items.filter(item => item.station === station ||
             (station === orderStations(order)[0] && item.menuId === 'taper'));
           return `
-            <article class="prep-card">
+            <article class="prep-card"${done ? ' data-ready' : ''}${order.channel === 'DELIVERY' ? ' data-delivery' : ''}>
               <header>
-                <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}${order.takeaway ? ' · Para llevar' : ''}</h3>
+                <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}</h3>
                   <p class="font-mono-ticket">${order.code}</p></div>
-                ${done ? '<span class="prep-done">Lista</span>' : Number.isFinite(start) ? `
+                ${done ? '<span class="prep-done"><i data-lucide="check" aria-hidden="true"></i> Lista</span>' : Number.isFinite(start) ? `
                   <div class="prep-clock" data-prep-start="${start}" data-prep-target="${prepTarget(order)}" title="Tiempo desde la aprobación">
                     <i data-lucide="clock" aria-hidden="true"></i><span></span>
                   </div>` : ''}
               </header>
+              ${order.takeaway ? '<div class="prep-channel">Para llevar</div>' : ''}
               <ul>
                 ${items.map(item => `<li>
                   <b class="prep-qty">${item.qty}×</b>
@@ -1856,23 +1926,12 @@
               <td class="py-3 px-4 text-right font-extrabold ${low ? 'text-rose-600' : 'text-slate-900'}">${i.stock} ${i.unit}</td>
               <td class="py-3 px-4 text-right text-slate-500">${i.minStock} ${i.unit}</td>
               <td class="py-3 px-4 text-right text-slate-600">${money(i.cost)}</td>
-              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${low ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'}">${low ? 'Stock Bajo' : 'Óptimo'}</span></td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${low ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'}">${i.stock < 0 ? 'Faltante' : low ? 'Stock bajo' : 'Óptimo'}</span></td>
             </tr>
           `;
         }).join('');
 
-        // Kardex
-        document.getElementById('kardex-tbody').innerHTML = state.kardex.map(k => `
-          <tr class="hover:bg-slate-50">
-            <td class="py-3 px-4 text-slate-500 whitespace-nowrap">${k.date}</td>
-            <td class="py-3 px-4 font-bold text-slate-900">${k.ingName}</td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${k.qty >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}">${k.type}</span></td>
-            <td class="py-3 px-4 text-slate-700">${k.doc}</td>
-            <td class="py-3 px-4 text-right text-slate-500">${k.prev} ${k.unit}</td>
-            <td class="py-3 px-4 text-right font-bold ${k.qty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${k.qty >= 0 ? '+' + k.qty : k.qty} ${k.unit}</td>
-            <td class="py-3 px-4 text-right font-extrabold text-slate-900">${k.next} ${k.unit}</td>
-          </tr>
-        `).join('');
+        renderKardex();
 
         // Proveedores
         document.getElementById('sup-tbody').innerHTML = state.suppliers.map(s => `
@@ -2166,7 +2225,7 @@
         const appBtn = e.target.closest('[data-admin-approve]');
         if (appBtn) {
           const order = state.orders.find(o => o.id === appBtn.dataset.adminApprove);
-          if (!order) return;
+          if (!order || order.status !== 'POR_APROBAR') return;
           if (order.channel === 'DELIVERY' && order.paymentStatus !== 'PAGADO') {
             if (!window.confirm('¿Verificaste el pago de este pedido en tu cuenta?')) return;
             order.paymentStatus = 'PAGADO';
@@ -2198,10 +2257,13 @@
             });
           }
 
-          saveState();
+          const saved = saveState();
           renderActiveRole();
-          showToast(`Pedido ${order.code} aprobado. Comanda disponible para imprimir y enviada al Chef.`);
-          openBixolonModal(order);
+          saved.then(ok => {
+            if (!ok) return;
+            showToast(`Pedido ${order.code} aprobado y enviado a Preparación.`);
+            openBixolonModal(order);
+          });
           return;
         }
 
@@ -2739,7 +2801,9 @@
             prepCodeDialog.close();
           }
           await syncStaff();
-          showToast(result.ready ? 'Pedido ' + order.code + ' listo.' : stationName(station) + ' lista para ' + order.code + '.');
+          prepAlertMessage.textContent = result.ready
+            ? 'Pedido ' + order.code + ' listo.'
+            : stationName(station) + ' lista para ' + order.code + '.';
         } catch (error) {
           const message = error.message || 'No se pudo terminar la preparación.';
           if (byCode && prepCodeDialog.open) prepCodeError.textContent = message;
@@ -2834,27 +2898,164 @@
         showToast('Archivo BXL/POS descargado para BIXOLON SPP-R310BK.');
       });
 
-      // Gestión Modals
+      function renderKardex() {
+        const query = document.getElementById('kardex-search').value.trim().toLocaleLowerCase('es');
+        const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        const movements = state.kardex.filter(k => (k.ingName + ' ' + k.doc).toLocaleLowerCase('es').includes(query));
+        document.getElementById('kardex-tbody').innerHTML = movements.map(k => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-4 text-slate-500 whitespace-nowrap">${k.date}</td>
+            <td class="py-3 px-4 font-bold text-slate-900">${escape(k.ingName)}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${k.qty >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}">${k.type}</span></td>
+            <td class="py-3 px-4 text-slate-700">${escape(k.doc)}</td>
+            <td class="py-3 px-4 text-right text-slate-500">${k.prev} ${k.unit}</td>
+            <td class="py-3 px-4 text-right font-bold ${k.qty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${k.qty >= 0 ? '+' + k.qty : k.qty} ${k.unit}</td>
+            <td class="py-3 px-4 text-right font-extrabold text-slate-900">${k.next} ${k.unit}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="7" class="p-4">No se encontraron movimientos.</td></tr>';
+
+      }
+
+      document.getElementById('kardex-search').addEventListener('input', renderKardex);
+
+      const recipeDialog = document.getElementById('inventory-recipes');
+      const recipeProduct = document.getElementById('recipe-product');
+      const recipeIngredient = document.getElementById('recipe-ingredient');
+      const recipeQuantity = document.getElementById('recipe-quantity');
+      const recipeStatus = document.getElementById('recipe-status');
+      const ingredientDialog = document.getElementById('inventory-ingredient');
+      const ingredientForm = document.getElementById('inventory-ingredient-form');
+      const ingredientUnit = document.getElementById('ingredient-unit');
+      const ingredientMinimum = document.getElementById('ingredient-minimum');
+      const ingredientError = document.getElementById('ingredient-error');
+      const quantityStep = unit => ['und', 'bot'].includes(unit) ? '1' : '0.001';
+      const adjustmentIngredient = document.getElementById('adj-ing');
+      const adjustmentType = document.getElementById('adj-type');
+      const adjustmentQuantity = document.getElementById('adj-qty');
+      let loadedRecipeQuantity;
+
+      function renderRecipe() {
+        const product = menuById.get(recipeProduct.value);
+        const recipe = recipeIngredients(product);
+        const rows = state.ingredients.filter(ingredient => recipe.get(ingredient.id) > 0).map(ingredient => {
+          const row = document.createElement('li');
+          row.textContent = ingredient.name + ' · ' + recipe.get(ingredient.id) + ' ' + ingredient.unit;
+          return row;
+        });
+        document.getElementById('recipe-current').replaceChildren(...rows);
+        recipeStatus.textContent = product?.id === 'm17' && !recipe.get('ing_nuggets')
+          ? 'Define cuántos nuggets lleva esta porción.'
+          : rows.length ? '' : 'Esta receta todavía no tiene insumos registrados.';
+        const ingredient = state.ingredients.find(entry => entry.id === recipeIngredient.value);
+        const unit = ingredient?.unit || '';
+        loadedRecipeQuantity = recipe.get(recipeIngredient.value) || 0;
+        recipeQuantity.value = loadedRecipeQuantity;
+        recipeQuantity.step = quantityStep(unit);
+        document.getElementById('recipe-unit').textContent = unit ? '(' + unit + ')' : '';
+      }
+
+      document.querySelectorAll('[data-close-inventory]').forEach(button => {
+        button.onclick = () => button.closest('dialog').close();
+      });
+
+      document.getElementById('btn-open-recipes').onclick = () => {
+        recipeProduct.replaceChildren(...MENU.filter(product => !product.retired).map(product => new Option(product.name, product.id)));
+        recipeIngredient.replaceChildren(...state.ingredients.map(ingredient => new Option(ingredient.name, ingredient.id)));
+        renderRecipe();
+        recipeDialog.showModal();
+      };
+      recipeProduct.onchange = recipeIngredient.onchange = renderRecipe;
+      document.getElementById('inventory-recipe-form').onsubmit = async event => {
+        event.preventDefault();
+        const product = menuById.get(recipeProduct.value);
+        const ingredient = state.ingredients.find(entry => entry.id === recipeIngredient.value);
+        if (!product || !ingredient) return;
+        if ((recipeIngredients(product).get(ingredient.id) || 0) !== loadedRecipeQuantity) {
+          renderRecipe();
+          recipeStatus.textContent = 'La receta cambió en otro equipo. Revisa la cantidad actual.';
+          return;
+        }
+        const quantity = stockQuantity(recipeQuantity.valueAsNumber);
+        state.recipeQuantities ||= {};
+        state.recipeQuantities[product.id] ||= {};
+        state.recipeQuantities[product.id][ingredient.id] = quantity;
+        const button = event.submitter;
+        button.disabled = true;
+        const saved = await saveState();
+        button.disabled = false;
+        if (!saved) {
+          recipeDialog.close();
+          return;
+        }
+        renderRecipe();
+        recipeStatus.textContent = 'Cantidad guardada para ' + product.name + '.';
+      };
+
+      document.getElementById('btn-open-ingredient').onclick = () => {
+        ingredientForm.reset();
+        ingredientMinimum.step = '1';
+        ingredientError.textContent = '';
+        ingredientDialog.showModal();
+      };
+      ingredientUnit.onchange = () => { ingredientMinimum.step = quantityStep(ingredientUnit.value); };
+      ingredientForm.onsubmit = async event => {
+        event.preventDefault();
+        const name = document.getElementById('ingredient-name').value.trim();
+        if (!name || /[<>&]/.test(name)) {
+          ingredientError.textContent = 'Escribe un nombre de insumo válido.';
+          return;
+        }
+        if (state.ingredients.some(item => item.name.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'))) {
+          ingredientError.textContent = 'Ya existe un insumo con ese nombre.';
+          return;
+        }
+        const usedCodes = new Set(state.ingredients.map(item => item.code));
+        let number = state.ingredients.length + 1;
+        while (usedCodes.has('IN-' + pad(number, 2))) number++;
+        state.ingredients.push({
+          id: 'ing_' + crypto.randomUUID(), code: 'IN-' + pad(number, 2), name,
+          station: document.getElementById('ingredient-station').value, unit: ingredientUnit.value,
+          stock: 0, minStock: stockQuantity(ingredientMinimum.valueAsNumber), cost: 0
+        });
+        const button = event.submitter;
+        button.disabled = true;
+        const saved = await saveState();
+        button.disabled = false;
+        ingredientDialog.close();
+        if (saved) {
+          renderGestion();
+          showToast('Insumo creado. Usa Ajustar stock para registrar el conteo.');
+        }
+      };
+
+      function updateAdjustmentInputs() {
+        const ingredient = state.ingredients.find(item => item.id === adjustmentIngredient.value);
+        const step = quantityStep(ingredient?.unit);
+        const counting = adjustmentType.value === 'CONTEO';
+        adjustmentQuantity.step = step;
+        adjustmentQuantity.min = counting ? '0' : step;
+        document.getElementById('adj-quantity-label').textContent = counting ? 'Cantidad contada' : 'Cantidad';
+      }
+
+      adjustmentIngredient.onchange = adjustmentType.onchange = updateAdjustmentInputs;
       document.getElementById('btn-open-adjust').addEventListener('click', () => {
-        document.getElementById('adj-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.stock} ${i.unit})</option>`).join('');
+        document.getElementById('form-adjust').reset();
+        adjustmentIngredient.replaceChildren(...state.ingredients.map(item => new Option(item.name + ' (' + item.stock + ' ' + item.unit + ')', item.id)));
+        updateAdjustmentInputs();
         openModal('modal-adjust');
       });
-      document.getElementById('form-adjust').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const ing = state.ingredients.find(i => i.id === document.getElementById('adj-ing').value);
-        const type = document.getElementById('adj-type').value;
-        const qty = parseInt(document.getElementById('adj-qty').value, 10) || 0;
+      document.getElementById('form-adjust').addEventListener('submit', async event => {
+        event.preventDefault();
+        const ingredient = state.ingredients.find(item => item.id === adjustmentIngredient.value);
+        const type = adjustmentType.value;
+        const quantity = adjustmentQuantity.valueAsNumber;
         const reason = document.getElementById('adj-reason').value.trim();
-        if (!ing || qty <= 0) return;
-        const delta = type === 'ENTRADA' ? qty : -qty;
-        const prev = ing.stock;
-        ing.stock = Math.max(0, prev + delta);
-        state.counters.kardex += 1;
-        state.kardex.unshift({ id: 'k' + state.counters.kardex, date: nowStr(), ingName: ing.name, type, doc: reason, prev, qty: delta, next: ing.stock, unit: ing.unit });
-        saveState();
+        if (!ingredient || !reason || !Number.isFinite(quantity) || quantity < Number(adjustmentQuantity.min)) return;
+        const next = type === 'CONTEO' ? quantity : ingredient.stock + (type === 'ENTRADA' ? quantity : -quantity);
+        recordStockChange(ingredient, next, type, reason);
         closeModal('modal-adjust');
         renderGestion();
-        showToast('Ajuste registrado en Kardex.');
+        if (await saveState()) showToast('Ajuste registrado en Kardex.');
       });
 
       document.getElementById('btn-open-purchase').addEventListener('click', () => {
@@ -2998,7 +3199,6 @@
         document.getElementById('staff-logout').hidden = false;
         updateStaffNavigation();
         document.getElementById('staff-alerts').hidden = false;
-        document.getElementById('staff-avatar').textContent = staffArea === 'chef' ? 'C' : 'N';
         const nextOrders = new Map(state.orders.map(order => [order.id, order.status]));
         if (observedOrders) {
           const arrivals = state.orders.filter(order => !observedOrders.has(order.id) && ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF'].includes(order.status));
@@ -3006,10 +3206,9 @@
             alertMessage.textContent = arrivals.length === 1
               ? 'Nuevo pedido ' + arrivals[0].code + ' · ' + (arrivals[0].channel === 'DELIVERY' ? 'Delivery' : arrivals[0].table)
               : arrivals.length + ' pedidos nuevos';
+            prepAlertMessage.textContent = alertMessage.textContent;
             arrivals.forEach(playOrderSound);
           }
-        } else {
-          alertMessage.textContent = staffArea === 'chef' ? 'Cocina' : 'Administración · Nicol';
         }
         observedOrders = nextOrders;
         if (ui.role !== 'cliente') renderActiveRole();

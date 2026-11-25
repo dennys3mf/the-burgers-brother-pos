@@ -1,3 +1,10 @@
+export function withInventoryCatalog(state) {
+  if (!state.ingredients.some(ingredient => ingredient.id === 'ing_nuggets')) {
+    state.ingredients.push({ id: 'ing_nuggets', code: 'IN-14', name: 'Nuggets', station: 'COCINA', unit: 'und', stock: 0, minStock: 0, cost: 0 });
+  }
+  return state;
+}
+
 export function initialState() {
   const state = {
     counters: { order: 0, boleta: 0, kardex: 0 },
@@ -24,5 +31,5 @@ export function initialState() {
     boletas: []
   };
   for (const ingredient of state.ingredients) ingredient.stock = 0;
-  return state;
+  return withInventoryCatalog(state);
 }

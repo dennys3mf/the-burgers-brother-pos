@@ -1,7 +1,7 @@
 import { STATIONS, orderStations, stationReady } from '../../public/preparation.js';
 import { MENU, EXTRAS, WING_FLAVORS } from '../../public/catalog.js';
 import { priceOrder } from '../../public/order-pricing.js';
-import { initialState } from '../initial-state.js';
+import { initialState, withInventoryCatalog } from '../initial-state.js';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const sessionName = '__Host-pos_session';
@@ -310,7 +310,7 @@ export async function onRequest({ request, env }) {
     }
     if (path === '/api/state' && method === 'GET') {
       const row = await db.prepare('SELECT payload, revision, updated_at FROM pos_state WHERE id = 1').first();
-      return json({ ok: true, role, state: row ? JSON.parse(row.payload) : initialState(),
+      return json({ ok: true, role, state: row ? withInventoryCatalog(JSON.parse(row.payload)) : initialState(),
         revision: row?.revision || null, updatedAt: row?.updated_at || null });
     }
     if (path === '/api/state' && method === 'PUT') {
