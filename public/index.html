@@ -184,6 +184,13 @@
         </div>
         <p id="staff-sound-status" role="status"></p>
       </fieldset>
+      <fieldset id="chef-access-settings" hidden>
+        <legend>Accesos del personal</legend>
+        <div class="prep-config-actions">
+          <button id="btn-chef-access" type="button"><i data-lucide="key-round" aria-hidden="true"></i> Cambiar clave de Cocina</button>
+        </div>
+        <p id="chef-access-status" role="status"></p>
+      </fieldset>
     </div>
   </dialog>
 
@@ -364,7 +371,6 @@
 
       <div class="admin-toolbar">
         <button id="btn-admin-new-order" type="button" class="admin-tool admin-tool-primary"><i data-lucide="plus" aria-hidden="true"></i> Nuevo pedido</button>
-        <button id="btn-chef-access" type="button" class="admin-tool"><i data-lucide="key-round" aria-hidden="true"></i> Acceso de cocina</button>
         <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas" class="min-h-11 min-w-0 grow rounded-xl border border-slate-200 bg-white px-3 text-base">
       </div>
       <p id="admin-order-search-summary" class="text-sm text-slate-600" hidden></p>
@@ -781,8 +787,8 @@
 
   <dialog id="chef-access-dialog" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-4 text-slate-950" aria-labelledby="chef-access-title">
     <form id="chef-access-form" class="space-y-3">
-      <h2 id="chef-access-title" class="text-xl font-bold">Acceso de cocina</h2>
-      <label for="chef-new-password" class="block">Clave de cocina</label>
+      <h2 id="chef-access-title" class="text-xl font-bold">Cambiar clave de Cocina</h2>
+      <label for="chef-new-password" class="block">Nueva clave de Cocina</label>
       <input id="chef-new-password" type="password" autocomplete="new-password" minlength="8" maxlength="100" required class="w-full rounded-lg border p-2 text-base">
       <p class="text-sm text-slate-600">Comparte esta clave con el equipo de cocina. Si la cambias, se cerrarán sus sesiones anteriores.</p>
       <p id="chef-access-error" role="alert" class="text-sm text-rose-700"></p>
@@ -3282,6 +3288,7 @@
 
       const login = document.getElementById('staff-login');
       function updateStaffNavigation() {
+        document.getElementById('chef-access-settings').hidden = !staffReady || staffArea !== 'admin';
         staffSectionLinks.querySelectorAll('[data-role]').forEach(button => {
           const role = button.dataset.role;
           button.hidden = role !== 'cliente' && (!staffReady || (staffArea === 'chef' && role !== 'chef'));
@@ -3292,7 +3299,10 @@
       document.getElementById('staff-access').onclick = () => switchRole('admin');
       const chefAccessDialog = document.getElementById('chef-access-dialog');
       const chefAccessForm = document.getElementById('chef-access-form');
+      const chefAccessStatus = document.getElementById('chef-access-status');
       document.getElementById('btn-chef-access').onclick = () => {
+        if (!staffReady || staffArea !== 'admin') return;
+        chefAccessStatus.textContent = '';
         chefAccessForm.reset();
         document.getElementById('chef-access-error').textContent = '';
         chefAccessDialog.showModal();
@@ -3300,6 +3310,7 @@
       document.getElementById('chef-access-cancel').onclick = () => chefAccessDialog.close();
       chefAccessForm.onsubmit = async event => {
         event.preventDefault();
+        if (!staffReady || staffArea !== 'admin') return;
         const password = document.getElementById('chef-new-password');
         const errorText = document.getElementById('chef-access-error');
         const button = chefAccessForm.querySelector('button[type="submit"]');
@@ -3309,7 +3320,7 @@
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
           chefAccessDialog.close();
-          showToast('Clave de cocina actualizada.');
+          chefAccessStatus.textContent = 'Clave de Cocina actualizada.';
         } catch (error) {
           errorText.textContent = error.message;
         } finally {

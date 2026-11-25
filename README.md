@@ -1,6 +1,6 @@
 # The Burgers Brother POS
 
-La [carta pública](https://the-burgers-brother-pos.pages.dev/) permite generar códigos de mesa y delivery desde **Ver QR**. Nicol usa la clave de Admin para acceder a Administración, Gestión y la vista de cocina. El equipo de cocina usa una clave independiente, configurable desde Admin → Acceso de cocina. El cliente recibe un código al guardar su pedido en D1 y puede seguir el estado en la pestaña donde lo envió.
+La [carta pública](https://the-burgers-brother-pos.pages.dev/) permite generar códigos de mesa y delivery desde **Ver QR**. Nicol usa la clave de Admin para acceder a Administración, Gestión y la vista de cocina. El equipo de cocina usa una clave independiente, configurable desde Configuración general → Cambiar clave de Cocina. El cliente recibe un código al guardar su pedido en D1 y puede seguir el estado en la pestaña donde lo envió.
 
 El personal verifica el prepago de delivery antes de aprobar el pedido. La referencia ingresada por el cliente queda pendiente de verificación hasta ese momento. El inventario inicial contiene los insumos de la carta con existencias en cero.
 
@@ -22,4 +22,4 @@ Instala [BIXOLON Web Print SDK](https://es.bixolon.com/download_view.php?idx=14&
 
 En **Gestión → Caja**, abre una boleta y elige **Conectar impresora**. Cuando se verifique la conexión, pulsa **Imprimir directo**. Si el SDK tiene activado TLS, selecciona **HTTPS local en el SDK**. El POS usa el puerto local predeterminado 18080. El diálogo del sistema y el PDF siguen disponibles como opciones de impresión.
 
-Activa el sonido desde el panel de cada dispositivo. Los avisos se comprueban periódicamente mientras el POS permanece abierto.
+Activa el sonido desde Configuración general o la configuración de Preparación en cada dispositivo. Los avisos se comprueban periódicamente mientras el POS permanece abierto.

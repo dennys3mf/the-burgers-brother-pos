@@ -747,6 +747,7 @@ body[data-prep-view] #staff-alerts:not([hidden]),
 .prep-dialog :is(h2, h3) { font: 800 1.5rem/1.05 var(--display); }
 .prep-settings-content { display: grid; gap: .8rem; padding: .85rem; }
 .prep-settings-content fieldset { display: grid; gap: .4rem; min-width: 0; }
+.prep-settings-content fieldset[hidden] { display: none; }
 .prep-settings-content fieldset + fieldset { border-top: 1px solid var(--line); }
 .prep-settings-content legend { margin-bottom: .35rem; padding-inline-end: .6rem; font-weight: 800; }
 .prep-settings-content p { color: var(--text-muted); font-size: .85rem; }
