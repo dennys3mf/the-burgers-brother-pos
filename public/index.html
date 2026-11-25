@@ -113,34 +113,45 @@
 
   <!-- TOP NAVIGATION BAR (4-ACTOR SWITCHER) -->
   <header class="brand-bar sticky top-0 z-40 border-b">
-    <div class="max-w-7xl mx-auto px-3 sm:px-5 h-16 flex items-center justify-between gap-3">
-      <!-- Brand -->
-      <div class="brand-lockup shrink-0">
-        <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="The Burgers Brother" decoding="async">
-        <span class="brand-name" aria-hidden="true">THE BURGERS BROTHER</span>
+    <div class="staff-header max-w-7xl mx-auto px-3 sm:px-5 h-16">
+      <div class="brand-lockup brand-desktop">
+        <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
+        <span class="brand-name">THE BURGERS BROTHER</span>
       </div>
-
+      <button type="button" id="staff-menu-mobile" class="brand-lockup" aria-label="Menú de The Burgers Brother" aria-expanded="false" aria-controls="role-tabs">
+        <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
+        <span class="brand-name" aria-hidden="true">THE BURGERS BROTHER</span>
+        <i data-lucide="chevron-down" aria-hidden="true"></i>
+      </button>
       <button id="staff-access" type="button" class="min-h-11 px-2 text-xs font-semibold text-amber-400">Personal</button>
-      <button id="staff-logout" hidden type="button" class="text-xs font-semibold">Cerrar sesión</button>
-      <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1" id="role-tabs" aria-label="Secciones del POS">
-        <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
-          <i data-lucide="qr-code" class="w-4 h-4"></i>
-          <span>Carta</span>
+      <nav id="role-tabs" aria-label="Secciones del POS">
+        <div id="staff-sections">
+          <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>
+            <span>Carta</span>
+          </button>
+          <button type="button" hidden data-role="admin" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
+            <i data-lucide="bell-ring" class="w-4 h-4"></i>
+            <span>Admin</span>
+            <span id="badge-admin-pending" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-extrabold">0</span>
+          </button>
+          <button type="button" hidden data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
+            <i data-lucide="chef-hat" class="w-4 h-4"></i>
+            <span>Preparación</span>
+            <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
+          </button>
+          <button type="button" hidden data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
+            <i data-lucide="database" class="w-4 h-4"></i>
+            <span>Gestión</span>
+          </button>
+        </div>
+        <button type="button" id="staff-menu-desktop" hidden aria-label="Opciones de sesión" aria-expanded="false" aria-controls="staff-session-actions">
+          <i data-lucide="ellipsis" aria-hidden="true"></i>
         </button>
-        <button type="button" hidden data-role="admin" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
-          <i data-lucide="bell-ring" class="w-4 h-4"></i>
-          <span>Admin</span>
-          <span id="badge-admin-pending" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-extrabold">0</span>
-        </button>
-        <button type="button" hidden data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
-          <i data-lucide="chef-hat" class="w-4 h-4"></i>
-          <span>Preparación</span>
-          <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
-        </button>
-        <button type="button" hidden data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
-          <i data-lucide="database" class="w-4 h-4"></i>
-          <span>Gestión</span>
-        </button>
+        <div id="staff-session-actions" hidden>
+          <button type="button" id="staff-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración general</button>
+          <button id="staff-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
+        </div>
       </nav>
     </div>
   </header>
@@ -160,11 +171,26 @@
         </form>
       </dialog>
 
+  <dialog id="staff-settings" class="prep-dialog" aria-labelledby="staff-settings-title">
+    <header>
+      <h2 id="staff-settings-title">Configuración general</h2>
+      <button type="button" id="staff-settings-close" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+    </header>
+    <div class="prep-settings-content">
+      <fieldset>
+        <legend>Avisos de pedidos</legend>
+        <div class="prep-config-actions">
+          <button id="staff-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
+        </div>
+        <p id="staff-sound-status" role="status"></p>
+      </fieldset>
+    </div>
+  </dialog>
+
   <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
       <p id="staff-alert-message" role="status"></p>
-      <button id="staff-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
     </div>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
@@ -316,17 +342,9 @@
 
     <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
     <section id="view-admin" class="role-view hidden space-y-5">
-      <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div>
-          <h2 class="operator-title">Panel de pedidos</h2>
-          <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
-            <i data-lucide="printer" class="w-4 h-4"></i> BIXOLON SPP-R310BK (80mm)
-          </div>
-
-        </div>
+      <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <h2 class="operator-title">Panel de pedidos</h2>
+        <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
       </div>
 
       <div id="admin-filter-tabs" role="group" aria-label="Bandejas de pedidos">
@@ -368,6 +386,7 @@
           <details id="prep-menu" class="prep-menu">
             <summary aria-label="Opciones de preparación"><i data-lucide="ellipsis" aria-hidden="true"></i></summary>
             <div class="prep-menu-actions">
+              <nav id="prep-menu-sections" aria-label="Secciones del POS"></nav>
               <button type="button" id="prep-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración</button>
               <button type="button" id="prep-code-open"><i data-lucide="qr-code" aria-hidden="true"></i> Ingresar código de comanda</button>
               <button type="button" id="prep-logout"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
@@ -1073,8 +1092,8 @@
 
       async function toggleSound(event) {
         const inPrep = event.currentTarget === prepSoundButton;
-        const status = inPrep ? prepSoundStatus : alertMessage;
-        if (inPrep && prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
+        const status = inPrep ? prepSoundStatus : document.getElementById('staff-sound-status');
+        if (!inPrep || prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
         if (soundEnabled && audio?.state === 'running') {
           soundEnabled = false;
         } else {
@@ -1406,6 +1425,41 @@
         bChef.classList.toggle('hidden', cookingCount === 0);
       }
 
+      const staffHeader = document.querySelector('.staff-header');
+      const staffSectionLinks = document.getElementById('staff-sections');
+      const staffNav = document.getElementById('role-tabs');
+      const mobileStaffMenu = document.getElementById('staff-menu-mobile');
+      const desktopStaffMenu = document.getElementById('staff-menu-desktop');
+      const staffLogout = document.getElementById('staff-logout');
+      const staffSettingsDialog = document.getElementById('staff-settings');
+      const mobileHeader = matchMedia('(max-width: 767px)');
+      const staffMenuTrigger = () => mobileHeader.matches ? mobileStaffMenu : desktopStaffMenu;
+
+      function showStaffMenu(open) {
+        staffHeader.toggleAttribute('data-menu-open', open);
+        mobileStaffMenu.setAttribute('aria-expanded', String(open && mobileHeader.matches));
+        desktopStaffMenu.setAttribute('aria-expanded', String(open && !mobileHeader.matches));
+      }
+
+      for (const trigger of [mobileStaffMenu, desktopStaffMenu]) {
+        trigger.onclick = () => showStaffMenu(!staffHeader.hasAttribute('data-menu-open'));
+      }
+      document.addEventListener('click', event => {
+        if (staffHeader.hasAttribute('data-menu-open') && !staffHeader.contains(event.target)) showStaffMenu(false);
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !staffHeader.hasAttribute('data-menu-open')) return;
+        showStaffMenu(false);
+        staffMenuTrigger().focus();
+      });
+      mobileHeader.addEventListener('change', () => showStaffMenu(false));
+      document.getElementById('staff-settings-open').onclick = () => {
+        showStaffMenu(false);
+        staffMenuTrigger().focus();
+        staffSettingsDialog.showModal();
+      };
+      document.getElementById('staff-settings-close').onclick = () => staffSettingsDialog.close();
+
       let staffMenu = false;
       let prepReturnRole = 'admin';
 
@@ -1428,7 +1482,12 @@
         if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
         if (role !== 'cliente') staffMenu = true;
         if (role === 'chef' && ['admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
+        const fromMenu = staffHeader.hasAttribute('data-menu-open') || prepMenu.open;
+        showStaffMenu(false);
+        prepMenu.open = false;
         ui.role = role;
+        if (role === 'chef') document.getElementById('prep-menu-sections').append(staffSectionLinks);
+        else staffNav.prepend(staffSectionLinks);
         document.body.toggleAttribute('data-prep-view', role === 'chef');
         updateMenuLayout(role);
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
@@ -1446,6 +1505,10 @@
         if (role === 'chef' && scannedPrepCode) {
           openPrepCode(scannedPrepCode);
           scannedPrepCode = '';
+        } else if (fromMenu) {
+          if (role === 'chef') document.getElementById('prep-back').focus();
+          else if (mobileHeader.matches) mobileStaffMenu.focus();
+          else staffSectionLinks.querySelector('[aria-current="page"]')?.focus();
         }
       }
 
@@ -1781,10 +1844,11 @@
         switchRole(staffArea === 'chef' ? 'cliente' : prepReturnRole);
         const landing = location.hash ? (staffArea === 'chef' ? '' : '#personal') : '';
         if (location.hash !== landing) history.replaceState(null, '', location.pathname + location.search + landing);
-        document.querySelector('#role-tabs [aria-current="page"]')?.focus();
+        if (mobileHeader.matches) mobileStaffMenu.focus();
+        else staffSectionLinks.querySelector('[aria-current="page"]')?.focus();
       };
       document.getElementById('prep-code-open').onclick = () => openPrepCode();
-      document.getElementById('prep-logout').onclick = () => document.getElementById('staff-logout').click();
+      document.getElementById('prep-logout').onclick = signOutStaff;
       document.querySelectorAll('[data-close-prep]').forEach(button => {
         button.onclick = () => button.closest('dialog').close();
       });
@@ -3196,7 +3260,8 @@
         revision = data.revision;
         staffReady = true;
         document.getElementById('staff-access').hidden = true;
-        document.getElementById('staff-logout').hidden = false;
+        desktopStaffMenu.hidden = false;
+        document.getElementById('staff-session-actions').hidden = false;
         updateStaffNavigation();
         document.getElementById('staff-alerts').hidden = false;
         const nextOrders = new Map(state.orders.map(order => [order.id, order.status]));
@@ -3217,7 +3282,7 @@
 
       const login = document.getElementById('staff-login');
       function updateStaffNavigation() {
-        document.querySelectorAll('#role-tabs [data-role]').forEach(button => {
+        staffSectionLinks.querySelectorAll('[data-role]').forEach(button => {
           const role = button.dataset.role;
           button.hidden = role !== 'cliente' && (!staffReady || (staffArea === 'chef' && role !== 'chef'));
         });
@@ -3277,11 +3342,12 @@
         }
       };
 
-      document.getElementById('staff-logout').onclick = async () => {
+      async function signOutStaff() {
         await staffWrites;
         await fetch('/api/session', { method: 'DELETE' });
         location.reload();
-      };
+      }
+      staffLogout.onclick = signOutStaff;
 
       function saveState() {
         if (!staffReady || staffArea !== 'admin') return;
