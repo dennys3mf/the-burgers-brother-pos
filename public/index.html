@@ -230,7 +230,7 @@
               <select id="carta-page-select" aria-label="Categoría de la carta" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 font-semibold"></select>
               <p class="carta-caption">Toca un plato para personalizarlo.</p>
               <div id="carta-sheet" class="carta-sheet"></div>
-              <p id="carta-drinks-note" class="carta-caption" hidden>Frost a S/ 8.00 cada uno. Consulta con el personal por las bebidas de 300 ml.</p>
+              <p id="carta-drinks-note" class="carta-caption" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
             </div>
           </section>
           <div id="carta-list" hidden class="space-y-3">
@@ -1426,7 +1426,7 @@
         const items = MENU.filter(m => {
           const mCat = ui.clientCategory === 'Todos' || m.cat === ui.clientCategory;
           const mQ = !q || m.name.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q);
-          return mCat && mQ;
+          return !m.retired && mCat && mQ;
         });
 
         document.getElementById('client-menu-grid').innerHTML = items.map(m => `
@@ -1787,12 +1787,19 @@
         image.srcset = `${path}-720.webp 720w, ${path}-1120.webp 1120w`;
         image.src = `${path}-720.webp`;
         image.addEventListener('error', () => showMenuFormat('list'), { once: true });
-        const buttons = page.spots.map(({ id, left, right, top, bottom }) => {
+        const buttons = page.spots.map(({ id, left, right, top, bottom, showPrice }) => {
           const item = menuById.get(id);
           const button = document.createElement('button');
           button.type = 'button';
           button.className = 'carta-spot';
           button.dataset.openCust = id;
+          if (showPrice) {
+            button.classList.add('carta-spot-priced');
+            const price = document.createElement('span');
+            price.textContent = money(item.price);
+            price.setAttribute('aria-hidden', 'true');
+            button.append(price);
+          }
           button.setAttribute('aria-label', `${item.name}, ${money(item.price)}. Personalizar`);
           button.style.left = `${left / 559 * 100}%`;
           button.style.top = `${top / 790 * 100}%`;
@@ -2131,7 +2138,7 @@
       const editProducts = document.getElementById('edit-add-products');
       const productPicker = document.getElementById('edit-add-product');
       const editLines = document.getElementById('edit-order-items');
-      productPicker.append(...MENU.map(item => new Option(item.name + ' · ' + money(item.price), item.id)));
+      productPicker.append(...MENU.filter(item => !item.retired).map(item => new Option(item.name + ' · ' + money(item.price), item.id)));
       let addedOrderItems = [];
 
       function editQuantityRow(item, locked) {

@@ -437,3 +437,12 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
   color: var(--ink);
   box-shadow: none;
 }
+
+.carta-spot-priced::after { display: none; }
+.carta-spot-priced span {
+  position: absolute; top: 1%; right: 2%;
+  padding: .1em .35em; border: 1px solid #8f7956; border-radius: .18em;
+  background: #fff3d4; color: #17100c; white-space: nowrap;
+  font-size: clamp(8px, 2.25cqw, 13px); font-weight: 850; line-height: 1.25;
+}
+.carta-sheet { container-type: inline-size; }

@@ -30,7 +30,7 @@ export const menuPages = [
       ]),
       ...column(309, 385, [['m27', 346, 383]]),
       ...column(304, 432, [['m30', 475, 586]]),
-      ...column(294, 433, [['m42', 626, 652], ['m43', 652, 680]])
+      { id: 'm44', left: 294, right: 444, top: 601, bottom: 686, showPrice: true }
     ]
   },
   {
@@ -55,5 +55,6 @@ export const drinkOptions = {
   m26: ['Fanta', 'Sprite'],
   m28: ['Maracuyá', 'Limonada', 'Emoliente', 'Linaza', 'Chicha'],
   m29: ['Maracuyá', 'Mango', 'Cherry', 'Caramelo', 'Emoliente', 'Linaza'],
-  m30: ['Oreo', 'Fresa', 'Café']
+  m30: ['Oreo', 'Fresa', 'Café'],
+  m44: ['Chicha', 'Limonada']
 };
