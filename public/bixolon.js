@@ -54,7 +54,7 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     if (brandedComanda) {
       for (const part of body.trimEnd().split(/(^\d+x [^\n]*\n?)/m).filter(Boolean)) {
         if (/^\d+x /.test(part)) {
-          append({ printText: [part.trimEnd() + '\n', 0, 1, true, false, false, 0, 0] });
+          append({ printText: [part.trimEnd() + '\n', 0, 0, true, false, false, 0, 0] });
         } else {
           append(printText(part.endsWith('\n') ? part : part + '\n'));
         }
