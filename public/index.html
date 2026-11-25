@@ -163,6 +163,7 @@
   <!-- MAIN WORKSPACE -->
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
+      <span id="staff-avatar" class="staff-avatar" aria-hidden="true"></span>
       <p id="staff-alert-message" role="status"></p>
       <button id="staff-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
     </div>
@@ -315,16 +316,26 @@
           <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
             <i data-lucide="printer" class="w-4 h-4"></i> BIXOLON SPP-R310BK (80mm)
           </div>
-          <div id="admin-filter-tabs" class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-            <button type="button" data-admin-filter="POR_APROBAR" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Por Aprobar</button>
-            <button type="button" data-admin-filter="EN_COCINA" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">En Cocina</button>
-            <button type="button" data-admin-filter="LISTO_CHEF" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Listos (Chef)</button>
-            <button type="button" data-admin-filter="ENTREGADO" class="admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold">Historial</button>
-          </div>
+
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
+      <div id="admin-filter-tabs" role="group" aria-label="Bandejas de pedidos">
+        <button type="button" data-admin-filter="POR_APROBAR" class="admin-filter-btn">
+          <i data-lucide="inbox" aria-hidden="true"></i><span>Por aprobar</span><span data-order-count aria-hidden="true">0</span>
+        </button>
+        <button type="button" data-admin-filter="EN_COCINA" class="admin-filter-btn">
+          <i data-lucide="chef-hat" aria-hidden="true"></i><span>En cocina</span><span data-order-count aria-hidden="true">0</span>
+        </button>
+        <button type="button" data-admin-filter="LISTO_CHEF" class="admin-filter-btn">
+          <i data-lucide="circle-check" aria-hidden="true"></i><span>Listos</span><span data-order-count aria-hidden="true">0</span>
+        </button>
+        <button type="button" data-admin-filter="ENTREGADO" class="admin-filter-btn">
+          <i data-lucide="history" aria-hidden="true"></i><span>Historial</span><span data-order-count aria-hidden="true">0</span>
+        </button>
+      </div>
+
+      <div class="admin-toolbar">
         <button id="btn-admin-new-order" type="button" class="admin-tool admin-tool-primary"><i data-lucide="plus" aria-hidden="true"></i> Nuevo pedido</button>
         <button id="btn-chef-access" type="button" class="admin-tool"><i data-lucide="key-round" aria-hidden="true"></i> Acceso de cocina</button>
         <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas" class="min-h-11 min-w-0 grow rounded-xl border border-slate-200 bg-white px-3 text-base">
@@ -1469,19 +1480,22 @@
       };
 
       function renderAdmin() {
-        document.querySelectorAll('.admin-filter-btn').forEach(btn => {
-          const active = btn.dataset.adminFilter === ui.adminFilter;
-          btn.className = `admin-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-            active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-200'
-          }`;
+        const matchesTab = (order, filter) => filter === 'ENTREGADO'
+          ? ['ENTREGADO', 'RECHAZADO', 'CANCELADO'].includes(order.status)
+          : order.status === filter;
+        document.querySelectorAll('.admin-filter-btn').forEach(button => {
+          const filter = button.dataset.adminFilter;
+          const count = state.orders.filter(order => matchesTab(order, filter)).length;
+          button.setAttribute('aria-pressed', String(filter === ui.adminFilter));
+          button.setAttribute('aria-label', button.children[1].textContent + ', ' + count + ' pedidos');
+          button.querySelector('[data-order-count]').textContent = count;
         });
 
         const query = document.getElementById('admin-order-search').value.trim().toLocaleLowerCase('es');
         const filtered = state.orders.filter(order => {
           if (query) return [order.code, order.customer, order.table, order.boletaNum]
             .some(value => value?.toLocaleLowerCase('es').includes(query));
-          if (ui.adminFilter === 'ENTREGADO') return ['ENTREGADO', 'RECHAZADO', 'CANCELADO'].includes(order.status);
-          return order.status === ui.adminFilter;
+          return matchesTab(order, ui.adminFilter);
         });
         const summary = document.getElementById('admin-order-search-summary');
         summary.hidden = !query;
@@ -1489,7 +1503,7 @@
 
         const grid = document.getElementById('admin-orders-grid');
         if (filtered.length === 0) {
-          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">Esta bandeja está vacía.</div>`;
+          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">${query ? 'No se encontraron pedidos para esta búsqueda.' : 'Esta bandeja está vacía.'}</div>`;
           return;
         }
 
@@ -1500,7 +1514,7 @@
                             o.status === 'LISTO_CHEF' ? 'border-t-4 border-t-emerald-500' : 'border-t-4 border-t-slate-400';
 
           return `
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between ${borderCls}">
+            <div class="admin-order-card ${borderCls}">
               <div class="p-4 space-y-3">
                 <div class="flex items-start justify-between gap-2">
                   <div>
@@ -1511,7 +1525,7 @@
                       </span>
                     </div>
                     <div class="text-xs font-semibold text-slate-700 mt-0.5">${o.customer}</div>
-                    <div class="text-xs font-semibold text-slate-600">${adminStatus[o.status] || 'Estado desconocido'}</div>
+                    <div class="admin-order-status">${adminStatus[o.status] || 'Estado desconocido'}</div>
                     ${isDel ? `<div class="text-[11px] text-slate-500">${o.address} • ${o.phone}</div>` : ''}
                   </div>
                   <div class="text-right">
@@ -2758,6 +2772,7 @@
         document.getElementById('staff-logout').hidden = false;
         updateStaffNavigation();
         document.getElementById('staff-alerts').hidden = false;
+        document.getElementById('staff-avatar').textContent = staffArea === 'chef' ? 'C' : 'N';
         const nextOrders = new Map(state.orders.map(order => [order.id, order.status]));
         if (observedOrders) {
           const arrivals = state.orders.filter(order => !observedOrders.has(order.id) && ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF'].includes(order.status));
