@@ -63,8 +63,6 @@
     }
     .carta-spot:focus-visible { outline: 2px solid #fff; z-index: 1; }
     #client-cart { scroll-margin-top: 7rem; }
-    #modal-customize { width: calc(100% - 2rem); max-height: min(94dvh, 46rem); }
-    #modal-customize::backdrop { background: rgb(2 6 23 / 72%); }
     .font-mono-ticket {
       font-family: 'JetBrains Mono', 'Courier New', monospace;
     }
@@ -519,16 +517,16 @@
   <!-- ==================== MODALS ==================== -->
 
   <!-- MODAL: CUSTOMIZE ITEM (EXTRAS / ALITAS FLAVORS / NOTES) -->
-  <dialog id="modal-customize" aria-labelledby="cust-title" aria-describedby="cust-desc" class="m-auto max-w-md rounded-2xl shadow-2xl">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <div>
-          <h3 id="cust-title" class="font-extrabold text-sm text-slate-900">Personalizar</h3>
-          <p id="cust-desc" class="text-xs text-slate-500"></p>
-        </div>
-        <button type="button" data-close-modal="modal-customize" aria-label="Cerrar personalización" class="min-w-11 min-h-11 grid place-items-center text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <dialog id="modal-customize" aria-labelledby="cust-title" aria-describedby="cust-desc" class="product-customize m-auto rounded-2xl shadow-2xl">
+    <header class="product-customize-header">
+      <div>
+        <h3 id="cust-title">Personalizar</h3>
+        <p id="cust-desc"></p>
       </div>
-      <form id="form-customize" class="p-4 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
+      <button type="button" data-close-modal="modal-customize" aria-label="Cerrar personalización" class="product-customize-close" autofocus><i data-lucide="x" class="w-5 h-5"></i></button>
+    </header>
+    <form id="form-customize">
+      <div class="product-customize-body">
         <input type="hidden" id="cust-prod-id" />
 
         <!-- Wing Flavors Picker (Only for Combos de Alitas) -->
@@ -540,11 +538,10 @@
           <div id="cust-flavors-grid" class="grid grid-cols-2 gap-1.5"></div>
         </div>
 
-        <!-- Extras Picker (For Burgers / Salchipapas) -->
-        <details id="cust-extras-wrap" class="product-extras">
-          <summary class="font-bold text-slate-800">Extras de pago (opcional) <span id="cust-extras-count"></span></summary>
-          <div id="cust-extras-list" class="grid grid-cols-2 gap-1.5"></div>
-        </details>
+        <fieldset id="cust-extras-wrap" hidden>
+          <legend>Extras <span class="customize-optional">Opcional</span></legend>
+          <div id="cust-extras-list" class="customize-options"></div>
+        </fieldset>
 
         <div id="cust-drink-wrap" hidden>
           <label for="cust-drink" class="block font-bold text-slate-800 mb-1">Elige la bebida o el sabor</label>
@@ -552,45 +549,48 @@
         </div>
         <p id="cust-error" role="alert" class="text-sm text-rose-700" hidden></p>
 
-        <fieldset id="cust-creams" hidden class="space-y-2">
-          <legend class="font-bold text-slate-800">Cremas para las papas</legend>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Mayonesa" class="h-4 w-4 accent-amber-600"> Mayonesa
+        <fieldset id="cust-creams" hidden>
+          <legend>Cremas para las papas <span class="customize-optional">Opcional</span></legend>
+          <div class="customize-options">
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Mayonesa" class="customize-cream-check"> Mayonesa
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Kétchup" class="h-4 w-4 accent-amber-600"> Kétchup
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Kétchup" class="customize-cream-check"> Kétchup
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Mostaza" class="h-4 w-4 accent-amber-600"> Mostaza
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Mostaza" class="customize-cream-check"> Mostaza
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Ají" class="h-4 w-4 accent-amber-600"> Ají
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Ají" class="customize-cream-check"> Ají
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Aceituna" class="h-4 w-4 accent-amber-600"> Aceituna
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Aceituna" class="customize-cream-check"> Aceituna
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Tártara" class="h-4 w-4 accent-amber-600"> Tártara
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Tártara" class="customize-cream-check"> Tártara
             </label>
-            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3">
-              <input type="checkbox" name="cream" value="Chimichurri" class="h-4 w-4 accent-amber-600"> Chimichurri
+            <label class="customize-option customize-cream">
+              <input type="checkbox" name="cream" value="Chimichurri" class="customize-cream-check"> Chimichurri
             </label>
           </div>
         </fieldset>
 
         <!-- Kitchen Note -->
         <div>
-          <label for="cust-note" class="block font-bold text-slate-800 mb-1">Indicaciones para cocina / barra</label>
-          <input id="cust-note" type="text" placeholder="Ej. Término 3/4, sin cebolla, poco hielo..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+          <label for="cust-note" class="block font-bold text-slate-800 mb-1">Indicaciones <span class="customize-optional">Opcional</span></label>
+          <input id="cust-note" type="text" placeholder="Ej. Sin cebolla, poco hielo…" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
         </div>
 
-        <div class="product-customize-footer pt-2 border-t border-slate-200 flex items-center justify-between">
-          <span class="font-extrabold text-sm text-slate-900" id="cust-price-preview" aria-live="polite">S/ 0.00</span>
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold" id="customize-submit-label">Agregar al Pedido</button>
+      </div>
+      <div class="product-customize-footer">
+        <div class="customize-total">
+          <span>Total</span>
+          <strong id="cust-price-preview" aria-live="polite">S/ 0.00</strong>
         </div>
-      </form>
-    </div>
+        <button type="submit" id="customize-submit-label">Agregar al pedido</button>
+      </div>
+    </form>
   </dialog>
 
   <!-- MODAL: REAL SCANNABLE TABLE QR CODE -->
@@ -1873,17 +1873,13 @@
         }
 
         const eWrap = document.getElementById('cust-extras-wrap');
-        eWrap.open = false;
-        if (m.station === 'COCINA') {
-          eWrap.classList.remove('hidden');
-          renderExtraButtons();
-        } else {
-          eWrap.classList.add('hidden');
-        }
+        eWrap.hidden = m.station !== 'COCINA';
+        if (!eWrap.hidden) renderExtraButtons();
 
         updateCustPrice(m.price);
         lucide.createIcons();
         customizeDialog.showModal();
+        customizeDialog.querySelector('.product-customize-body').scrollTop = 0;
       }
 
       function renderFlavorButtons(req) {
@@ -1894,16 +1890,20 @@
       }
 
       function renderExtraButtons() {
-        document.getElementById('cust-extras-list').innerHTML = EXTRAS.map(ex => {
-          const on = custSelectedExtras.some(e => e.id === ex.id);
-          return `<button type="button" data-toggle-extra="${ex.id}" class="p-2 rounded-lg border text-left font-semibold transition-colors ${on ? 'bg-slate-900 text-amber-400 border-slate-900' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${ex.name} (+${money(ex.price)})</button>`;
-        }).join('');
+        document.getElementById('cust-extras-list').innerHTML = EXTRAS.map(ex => `
+          <button type="button" data-toggle-extra="${ex.id}" aria-pressed="false" class="customize-option customize-extra">
+            <span>${ex.name}</span>
+            <span class="customize-extra-meta">
+              <span>+ ${money(ex.price)}</span>
+              <i data-lucide="plus" aria-hidden="true" class="customize-extra-add"></i>
+              <i data-lucide="check" aria-hidden="true" class="customize-extra-check"></i>
+            </span>
+          </button>`).join('');
       }
 
       function updateCustPrice(basePrice) {
         const extraSum = custSelectedExtras.reduce((s, e) => s + e.price, 0);
         document.getElementById('cust-price-preview').textContent = money(basePrice + extraSum);
-        document.getElementById('cust-extras-count').textContent = custSelectedExtras.length ? '(' + custSelectedExtras.length + ')' : '';
       }
 
       function openModal(id) {
@@ -1955,13 +1955,14 @@
         if (te) {
           const ex = EXTRAS.find(x => x.id === te.dataset.toggleExtra);
           if (!ex) return;
-          if (custSelectedExtras.some(x => x.id === ex.id)) {
+          const selected = custSelectedExtras.some(x => x.id === ex.id);
+          if (selected) {
             custSelectedExtras = custSelectedExtras.filter(x => x.id !== ex.id);
           } else {
             custSelectedExtras.push(ex);
           }
           const m = MENU.find(x => x.id === document.getElementById('cust-prod-id').value);
-          renderExtraButtons();
+          te.setAttribute('aria-pressed', String(!selected));
           if (m) updateCustPrice(m.price);
           return;
         }
@@ -2407,6 +2408,7 @@
         if (m.flavorsRequired && custSelectedFlavors.length < m.flavorsRequired) {
           customizeError.textContent = 'Selecciona ' + m.flavorsRequired + ' sabores de alitas.';
           customizeError.hidden = false;
+          customizeError.scrollIntoView({ block: 'nearest' });
           return;
         }
         const extraSum = custSelectedExtras.reduce((s, ex) => s + ex.price, 0);
