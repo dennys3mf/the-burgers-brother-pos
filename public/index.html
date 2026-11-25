@@ -358,25 +358,71 @@
     <section id="view-chef" class="role-view hidden prep-board">
       <header class="prep-header">
         <div><h2 class="operator-title">Preparación</h2><p id="chef-active-count" aria-live="polite"></p></div>
-        <div class="prep-switch" role="group" aria-label="Estación de preparación">
-          <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="chef-hat" aria-hidden="true"></i> Cocina</button>
-          <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
+        <div class="prep-header-actions">
+          <div class="prep-switch" role="group" aria-label="Estación de preparación">
+            <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="chef-hat" aria-hidden="true"></i> Cocina</button>
+            <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
+          </div>
+          <details id="prep-menu" class="prep-menu">
+            <summary aria-label="Opciones de preparación"><i data-lucide="ellipsis" aria-hidden="true"></i></summary>
+            <div class="prep-menu-actions">
+              <button type="button" id="prep-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración</button>
+              <button type="button" id="prep-code-open"><i data-lucide="qr-code" aria-hidden="true"></i> Ingresar código de comanda</button>
+              <button type="button" id="prep-logout"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
+            </div>
+          </details>
         </div>
       </header>
-      <div class="prep-tools">
-        <div class="prep-filters" role="group" aria-label="Estado en la estación">
-          <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
-          <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
-        </div>
-        <details id="prep-scan" class="prep-scan">
-          <summary><i data-lucide="qr-code" aria-hidden="true"></i> Cargar código <i data-lucide="chevron-down" aria-hidden="true"></i></summary>
-          <form id="chef-code-form" class="prep-code">
-            <label for="chef-code-input">Código de comanda</label>
-            <input id="chef-code-input" type="text" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="BB-…">
-            <button type="submit" id="btn-chef-complete-code"><i data-lucide="check" aria-hidden="true"></i> Marcar estación lista</button>
-          </form>
-        </details>
+      <div class="prep-filters" role="group" aria-label="Estado en la estación">
+        <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
+        <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
       </div>
+      <dialog id="prep-scan" class="prep-dialog" aria-labelledby="prep-code-title">
+        <header>
+          <h3 id="prep-code-title">Ingresar código de comanda</h3>
+          <button type="button" data-close-prep aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+        </header>
+        <form id="chef-code-form" class="prep-code">
+          <label for="chef-code-input">Código de comanda</label>
+          <input id="chef-code-input" type="text" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="BB-…" required>
+          <button type="submit" id="btn-chef-complete-code"><i data-lucide="check" aria-hidden="true"></i> Marcar estación lista</button>
+          <p id="prep-code-error" role="alert"></p>
+        </form>
+      </dialog>
+      <dialog id="prep-settings" class="prep-dialog" aria-labelledby="prep-settings-title">
+        <header>
+          <h3 id="prep-settings-title">Configuración de preparación</h3>
+          <button type="button" data-close-prep aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+        </header>
+        <div class="prep-settings-content">
+          <fieldset>
+            <legend>Avisos sonoros</legend>
+            <div class="prep-config-actions">
+              <button id="prep-sound" type="button" aria-pressed="false"><i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span></button>
+              <button id="prep-snooze" type="button">Pausar 15 min</button>
+            </div>
+            <label for="prep-volume">Volumen <output for="prep-volume" id="prep-volume-value"></output></label>
+            <input id="prep-volume" type="range" min="10" max="100" step="10" value="100">
+            <label class="prep-setting-check"><input id="prep-reminders" type="checkbox"> Repetir aviso una vez si la comanda sigue pendiente</label>
+            <p id="prep-sound-status" role="status"></p>
+          </fieldset>
+          <fieldset>
+            <legend>Tiempo de preparación</legend>
+            <p>El reloj se resalta al alcanzar este tiempo. Se cuenta desde la aprobación.</p>
+            <label class="prep-setting-select" for="prep-table-time">Mesa
+              <select id="prep-table-time"><option value="10">10 min</option><option value="15">15 min</option><option value="20">20 min</option></select>
+            </label>
+            <label class="prep-setting-select" for="prep-delivery-time">Delivery
+              <select id="prep-delivery-time"><option value="60">1 h</option><option value="90">1 h 30 min</option><option value="120">2 h</option></select>
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Pantalla</legend>
+            <label class="prep-setting-check"><input id="prep-large-text" type="checkbox"> Letra más grande en las comandas</label>
+            <label class="prep-setting-check"><input id="prep-show-timers" type="checkbox" checked> Mostrar tiempo desde la aprobación</label>
+          </fieldset>
+        </div>
+      </dialog>
       <div id="chef-orders-list" class="prep-grid"></div>
     </section>
 
@@ -937,9 +983,12 @@
       let audio;
       let soundEnabled = false;
       let nextSound = 0;
+      const prepSoundButton = document.getElementById('prep-sound');
 
       function playOrderSound() {
-        if (!soundEnabled || audio?.state !== 'running') return;
+        const inPrep = ui.role === 'chef';
+        if (!soundEnabled || audio?.state !== 'running' || (inPrep && prepPreferences.snoozeUntil > Date.now())) return false;
+        const level = inPrep ? prepPreferences.volume / 100 : 1;
         const start = Math.max(audio.currentTime, nextSound);
         nextSound = start + .95;
         for (const [index, frequency] of [740, 980, 1240].entries()) {
@@ -949,15 +998,32 @@
           tone.type = 'triangle';
           tone.frequency.value = frequency;
           volume.gain.setValueAtTime(.001, time);
-          volume.gain.exponentialRampToValueAtTime(.42, time + .025);
+          volume.gain.exponentialRampToValueAtTime(.42 * level, time + .025);
           volume.gain.exponentialRampToValueAtTime(.001, time + .21);
           tone.connect(volume).connect(audio.destination);
           tone.start(time);
           tone.stop(time + .22);
         }
+        return true;
       }
 
-      soundButton.onclick = async () => {
+      function renderSoundButtons() {
+        for (const button of [soundButton, prepSoundButton]) {
+          button.setAttribute('aria-pressed', String(soundEnabled));
+          button.querySelector('span').textContent = soundEnabled ? 'Silenciar' : 'Activar sonido';
+          button.querySelector('svg, i')?.remove();
+          const icon = document.createElement('i');
+          icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
+          icon.setAttribute('aria-hidden', 'true');
+          button.prepend(icon);
+        }
+        lucide.createIcons();
+      }
+
+      async function toggleSound(event) {
+        const inPrep = event.currentTarget === prepSoundButton;
+        const status = inPrep ? prepSoundStatus : alertMessage;
+        if (inPrep && prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
         if (soundEnabled && audio?.state === 'running') {
           soundEnabled = false;
         } else {
@@ -966,20 +1032,15 @@
             audio ||= new Audio();
             await audio.resume();
             soundEnabled = audio.state === 'running';
-            playOrderSound();
+            if (soundEnabled) playOrderSound();
+            else status.textContent = 'No se pudo activar el sonido en este navegador.';
           } catch {
-            alertMessage.textContent = 'No se pudo activar el sonido en este navegador.';
+            status.textContent = 'No se pudo activar el sonido en este navegador.';
           }
         }
-        soundButton.setAttribute('aria-pressed', String(soundEnabled));
-        soundButton.querySelector('span').textContent = soundEnabled ? 'Silenciar' : 'Activar sonido';
-        soundButton.querySelector('svg, i')?.remove();
-        const icon = document.createElement('i');
-        icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
-        icon.setAttribute('aria-hidden', 'true');
-        soundButton.prepend(icon);
-        lucide.createIcons();
-      };
+        renderSoundButtons();
+      }
+      soundButton.onclick = prepSoundButton.onclick = toggleSound;
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function deductInventoryForOrder(order, action = 'Aprobación') {
@@ -1308,6 +1369,7 @@
         if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
         if (role !== 'cliente') staffMenu = true;
         ui.role = role;
+        document.body.toggleAttribute('data-prep-view', role === 'chef');
         updateMenuLayout(role);
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
@@ -1321,6 +1383,10 @@
         });
 
         renderActiveRole();
+        if (role === 'chef' && scannedPrepCode) {
+          openPrepCode(scannedPrepCode);
+          scannedPrepCode = '';
+        }
       }
 
       function renderActiveRole() {
@@ -1580,6 +1646,105 @@
       const stationName = station => station === 'BARRA' ? 'Barra' : 'Cocina';
       const prepBusy = new Set();
 
+      const prepMenu = document.getElementById('prep-menu');
+      const prepSettings = document.getElementById('prep-settings');
+      const prepCodeDialog = document.getElementById('prep-scan');
+      const prepCodeError = document.getElementById('prep-code-error');
+      const prepView = document.getElementById('view-chef');
+      const prepSnooze = document.getElementById('prep-snooze');
+      const prepSoundStatus = document.getElementById('prep-sound-status');
+      const prepReminderKeys = new Set();
+      let scannedPrepCode = '';
+      const prepDefaults = { volume: 100, tableTime: 10, deliveryTime: 60, showTimers: true, largeText: false, reminders: false, snoozeUntil: 0 };
+      const prepPreferences = { ...prepDefaults };
+      try {
+        Object.assign(prepPreferences, JSON.parse(localStorage.getItem('pos-prep-preferences')));
+      } catch {
+        // Use defaults when saved preferences cannot be read.
+      }
+
+      function prepTarget(order) {
+        return order.channel === 'DELIVERY' ? prepPreferences.deliveryTime : prepPreferences.tableTime;
+      }
+
+      function renderPrepPreferences() {
+        prepView.toggleAttribute('data-hide-timers', !prepPreferences.showTimers);
+        prepView.toggleAttribute('data-large-text', prepPreferences.largeText);
+        document.getElementById('prep-volume-value').textContent = prepPreferences.volume + '%';
+        const snoozed = prepPreferences.snoozeUntil > Date.now();
+        prepSnooze.textContent = snoozed ? 'Reanudar avisos' : 'Pausar 15 min';
+        const pauseMessage = 'Avisos pausados temporalmente.';
+        if (snoozed && prepSoundStatus.textContent !== pauseMessage) prepSoundStatus.textContent = pauseMessage;
+        else if (!snoozed && prepSoundStatus.textContent === pauseMessage) prepSoundStatus.textContent = '';
+      }
+
+      function savePrepPreference(name, value) {
+        prepPreferences[name] = value;
+        localStorage.setItem('pos-prep-preferences', JSON.stringify(prepPreferences));
+        renderPrepPreferences();
+        if (name === 'tableTime' || name === 'deliveryTime') renderActiveRole();
+      }
+
+      for (const [id, name] of Object.entries({
+        'prep-volume': 'volume', 'prep-table-time': 'tableTime', 'prep-delivery-time': 'deliveryTime',
+        'prep-show-timers': 'showTimers', 'prep-large-text': 'largeText', 'prep-reminders': 'reminders'
+      })) {
+        const input = document.getElementById(id);
+        const isCheckbox = input.type === 'checkbox';
+        if (isCheckbox) input.checked = prepPreferences[name];
+        else input.value = prepPreferences[name];
+        input.addEventListener(input.type === 'range' ? 'input' : 'change', () => {
+          savePrepPreference(name, isCheckbox ? input.checked : Number(input.value));
+        });
+      }
+      prepSnooze.onclick = () => savePrepPreference('snoozeUntil', prepPreferences.snoozeUntil > Date.now() ? 0 : Date.now() + 15 * 60000);
+      renderPrepPreferences();
+
+      function openPrepDialog(dialog) {
+        prepMenu.open = false;
+        prepMenu.querySelector('summary').focus();
+        dialog.showModal();
+      }
+
+      function openPrepCode(code = '') {
+        document.getElementById('chef-code-input').value = code;
+        prepCodeError.textContent = '';
+        if (!prepCodeDialog.open) openPrepDialog(prepCodeDialog);
+      }
+
+      document.getElementById('prep-settings-open').onclick = () => {
+        renderPrepPreferences();
+        openPrepDialog(prepSettings);
+      };
+      document.getElementById('prep-code-open').onclick = () => openPrepCode();
+      document.getElementById('prep-logout').onclick = () => document.getElementById('staff-logout').click();
+      document.querySelectorAll('[data-close-prep]').forEach(button => {
+        button.onclick = () => button.closest('dialog').close();
+      });
+      document.addEventListener('click', event => {
+        if (prepMenu.open && !prepMenu.contains(event.target)) prepMenu.open = false;
+      });
+      prepMenu.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !prepMenu.open) return;
+        prepMenu.open = false;
+        prepMenu.querySelector('summary').focus();
+      });
+
+      function checkPrepReminders() {
+        if (ui.role !== 'chef' || document.hidden || !prepPreferences.reminders) return;
+        const now = Date.now();
+        const overdue = state.orders.filter(order =>
+          order.status === 'EN_COCINA' && orderStations(order).includes(prepStation) && !stationReady(order, prepStation)
+          && !prepReminderKeys.has(prepStation + order.id)
+          && now - preparationStartedAt(order) >= prepTarget(order) * 60000);
+        if (overdue.length && playOrderSound()) {
+          overdue.forEach(order => prepReminderKeys.add(prepStation + order.id));
+          alertMessage.textContent = overdue.length === 1
+            ? 'Comanda demorada · ' + overdue[0].code
+            : overdue.length + ' comandas superaron su tiempo de preparación.';
+        }
+      }
+
       function updatePrepTimers() {
         document.querySelectorAll('[data-prep-start]').forEach(timer => {
           const minutes = Math.max(0, Math.floor((Date.now() - Number(timer.dataset.prepStart)) / 60000));
@@ -1588,10 +1753,14 @@
           timer.querySelector('span').textContent = hours
             ? hours + ' h' + (remaining ? ' ' + remaining + ' min' : '')
             : minutes ? minutes + ' min' : '< 1 min';
-          timer.classList.toggle('prep-late', minutes >= 15);
+          timer.classList.toggle('prep-late', minutes >= Number(timer.dataset.prepTarget));
         });
       }
-      setInterval(updatePrepTimers, 15000);
+      setInterval(() => {
+        updatePrepTimers();
+        renderPrepPreferences();
+        checkPrepReminders();
+      }, 15000);
 
       function renderChef() {
         const station = prepStation;
@@ -1621,7 +1790,7 @@
                 <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}${order.takeaway ? ' · Para llevar' : ''}</h3>
                   <p class="font-mono-ticket">${order.code}</p></div>
                 ${done ? '<span class="prep-done">Lista</span>' : Number.isFinite(start) ? `
-                  <div class="prep-clock" data-prep-start="${start}" title="Tiempo desde la aprobación">
+                  <div class="prep-clock" data-prep-start="${start}" data-prep-target="${prepTarget(order)}" title="Tiempo desde la aprobación">
                     <i data-lucide="clock" aria-hidden="true"></i><span></span>
                   </div>` : ''}
               </header>
@@ -2536,7 +2705,7 @@
         const code = chefInput.value.trim().toUpperCase().replace(/^BB-/, '');
         const order = code && state.orders.find(entry => entry.num === code || entry.code === 'BB-' + code.padStart(3, '0'));
         if (!order) {
-          showToast('No se encontró esa comanda.', 'err');
+          prepCodeError.textContent = 'No se encontró esa comanda.';
           return;
         }
         const areas = orderStations(order);
@@ -2545,8 +2714,12 @@
       };
 
       async function completePrep(order, station, button) {
+        const byCode = button.id === 'btn-chef-complete-code';
+        if (byCode) prepCodeError.textContent = '';
         if (!order || order.status !== 'EN_COCINA' || !orderStations(order).includes(station) || stationReady(order, station)) {
-          showToast('La comanda no está pendiente en ' + stationName(station) + '.', 'info');
+          const message = 'La comanda no está pendiente en ' + stationName(station) + '.';
+          if (byCode) prepCodeError.textContent = message;
+          else showToast(message, 'info');
           return;
         }
         const key = order.id + station;
@@ -2561,11 +2734,16 @@
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
-          if (button.id === 'btn-chef-complete-code') chefInput.value = '';
+          if (byCode) {
+            chefInput.value = '';
+            prepCodeDialog.close();
+          }
           await syncStaff();
           showToast(result.ready ? 'Pedido ' + order.code + ' listo.' : stationName(station) + ' lista para ' + order.code + '.');
         } catch (error) {
-          showToast(error.message || 'No se pudo terminar la preparación.', 'err');
+          const message = error.message || 'No se pudo terminar la preparación.';
+          if (byCode && prepCodeDialog.open) prepCodeError.textContent = message;
+          else showToast(message, 'err');
         } finally {
           prepBusy.delete(key);
           button.disabled = false;
@@ -2733,6 +2911,7 @@
       });
 
       function applyHashRoute(hashStr) {
+        scannedPrepCode = '';
         const h = (hashStr || '').replace(/^#/, '');
         const params = new URLSearchParams(h);
         if (params.get('estacion') === 'barra' || params.get('estacion') === 'cocina') {
@@ -2764,8 +2943,7 @@
             switchRole('cliente');
             return;
           }
-          document.getElementById('prep-scan').open = true;
-          document.getElementById('chef-code-input').value = scannedCode;
+          scannedPrepCode = scannedCode;
           switchRole('chef');
         } else {
           switchRole('cliente');
