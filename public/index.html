@@ -672,24 +672,29 @@
   </div>
 
   <!-- MODAL: BIXOLON SPP-R310BK 80MM THERMAL TICKET PRINT -->
-  <div id="modal-bixolon" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-        <div>
-          <h3 id="bixolon-modal-title" class="font-extrabold text-sm text-slate-900">Impresión Térmica — BIXOLON SPP-R310BK (80 mm)</h3>
-          <p class="text-xs text-slate-500">Conecta la BIXOLON para imprimir directamente desde el POS.</p>
-        </div>
-        <button type="button" data-close-modal="modal-bixolon" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <dialog id="modal-bixolon" class="print-dialog" aria-labelledby="bixolon-modal-title">
+    <header class="print-dialog-header">
+      <div>
+        <h3 id="bixolon-modal-title">Impresión de pedido</h3>
+        <p id="bixolon-order-code" class="font-mono-ticket"></p>
       </div>
-      <div id="bixolon-modal-body" class="p-5 bg-slate-200/80 overflow-y-auto flex flex-wrap justify-center gap-6"></div>
-      <section id="bixolon-direct" aria-label="Impresión directa" class="border-t border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
-        <div class="flex flex-wrap gap-2">
-          <button type="button" id="btn-bixolon-connect" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold">Conectar impresora</button>
-          <button type="button" id="btn-bixolon-direct-print" disabled class="min-h-11 rounded-xl bg-amber-500 px-3 text-xs font-bold text-slate-950">Imprimir boleta directo</button>
-          <button type="button" id="btn-bixolon-direct-comanda" disabled class="min-h-11 rounded-xl bg-amber-500 px-3 text-xs font-bold text-slate-950">Imprimir comanda directo</button>
+      <button type="button" data-close-modal="modal-bixolon" class="print-close" aria-label="Cerrar impresión">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+    </header>
+    <div class="print-dialog-layout">
+      <aside class="print-dialog-sidebar" aria-label="Controles de impresión">
+      <section id="bixolon-direct" aria-label="Impresión directa" class="print-controls">
+        <div class="print-connection">
+          <i data-lucide="printer" aria-hidden="true"></i>
+          <div><h4>Impresión directa</h4><p id="bixolon-status" role="status">Impresora sin verificar.</p></div>
         </div>
-        <p id="bixolon-status" role="status" class="text-xs text-slate-700">Impresora sin verificar.</p>
-        <details class="text-xs text-slate-700">
+        <div class="print-buttons">
+          <button type="button" id="btn-bixolon-connect" class="print-connect">Conectar impresora</button>
+          <button type="button" id="btn-bixolon-direct-print" disabled class="print-primary">Imprimir boleta</button>
+          <button type="button" id="btn-bixolon-direct-comanda" disabled class="print-primary">Imprimir comanda</button>
+        </div>
+        <details class="print-options">
           <summary class="cursor-pointer font-semibold">Configurar BIXOLON</summary>
           <div class="mt-2 flex flex-wrap items-end gap-3">
             <label class="grid gap-1">Nombre lógico en el SDK
@@ -703,25 +708,22 @@
           <a class="mt-1 inline-block underline" href="https://es.bixolon.com/download_view.php?idx=14&amp;s_key=SDK" target="_blank" rel="noopener noreferrer">Descargar BIXOLON Web Print SDK</a>
         </details>
       </section>
-      <div class="px-5 py-3.5 border-t border-slate-200 bg-white flex flex-wrap items-center justify-end gap-2">
-        <button type="button" id="btn-bixolon-print-comanda" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5">
-          <i data-lucide="printer" class="w-4 h-4"></i> Imprimir comanda con el navegador
-        </button>
-        <button type="button" id="btn-bixolon-print-boleta" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5">
-          <i data-lucide="receipt" class="w-4 h-4"></i> Imprimir Boleta Interna
-        </button>
-        <button type="button" id="btn-bixolon-share-boleta" hidden disabled class="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold">
-          Compartir / descargar PDF
-        </button>
-        <button type="button" id="btn-bixolon-escpos" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
-          BXL/POS (.txt)
-        </button>
-        <button type="button" data-close-modal="modal-bixolon" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">
-          Cerrar
-        </button>
-      </div>
+        <details class="print-options print-alternatives">
+          <summary>Imprimir o guardar de otra forma</summary>
+          <div class="print-buttons">
+            <button type="button" id="btn-bixolon-print-comanda">Comanda en el navegador</button>
+            <button type="button" id="btn-bixolon-print-boleta">Boleta en el navegador</button>
+            <button type="button" id="btn-bixolon-share-boleta" hidden disabled>Compartir o descargar PDF</button>
+            <button type="button" id="btn-bixolon-escpos">Descargar archivo BXL/POS</button>
+          </div>
+        </details>
+      </aside>
+      <section class="print-preview" aria-label="Vista previa">
+        <h4>Vista previa <span>Rollo de 80 mm</span></h4>
+        <div id="bixolon-modal-body"></div>
+      </section>
     </div>
-  </div>
+  </dialog>
 
   <dialog id="chef-access-dialog" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-4 text-slate-950" aria-labelledby="chef-access-title">
     <form id="chef-access-form" class="space-y-3">
@@ -1267,7 +1269,7 @@
             }
           });
         }
-        document.getElementById('bixolon-modal-title').textContent = `BIXOLON SPP-R310BK — Pedido ${order.code}`;
+        document.getElementById('bixolon-order-code').textContent = order.code;
         document.getElementById('bixolon-modal-body').innerHTML = `
           <div class="flex flex-col items-center gap-2">
             <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-extrabold">Comanda Mozo / Cocina</span>
@@ -1280,7 +1282,10 @@
             </div>
           ` : ''}
         `;
-        openModal('modal-bixolon');
+        const printDialog = document.getElementById('modal-bixolon');
+        if (!printDialog.open) printDialog.showModal();
+        printDialog.scrollTop = 0;
+        lucide.createIcons();
       }
 
       function printThermal(html) {
@@ -1877,7 +1882,7 @@
       document.addEventListener('click', (e) => {
         const cm = e.target.closest('[data-close-modal]');
         if (cm) {
-          if (cm.dataset.closeModal === customizeDialog.id) customizeDialog.close();
+          if (cm.dataset.closeModal === customizeDialog.id || cm.dataset.closeModal === 'modal-bixolon') document.getElementById(cm.dataset.closeModal).close();
           else closeModal(cm.dataset.closeModal);
           return;
         }

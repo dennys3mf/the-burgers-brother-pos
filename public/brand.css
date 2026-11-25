@@ -345,3 +345,55 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
 #admin-orders-grid [data-admin-deliver] { grid-column: 1 / -1; margin-top: .15rem; }
 #admin-orders-grid [data-admin-approve] { background: var(--gold); color: var(--ink); }
 #admin-orders-grid [data-admin-approve]:hover { background: #ffda82; }
+
+.print-dialog {
+  width: min(56rem, calc(100% - 1.25rem)); max-height: calc(100dvh - 1.25rem);
+  margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain;
+  border: 1px solid var(--surface-border); border-radius: var(--radius-4);
+  background: var(--surface-raised); color: var(--ink);
+}
+.print-dialog::backdrop { background: rgb(24 19 17 / 74%); }
+.print-dialog-header {
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: center;
+  justify-content: space-between; gap: .75rem; padding: .65rem 1rem;
+  background: var(--charcoal); color: var(--cream);
+}
+.print-dialog-header h3 { font: 800 1.65rem/1 var(--display); }
+.print-dialog-header p { color: #f4d8ac; font-size: .78rem; margin-top: .2rem; overflow-wrap: anywhere; }
+.print-close {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: none;
+  border: 1px solid #805731; border-radius: .65rem;
+}
+.print-close svg, .print-connection > svg { width: 1.1rem; height: 1.1rem; }
+.print-dialog-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 17rem); }
+.print-dialog-sidebar {
+  grid-column: 2; grid-row: 1; align-self: start; padding: 1rem; min-width: 0;
+}
+.print-controls { display: grid; gap: .75rem; }
+.print-connection { display: flex; gap: .5rem; align-items: start; }
+.print-connection h4 { font-weight: 800; font-size: .95rem; }
+.print-connection p { color: var(--text-muted); font-size: .78rem; line-height: 1.4; overflow-wrap: anywhere; }
+.print-buttons { display: grid; gap: .45rem; }
+.print-buttons button, .print-options summary {
+  min-height: 44px; border: 1px solid var(--surface-border); padding: .45rem .65rem;
+  border-radius: .55rem; font-size: .82rem; font-weight: 750; line-height: 1.25;
+}
+.print-buttons button[hidden], .print-buttons button.hidden { display: none; }
+.print-primary { background: var(--gold); border-color: transparent !important; }
+.print-primary:not(:disabled):hover { background: #ffda82; }
+.print-primary:disabled { background: var(--paper); color: var(--text-muted); opacity: 1; }
+.print-options { font-size: .78rem; color: var(--text-muted); }
+.print-options summary { cursor: pointer; padding-block: .77rem; }
+.print-alternatives { margin-top: .6rem; }
+.print-options .print-buttons { margin-top: .5rem; }
+.print-options input:not([type="checkbox"]) { max-width: 100%; font-size: 1rem; }
+.print-preview { grid-column: 1; grid-row: 1; padding: 1rem; min-width: 0; background: var(--paper); }
+.print-preview h4 { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem; margin-bottom: 1rem; font-weight: 800; }
+.print-preview h4 span { color: var(--text-muted); font-size: .75rem; font-weight: 650; }
+#bixolon-modal-body { display: grid; justify-items: center; gap: 1rem; padding: 0; }
+#bixolon-modal-body > div, #bixolon-modal-body .thermal-paper { max-width: 100%; overflow-wrap: anywhere; }
+@media screen and (max-width: 640px) {
+  .print-dialog-layout { display: block; }
+  .print-dialog-sidebar, .print-preview { padding: .75rem; }
+  .print-controls .print-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
