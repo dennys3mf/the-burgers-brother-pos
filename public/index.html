@@ -217,11 +217,13 @@
           <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 id="carta-title" class="menu-title">La carta</h2>
+              <span id="cart-announcement" class="sr-only" role="status"></span>
+              <p id="menu-order-context" class="menu-order-context" hidden></p>
               <a id="carta-cart-link" hidden class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
             </div>
             <div class="carta-controls menu-modes" aria-label="Formato de la carta">
               <button type="button" data-menu-format="visual" aria-pressed="true">Carta ilustrada</button>
-              <button type="button" data-menu-format="list" aria-pressed="false">Buscar en la carta</button>
+              <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
             </div>
             <div id="carta-visual" class="space-y-3">
               <div id="carta-pages" class="carta-controls" aria-label="Páginas de la carta"></div>
@@ -256,7 +258,10 @@
 
           <div id="client-cart-items" class="p-3.5 space-y-2.5 max-h-64 overflow-y-auto min-h-[120px]"></div>
 
-          <div id="public-order-controls"></div>
+          <details id="public-order-settings" hidden>
+            <summary id="public-order-settings-label">Cambiar tipo de pedido</summary>
+            <div id="public-order-controls"></div>
+          </details>
           <!-- Customer Info & Delivery Payment Gate -->
           <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3 text-xs">
             <div>
@@ -293,8 +298,13 @@
               <input id="client-order-note" type="text" aria-label="Nota general del pedido" placeholder="Nota general (ej. Cremas aparte, sin ají)..." class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
             </div>
 
+            <dl id="client-order-breakdown" class="order-breakdown" hidden>
+              <div><dt>Productos</dt><dd id="client-subtotal"></dd></div>
+              <div id="client-taper-charge" hidden><dt>Táperes</dt><dd></dd></div>
+              <div id="client-card-charge" hidden><dt>Recargo tarjeta (5 %)</dt><dd></dd></div>
+            </dl>
             <div class="flex items-center justify-between pt-2 border-t border-slate-200 text-base font-extrabold">
-              <span>Total <small id="client-card-fee" class="block font-normal"></small></span>
+              <span id="client-total-label">Total</span>
               <span id="client-cart-total" class="text-orange-600">S/ 0.00</span>
             </div>
 
@@ -565,10 +575,10 @@
         </div>
 
         <!-- Extras Picker (For Burgers / Salchipapas) -->
-        <div id="cust-extras-wrap" class="space-y-2">
-          <label class="block font-bold text-slate-800">Agregar Extras (Opcional)</label>
+        <details id="cust-extras-wrap" class="product-extras">
+          <summary class="font-bold text-slate-800">Extras de pago (opcional) <span id="cust-extras-count"></span></summary>
           <div id="cust-extras-list" class="grid grid-cols-2 gap-1.5"></div>
-        </div>
+        </details>
 
         <div id="cust-drink-wrap" hidden>
           <label for="cust-drink" class="block font-bold text-slate-800 mb-1">Elige la bebida o el sabor</label>
@@ -609,8 +619,8 @@
           <input id="cust-note" type="text" placeholder="Ej. Término 3/4, sin cebolla, poco hielo..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
         </div>
 
-        <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
-          <span class="font-extrabold text-sm text-slate-900" id="cust-price-preview">S/ 0.00</span>
+        <div class="product-customize-footer pt-2 border-t border-slate-200 flex items-center justify-between">
+          <span class="font-extrabold text-sm text-slate-900" id="cust-price-preview" aria-live="polite">S/ 0.00</span>
           <button type="submit" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold" id="customize-submit-label">Agregar al Pedido</button>
         </div>
       </form>
@@ -1318,6 +1328,7 @@
         const controls = document.getElementById('menu-mode-controls');
         const destination = document.getElementById(isPublic ? 'public-order-controls' : 'staff-menu-hero');
         if (controls.parentElement !== destination) destination.append(controls);
+        document.getElementById('public-order-settings').hidden = !isPublic;
       }
 
       function switchRole(role) {
@@ -1467,10 +1478,19 @@
         clientTapers.disabled = !delivery && !packaging.takeaway;
         document.getElementById('client-tapers-label').hidden = clientTapers.disabled;
         const { total, fee } = priceOrder(ui.clientCart, { ...packaging, tapers: clientTapers.checkValidity() ? packaging.tapers : 0, channel: ui.clientMode, paymentMethod: ui.clientDelPay });
-        document.getElementById('client-card-fee').textContent = [
-          ui.clientCart.length && packaging.tapers > 0 && clientTapers.checkValidity() ? 'Táperes: ' + money(packaging.tapers) : '',
-          fee ? 'Recargo tarjeta: ' + money(fee) : ''
-        ].filter(Boolean).join(' · ');
+        const taperCharge = ui.clientCart.length && clientTapers.checkValidity() ? packaging.tapers : 0;
+        document.getElementById('client-order-breakdown').hidden = !ui.clientCart.length;
+        document.getElementById('client-subtotal').textContent = money(total - taperCharge - fee);
+        document.getElementById('client-total-label').textContent = delivery ? 'Total a pagar' : 'Total';
+        for (const [id, value] of [['client-taper-charge', taperCharge], ['client-card-charge', fee]]) {
+          const row = document.getElementById(id);
+          row.hidden = !value;
+          row.querySelector('dd').textContent = money(value);
+        }
+        const context = document.getElementById('menu-order-context');
+        context.hidden = !document.body.hasAttribute('data-public-menu');
+        context.textContent = delivery ? 'Estás pidiendo para delivery' : 'Estás pidiendo para ' + ui.clientMesa;
+        document.getElementById('public-order-settings-label').textContent = delivery ? 'Cambiar tipo de pedido' : 'Cambiar mesa o tipo de pedido';
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
         const showCart = units > 0 || staffMenu || ui.staffOrderEntry;
         document.getElementById('client-cart').hidden = !showCart;
@@ -1841,6 +1861,7 @@
         }
 
         const eWrap = document.getElementById('cust-extras-wrap');
+        eWrap.open = false;
         if (m.station === 'COCINA') {
           eWrap.classList.remove('hidden');
           renderExtraButtons();
@@ -1870,6 +1891,7 @@
       function updateCustPrice(basePrice) {
         const extraSum = custSelectedExtras.reduce((s, e) => s + e.price, 0);
         document.getElementById('cust-price-preview').textContent = money(basePrice + extraSum);
+        document.getElementById('cust-extras-count').textContent = custSelectedExtras.length ? '(' + custSelectedExtras.length + ')' : '';
       }
 
       function openModal(id) {
@@ -2415,7 +2437,8 @@
         ui.clientCart.push(item);
         customizeDialog.close();
         renderClientCart();
-        showToast(`${m.name} agregado al pedido.`);
+        document.getElementById('cart-announcement').textContent = m.name + ' agregado. ' +
+          document.getElementById('carta-cart-link').textContent;
       });
 
       document.getElementById('btn-submit-client-order').addEventListener('click', async (event) => {
@@ -2731,6 +2754,14 @@
         } else {
           switchRole('cliente');
         }
+      }
+
+      if ('IntersectionObserver' in window) {
+        const cart = document.getElementById('client-cart');
+        const cartObserver = new IntersectionObserver(([entry]) => {
+          document.body.toggleAttribute('data-cart-in-view', entry.isIntersecting);
+        }, { rootMargin: '0px 0px -80px 0px' });
+        cartObserver.observe(cart);
       }
 
       document.getElementById('carta-cart-link').addEventListener('click', event => {

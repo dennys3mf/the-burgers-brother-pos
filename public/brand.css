@@ -397,3 +397,30 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
   .print-dialog-sidebar, .print-preview { padding: .75rem; }
   .print-controls .print-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.menu-order-context { color: #f4d8ac; font-size: .8rem; }
+#public-order-settings summary {
+  cursor: pointer; padding: .72rem 1rem; font-size: .85rem; font-weight: 750;
+  border-block: 1px solid var(--surface-border);
+}
+.order-breakdown { display: grid; gap: .35rem; font-size: .82rem; color: var(--text-muted); }
+.order-breakdown[hidden], .order-breakdown div[hidden] { display: none; }
+.order-breakdown div { display: flex; justify-content: space-between; gap: .5rem; }
+.order-breakdown dd { font-variant-numeric: tabular-nums; }
+.product-extras summary {
+  cursor: pointer; padding: .65rem .75rem; border: 1px solid var(--surface-border);
+  border-radius: var(--radius-3); min-height: 44px;
+}
+.product-extras > div { margin-top: .5rem; }
+.product-customize-footer {
+  position: sticky; bottom: 0; z-index: 1; background: var(--cream);
+  padding-bottom: max(.3rem, env(safe-area-inset-bottom));
+}
+.carta-spot::after {
+  content: '+'; position: absolute; top: .15rem; right: .2rem;
+  border-radius: 50%; width: .9rem; height: .9rem; display: grid; place-items: center;
+  font-size: .72rem; line-height: 1; font-weight: 850; color: var(--ink); background: var(--gold);
+}
+@media screen and (max-width: 767px) {
+  body[data-public-menu][data-cart-in-view] #carta-cart-link:not([hidden]) { display: none; }
+}
