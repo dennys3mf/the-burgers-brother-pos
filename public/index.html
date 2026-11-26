@@ -407,19 +407,27 @@
           <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
             <div class="menu-browser-head">
               <div class="menu-browser-brand">
-                <h2 id="carta-title" class="menu-title">La carta</h2>
-                <button type="button" id="menu-order-context" class="menu-order-context" hidden aria-label="Cambiar mesa o tipo de pedido"></button>
-              </div>
-              <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
-                <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
-                <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
-                <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
-                  <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
-                  <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+                <img class="menu-brand-mark" src="./logo-burgers-brother.webp" alt="The Burgers Brother" width="44" height="44">
+                <div class="menu-brand-title">
+                  <h2 id="carta-title" class="menu-title">La carta</h2>
+                  <button type="button" id="menu-order-context" class="menu-order-context" hidden aria-label="Cambiar mesa o tipo de pedido"></button>
                 </div>
               </div>
-              <span id="cart-announcement" class="sr-only" role="status"></span>
-              <button type="button" id="carta-cart-link" hidden class="carta-cart-link" aria-controls="client-cart" aria-expanded="false">Ver pedido (0)</button>
+              <div class="menu-browser-actions">
+                <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
+                  <button type="button" data-menu-format="visual" aria-pressed="true"><i data-lucide="book-open" aria-hidden="true"></i><span>Carta libro</span></button>
+                  <button type="button" data-menu-format="list" aria-pressed="false"><i data-lucide="search" aria-hidden="true"></i><span>Ver lista y buscar</span></button>
+                  <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
+                    <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
+                    <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+                  </div>
+                </div>
+                <span id="cart-announcement" class="sr-only" role="status"></span>
+                <button type="button" id="carta-cart-link" hidden class="carta-cart-link" aria-controls="client-cart" aria-expanded="false">
+                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <span id="carta-cart-label">Ver pedido (0)</span>
+                </button>
+              </div>
             </div>
             <div id="carta-visual" class="carta-visual-shell">
               <div class="carta-book-toolbar">
@@ -2184,7 +2192,7 @@
         cartLink.hidden = isPublic ? false : !showInlineCart;
         cartLink.dataset.hasItems = String(units > 0);
         cartLink.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
-        cartLink.textContent = units > 0 ? `Ver pedido (${units}) · ${money(total)}` : 'Ver pedido (0)';
+        document.getElementById('carta-cart-label').textContent = units > 0 ? `Ver pedido (${units}) · ${money(total)}` : 'Ver pedido (0)';
         document.getElementById('client-cart-total').textContent = money(total);
         const backCartLink = document.querySelector('.carta-back-cart-link');
         if (backCartLink) {

@@ -2669,3 +2669,250 @@ html[data-staff-loading] #staff-loading {
   color: var(--text-muted);
   opacity: 1;
 }
+
+/* Customer menu: a calm, branded masthead with clear ordering controls. */
+.menu-browser-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: .5rem;
+  min-width: 0;
+}
+.menu-brand-mark {
+  display: block;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background: var(--cream);
+}
+.menu-brand-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem .7rem;
+  min-width: 0;
+}
+
+body[data-public-menu] .menu-browser-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem 1rem;
+  padding: .7rem clamp(.75rem, 1.8vw, 1.15rem);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 4px 14px rgb(24 19 17 / 12%);
+}
+body[data-public-menu] .menu-browser-brand {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-width: 0;
+}
+body[data-public-menu] .menu-title {
+  color: var(--ink);
+  font-size: clamp(1.85rem, 3vw, 2.45rem);
+  line-height: .95;
+}
+body[data-public-menu] .menu-order-context {
+  min-height: 34px;
+  padding: .3rem .7rem;
+  border: 1px solid var(--line);
+  background: var(--surface-tint);
+  color: var(--selected-ink);
+  font-size: .76rem;
+  font-weight: 750;
+}
+body[data-public-menu] .menu-order-context:hover {
+  border-color: var(--control-line);
+  background: var(--selected-fill);
+  color: var(--ink);
+}
+body[data-public-menu] .menu-browser-actions {
+  gap: .55rem;
+}
+body[data-public-menu] .menu-browser .menu-modes {
+  align-items: center;
+  gap: .25rem;
+  padding: .25rem;
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+  background: var(--surface-tint);
+}
+body[data-public-menu] .menu-browser .menu-modes > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 44px;
+  padding: .45rem .75rem;
+  border: 1px solid transparent;
+  border-radius: .68rem;
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+  font-size: .82rem;
+  font-weight: 750;
+  white-space: nowrap;
+  transition: background-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+body[data-public-menu] .menu-browser .menu-modes > button svg,
+body[data-public-menu] #carta-cart-link svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+body[data-public-menu] .menu-browser .menu-modes > button:hover:not([aria-pressed="true"]) {
+  background: var(--surface-quiet);
+  color: var(--ink);
+}
+body[data-public-menu] .menu-browser .menu-modes > button[aria-pressed="true"] {
+  border-color: #c9994d;
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 2px 0 rgb(78 49 27 / 12%);
+}
+body[data-public-menu] .menu-browser .carta-layout-group {
+  border-color: var(--line);
+  background: var(--cream);
+}
+body[data-public-menu] .menu-browser .carta-layout-group button {
+  min-height: 38px;
+  background: transparent;
+  color: var(--text-muted);
+}
+body[data-public-menu] .menu-browser .carta-layout-group button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--cream);
+}
+body[data-public-menu] .menu-browser .carta-cart-link {
+  min-height: 44px;
+  padding: .45rem .8rem;
+  border: 1px solid var(--control-line);
+  border-radius: .75rem;
+  background: #fffaf3;
+  color: var(--ink);
+  box-shadow: 0 2px 0 rgb(78 49 27 / 9%);
+  font-size: .82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+body[data-public-menu] .menu-browser .carta-cart-link:hover {
+  border-color: var(--rust);
+  background: var(--surface-tint);
+  color: var(--ink);
+}
+body[data-public-menu] .menu-browser .carta-cart-link[data-has-items="true"] {
+  border-color: #c9994d;
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 3px 0 rgb(78 49 27 / 14%);
+}
+body[data-public-menu] .menu-browser .carta-cart-link[data-has-items="true"]:hover {
+  background: var(--control-highlight);
+}
+body[data-public-menu] #carta-pages {
+  flex-wrap: nowrap;
+  gap: .4rem;
+  overflow-x: auto;
+  padding: .15rem .05rem .35rem;
+  scrollbar-width: thin;
+}
+body[data-public-menu] #carta-pages button {
+  min-height: 42px;
+  padding: .45rem .8rem;
+  border: 1px solid var(--dark-line);
+  border-radius: 999px;
+  background: var(--charcoal);
+  color: var(--on-dark-muted);
+  font-size: .82rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+body[data-public-menu] #carta-pages button:hover:not([aria-current="page"]) {
+  border-color: var(--gold);
+  background: var(--surface-dark-hover);
+  color: var(--cream);
+}
+body[data-public-menu] #carta-pages button[aria-current="page"] {
+  border-color: #c9994d;
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 2px 0 rgb(78 49 27 / 14%);
+}
+
+@media screen and (max-width: 767px) {
+  body[data-public-menu] .menu-browser-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .55rem .45rem;
+    padding: .55rem .65rem;
+  }
+  body[data-public-menu] .menu-browser-brand {
+    grid-column: 1;
+    grid-row: 1;
+    gap: .5rem;
+    justify-content: flex-start;
+  }
+  body[data-public-menu] .menu-brand-mark {
+    width: 38px;
+    height: 38px;
+  }
+  body[data-public-menu] .menu-brand-title {
+    gap: .2rem .45rem;
+  }
+  body[data-public-menu] .menu-title {
+    font-size: clamp(1.7rem, 7vw, 2.05rem);
+  }
+  body[data-public-menu] .menu-order-context {
+    min-height: 30px;
+    padding: .22rem .55rem;
+    font-size: .7rem;
+  }
+  body[data-public-menu] .menu-browser-actions {
+    display: contents;
+  }
+  body[data-public-menu] .menu-browser .menu-modes {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: .25rem;
+  }
+  body[data-public-menu] .menu-browser .menu-modes > button {
+    min-width: 0;
+    min-height: 44px;
+    gap: .32rem;
+    padding: .42rem .35rem;
+    font-size: .73rem;
+  }
+  body[data-public-menu] .menu-browser .carta-layout-group {
+    display: none;
+  }
+  body[data-public-menu] #carta-cart-link {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    min-height: 40px;
+    width: 10.25rem;
+    max-width: 10.25rem;
+    min-width: 0;
+    overflow: hidden;
+    margin: 0;
+    padding-inline: .6rem;
+    font-size: .72rem;
+  }
+  body[data-public-menu] #carta-cart-link span {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
