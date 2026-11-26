@@ -91,46 +91,6 @@
 
   <a id="staff-skip-link" class="staff-skip-link" href="#pos-content">Saltar al contenido</a>
 
-  <!-- TOP NAVIGATION BAR -->
-  <header class="brand-bar sticky top-0 z-40 border-b">
-    <div class="staff-header max-w-7xl mx-auto px-3 sm:px-5 h-16">
-      <div class="brand-left">
-        <button type="button" id="bar-modules-btn" data-back-modules class="bar-modules-btn" hidden aria-label="Ir a Módulos del POS" title="Módulos">
-          <i data-lucide="layout-grid" aria-hidden="true"></i>
-          <span>Módulos</span>
-        </button>
-        <div class="brand-lockup">
-          <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
-          <span class="brand-name">THE BURGERS BROTHER</span>
-        </div>
-      </div>
-      <nav id="role-tabs" aria-label="Accesos rápidos del POS">
-        <div id="modules-bar-tools" class="modules-bar-tools" hidden>
-          <button type="button" id="modules-bar-pending" class="modules-bar-pill" data-alert="false" hidden aria-label="Pedidos por aprobar">
-            <i data-lucide="bell-ring" aria-hidden="true"></i>
-            <span id="modules-bar-pending-count">0</span>
-          </button>
-          <button type="button" id="modules-bar-cooking" class="modules-bar-pill" data-alert="false" aria-label="Pedidos en preparación">
-            <i data-lucide="chef-hat" aria-hidden="true"></i>
-            <span id="modules-bar-cooking-count">0</span>
-          </button>
-          <button type="button" id="modules-bar-sound" class="modules-bar-sound" aria-pressed="false" title="Activar o silenciar avisos">
-            <i data-lucide="volume-x" aria-hidden="true"></i>
-            <span>Sonido</span>
-          </button>
-        </div>
-        <button type="button" id="staff-menu-desktop" hidden aria-label="Opciones de sesión" aria-expanded="false" aria-controls="staff-session-actions">
-          <i data-lucide="ellipsis" aria-hidden="true"></i>
-        </button>
-        <div id="staff-session-actions" hidden>
-          <button type="button" id="staff-menu-modules" data-back-modules hidden><i data-lucide="layout-grid" aria-hidden="true"></i> Ir a Módulos</button>
-          <button type="button" id="staff-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración general</button>
-          <button id="staff-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
-        </div>
-      </nav>
-    </div>
-  </header>
-
   <dialog id="staff-settings" class="prep-dialog" aria-labelledby="staff-settings-title">
     <header>
       <h2 id="staff-settings-title">Configuración general</h2>
@@ -1390,7 +1350,6 @@
       let nextSound = 0;
       const prepSoundButton = document.getElementById('prep-sound');
       const modulesSoundButton = document.getElementById('modules-sound-toggle');
-      const barSoundButton = document.getElementById('modules-bar-sound');
 
       function playOrderSound() {
         const inPrep = ui.role === 'chef';
@@ -1430,7 +1389,6 @@
         for (const button of [soundButton, prepSoundButton, modulesSoundButton]) {
           setSoundButtonState(button, fullLabel);
         }
-        setSoundButtonState(barSoundButton, soundEnabled ? 'Sonido ON' : 'Sonido OFF');
         const soundBadge = document.getElementById('mod-badge-sound');
         if (soundBadge) {
           soundBadge.textContent = soundEnabled ? 'Activo' : 'Silenciado';
@@ -1459,11 +1417,11 @@
           }
         }
         renderSoundButtons();
-        if (trigger === modulesSoundButton || trigger === barSoundButton) {
+        if (trigger === modulesSoundButton) {
           showToast(soundEnabled ? 'Avisos sonoros activados.' : 'Sonido silenciado.', 'info');
         }
       }
-      soundButton.onclick = prepSoundButton.onclick = modulesSoundButton.onclick = barSoundButton.onclick = toggleSound;
+      soundButton.onclick = prepSoundButton.onclick = modulesSoundButton.onclick = toggleSound;
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function recipeIngredients(product) {
@@ -1791,11 +1749,6 @@
           if (el) el.dataset.alert = String(Boolean(flag));
         };
 
-        setText('modules-bar-pending-count', String(pendingCount));
-        setAlert('modules-bar-pending', pendingCount > 0);
-        setText('modules-bar-cooking-count', String(cookingCount));
-        setAlert('modules-bar-cooking', cookingCount > 0);
-
         setText('kpi-pending-num', String(pendingCount));
         setAlert('kpi-pending', pendingCount > 0);
         setText('kpi-cocina-num', String(cocinaPending));
@@ -1860,32 +1813,7 @@
         if (staffReady) renderModuleStats();
       }
 
-      const staffHeader = document.querySelector('.staff-header');
-      const barModulesBtn = document.getElementById('bar-modules-btn');
-      const staffMenuModules = document.getElementById('staff-menu-modules');
-      const desktopStaffMenu = document.getElementById('staff-menu-desktop');
-      const staffLogout = document.getElementById('staff-logout');
       const staffSettingsDialog = document.getElementById('staff-settings');
-
-      function showStaffMenu(open) {
-        staffHeader.toggleAttribute('data-menu-open', open);
-        desktopStaffMenu.setAttribute('aria-expanded', String(open));
-      }
-
-      desktopStaffMenu.onclick = () => showStaffMenu(!staffHeader.hasAttribute('data-menu-open'));
-      document.addEventListener('click', event => {
-        if (staffHeader.hasAttribute('data-menu-open') && !staffHeader.contains(event.target)) showStaffMenu(false);
-      });
-      document.addEventListener('keydown', event => {
-        if (event.key !== 'Escape' || !staffHeader.hasAttribute('data-menu-open')) return;
-        showStaffMenu(false);
-        desktopStaffMenu.focus();
-      });
-      document.getElementById('staff-settings-open').onclick = () => {
-        showStaffMenu(false);
-        desktopStaffMenu.focus();
-        staffSettingsDialog.showModal();
-      };
       document.getElementById('staff-settings-close').onclick = () => staffSettingsDialog.close();
 
       const rolesDialog = document.getElementById('staff-roles');
@@ -1905,16 +1833,6 @@
       document.getElementById('staff-skip-link').onclick = event => {
         event.preventDefault();
         document.getElementById('pos-content').focus();
-      };
-      document.getElementById('modules-bar-pending').onclick = () => {
-        if (!canOpenPosView('admin')) return;
-        ui.adminFilter = 'POR_APROBAR';
-        switchRole('admin');
-      };
-      document.getElementById('modules-bar-cooking').onclick = () => {
-        if (!canOpenPosView('chef')) return;
-        prepFilter = 'pending';
-        switchRole('chef');
       };
       document.getElementById('view-modulos').addEventListener('click', event => {
         const trigger = event.target.closest('[data-launch-action], [data-launch-role]');
@@ -2043,16 +1961,12 @@
         if (!canOpenPosView(role)) return;
         if (role !== 'cliente') staffMenu = true;
         if (role === 'chef' && ['modulos', 'admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
-        const fromMenu = staffHeader.hasAttribute('data-menu-open') || prepMenu.open;
-        showStaffMenu(false);
+        const fromMenu = prepMenu.open;
         prepMenu.open = false;
         ui.role = role;
         document.body.toggleAttribute('data-prep-view', role === 'chef');
         document.body.toggleAttribute('data-modules-view', role === 'modulos');
         updateMenuLayout(role);
-        const showModulesBack = staffReady && (staffMenu || ui.staffOrderEntry) && role !== 'modulos';
-        barModulesBtn.hidden = !showModulesBack;
-        staffMenuModules.hidden = !showModulesBack;
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
 
@@ -4493,8 +4407,6 @@
         if (staffArea === 'admin') confirmedState = JSON.stringify({ state });
         if (needsStaffRefresh) setStaffRecovery();
         staffReady = true;
-        desktopStaffMenu.hidden = false;
-        document.getElementById('staff-session-actions').hidden = false;
         updateStaffNavigation();
         document.getElementById('staff-alerts').hidden = false;
         const nextOrders = new Map(state.orders.map(order => [order.id, order.status]));
@@ -4517,17 +4429,12 @@
         const isAdmin = staffReady && staffArea === 'admin';
         const isChef = staffReady && staffArea === 'chef';
         document.getElementById('chef-access-settings').hidden = !isAdmin;
-        document.getElementById('modules-bar-tools').hidden = !staffReady;
-        document.getElementById('modules-bar-pending').hidden = !isAdmin;
         document.getElementById('modules-profile').textContent = isAdmin ? 'Admin · Nicol' : 'Cocina';
         document.getElementById('modules-operation-title').textContent = isChef ? 'Tu estación' : 'Operación en vivo';
         document.getElementById('modules-shortcuts-title').textContent = isChef ? 'Herramientas y ajustes' : 'Gestión y sistema';
         document.getElementById('mod-desc-carta').textContent = isChef ? 'Consultar platos e ingredientes' : 'Menú visual, precios y QR';
         document.getElementById('mod-badge-carta').textContent = isChef ? 'Menú' : 'QR y menú';
         document.getElementById('mod-desc-settings').textContent = isChef ? 'Sonido y avisos de llegada' : 'Sonido, avisos y clave Cocina';
-        const showModulesBack = staffReady && (staffMenu || ui.staffOrderEntry) && ui.role !== 'modulos';
-        barModulesBtn.hidden = !showModulesBack;
-        staffMenuModules.hidden = !showModulesBack;
         document.querySelectorAll('[data-staff-scope]').forEach(el => {
           const scope = el.dataset.staffScope;
           el.hidden = (scope === 'admin' && !isAdmin) || (scope === 'chef' && !isChef);
@@ -4582,7 +4489,6 @@
           button.disabled = false;
         }
       }
-      staffLogout.onclick = signOutStaff;
       document.getElementById('modules-logout').onclick = signOutStaff;
 
       async function refreshAfterWrite() {

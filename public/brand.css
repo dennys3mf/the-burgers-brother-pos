@@ -17,83 +17,8 @@ body { background: var(--paper); color: var(--ink); }
 :where(button):not(:disabled) { cursor: pointer; }
 :where(button):disabled { opacity: .65; cursor: wait; }
 
-.brand-bar { background: var(--ink); border-color: #4c3425; box-shadow: none; }
-.staff-header { position: relative; display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
-.brand-left { display: flex; align-items: center; gap: .6rem; min-width: 0; }
-.brand-lockup { display: flex; align-items: center; gap: .6rem; min-width: 0; color: var(--cream); }
-.brand-mark { display: block; width: 42px; height: 42px; flex: none; object-fit: contain; border-radius: 50%; }
-.brand-name { font: 800 1.28rem/.95 var(--display); letter-spacing: .04em; white-space: nowrap; }
-.bar-modules-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  min-height: 40px;
-  padding: .35rem .72rem;
-  border: 1px solid rgb(255 212 146 / 26%);
-  border-radius: .65rem;
-  background: #281d18;
-  color: var(--cream);
-  font-size: .8rem;
-  font-weight: 750;
-  white-space: nowrap;
-}
-.bar-modules-btn[hidden] { display: none; }
-.bar-modules-btn svg { width: 1rem; height: 1rem; color: var(--gold); flex: none; }
-.bar-modules-btn:hover { background: #36271f; border-color: var(--gold); }
-#role-tabs { margin-inline-start: auto; display: flex; align-items: center; gap: .45rem; flex: none; }
-#role-tabs :focus-visible, .bar-modules-btn:focus-visible, .customer-hero :focus-visible, .menu-browser :focus-visible {
+.customer-hero :focus-visible, .menu-browser :focus-visible {
   outline-color: var(--gold);
-}
-#staff-menu-desktop {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex: none;
-  border: 1px solid #866d5d;
-  border-radius: .65rem;
-  color: var(--cream);
-}
-#staff-menu-desktop[hidden], #staff-session-actions { display: none; }
-#staff-menu-desktop svg { width: 1.15rem; height: 1.15rem; }
-.staff-header[data-menu-open] #staff-session-actions:not([hidden]) { display: grid; }
-#staff-session-actions {
-  position: absolute;
-  z-index: 20;
-  inset-inline-end: .75rem;
-  top: calc(100% + .35rem);
-  width: max-content;
-  max-width: calc(100vw - 1.5rem);
-  padding: .3rem;
-  border: 1px solid var(--line);
-  border-radius: .7rem;
-  background: var(--cream);
-  color: var(--ink);
-  box-shadow: 0 .5rem 1.5rem rgb(24 19 17 / 19%);
-}
-#staff-session-actions button {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  min-height: 44px;
-  padding: .5rem .7rem;
-  border-radius: .5rem;
-  font-size: .88rem;
-  font-weight: 700;
-  text-align: left;
-}
-#staff-session-actions button[hidden] { display: none; }
-#staff-session-actions button:hover { background: var(--paper); }
-#staff-session-actions button svg { width: 1rem; height: 1rem; flex: none; }
-#staff-session-actions :focus-visible { outline-color: var(--rust); outline-offset: -2px; }
-
-@media screen and (max-width: 559px) {
-  .staff-header { min-height: 60px; gap: .4rem; }
-  .brand-mark { width: 36px; height: 36px; }
-  .brand-name { font-size: .92rem; line-height: .95; white-space: normal; max-width: 6.6rem; }
-  body:not([data-modules-view]) .brand-name { display: none; }
-  .bar-modules-btn span, .modules-bar-sound span { display: none; }
-  .bar-modules-btn, .modules-bar-pill, .modules-bar-sound { padding: .35rem .55rem; min-height: 40px; }
 }
 #modal-customize::backdrop { background: rgb(24 19 17 / 77%); }
 
@@ -1124,12 +1049,12 @@ p.checkout-pay-info { display: block; }
 }
 
 @media screen and (max-width: 767px), screen and (max-height: 500px) {
-  .brand-bar { padding-top: env(safe-area-inset-top); }
-  .brand-bar, main {
+  main {
+    padding-top: max(.9rem, env(safe-area-inset-top));
     padding-inline-start: env(safe-area-inset-left);
     padding-inline-end: env(safe-area-inset-right);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  main { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   #toast-container { bottom: max(1rem, env(safe-area-inset-bottom)); }
   #admin-filter-tabs button, .gestion-tab,
   #view-admin button, #view-chef button, #view-gestion button,
@@ -1144,7 +1069,7 @@ p.checkout-pay-info { display: block; }
     font-size: 16px;
     min-width: 0;
   }
-  #role-tabs, .role-view, #client-cart, #view-cliente .grid > div,
+  .role-view, #client-cart, #view-cliente .grid > div,
   #view-chef .grid > div, .gestion-panel .grid > div { min-width: 0; }
   .gestion-panel [role="region"] { max-width: 100%; }
   .gestion-panel table { min-width: 30rem; }
@@ -1234,12 +1159,10 @@ p.checkout-pay-info { display: block; }
 #admin-orders-grid .admin-order-items { font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
 #admin-orders-grid .admin-order-actions { justify-content: flex-start; }
 #chef-access-dialog::backdrop { background: rgb(24 19 17 / 77%); }
-#staff-sections button[hidden] { display: none; }
 @media (max-width: 600px) {
   #admin-order-search { flex-basis: 100%; }
 }
 
-body[data-public-menu] > .brand-bar,
 body[data-public-menu] #staff-menu-hero,
 body[data-public-menu] #staff-alerts,
 #carta-cart-link[hidden], #client-cart[hidden], #cart-drawer-backdrop[hidden] { display: none; }
@@ -2114,7 +2037,7 @@ body[data-public-menu] #staff-sync-notice { display: none; }
 }
 .staff-skip-link:not(:focus-visible) { clip-path: inset(50%); }
 body[data-public-menu] .staff-skip-link { display: none; }
-#pos-content { scroll-margin-block-start: 5rem; }
+#pos-content { scroll-margin-block-start: 1rem; }
 
 body[data-staff-workspace] {
   min-height: 100dvh;
@@ -2124,11 +2047,6 @@ body[data-staff-workspace] {
     linear-gradient(124deg, #1b1410 0 58%, #852f19 58% 66%, #261b16 66% 100%) fixed;
 }
 body[data-staff-workspace] main { padding-block: clamp(.9rem, 2.4vw, 2rem) 2.5rem; }
-body[data-staff-workspace] .brand-bar {
-  background: rgb(24 19 17 / 92%);
-  backdrop-filter: blur(10px);
-  border-color: rgb(255 210 148 / 16%);
-}
 
 /* Unified cream card surfaces across staff views over the studio canvas */
 body[data-staff-workspace] :is(
@@ -2179,35 +2097,6 @@ body[data-staff-workspace] #view-admin .admin-tool-primary {
   box-shadow: 0 8px 20px -8px rgb(0 0 0 / 50%);
 }
 body[data-staff-workspace] #prep-history-page { color: var(--cream); }
-
-.modules-bar-tools { display: none; }
-.modules-bar-pill, .modules-bar-sound {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  min-height: 40px;
-  padding: .35rem .7rem;
-  border: 1px solid #6b4e3c;
-  border-radius: 999px;
-  background: #281d18;
-  color: var(--cream);
-  font-size: .78rem;
-  font-weight: 750;
-  white-space: nowrap;
-}
-.modules-bar-pill[hidden] { display: none; }
-.modules-bar-pill svg, .modules-bar-sound svg { width: .95rem; height: .95rem; flex: none; }
-.modules-bar-pill[data-alert="true"] {
-  border-color: transparent;
-  background: var(--gold);
-  color: var(--ink);
-}
-.modules-bar-sound[aria-pressed="true"] {
-  border-color: #7ea885;
-  background: #23432d;
-  color: #edf7eb;
-}
-.modules-bar-pill:hover, .modules-bar-sound:hover { filter: brightness(1.08); }
 
 .modules-page, .modules-page section { min-width: 0; }
 .modules-page { max-width: 72rem; margin-inline: auto; padding-bottom: 1.5rem; }
@@ -2288,16 +2177,6 @@ body[data-staff-workspace] #prep-history-page { color: var(--cream); }
   border-color: #7ea885;
   background: #23432d;
   color: #edf7eb;
-}
-body[data-staff-workspace] .modules-bar-tools:not([hidden]) {
-  display: flex;
-  align-items: center;
-  gap: .4rem;
-}
-#modules-sound-toggle { display: none; }
-.modules-header-logout { display: none; }
-@media (min-width: 960px) {
-  .modules-header-logout { display: inline-flex; }
 }
 
 .modules-kpi-strip {
@@ -2516,12 +2395,8 @@ body[data-staff-workspace] .modules-bar-tools:not([hidden]) {
   .module-tile, .module-go, .modules-header-btn, .modules-kpi-chip { transition: none; transform: none; }
   .module-tile:hover, .module-tile:hover .module-go { transform: none; }
 }
-@media (max-width: 959px) {
-  #staff-session-actions button { min-height: 48px; }
-}
 
 @media (any-pointer: coarse) {
-  .bar-modules-btn, .modules-bar-pill, .modules-bar-sound, #staff-session-actions button,
   #admin-filter-tabs button, .gestion-tab, #view-admin .admin-tool,
   #admin-orders-grid button, #view-gestion .admin-tool,
   #view-chef :is(button, summary), .prep-dialog button,
@@ -2541,7 +2416,7 @@ body[data-staff-workspace] .modules-bar-tools:not([hidden]) {
 
 /* The session page has its own layout, including when the app bundles are slow. */
 #staff-loading { display: none; }
-html[data-staff-loading] :is(.brand-bar, .role-view, .staff-alerts) { display: none; }
+html[data-staff-loading] :is(.role-view, .staff-alerts) { display: none; }
 html[data-staff-loading] #staff-loading {
   display: grid;
   justify-items: center;
