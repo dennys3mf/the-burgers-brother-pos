@@ -950,7 +950,7 @@
           <span class="text-xs font-extrabold text-orange-600 uppercase tracking-wider">Código QR Real (ISO Escaneable)</span>
           <h3 class="text-base font-extrabold text-slate-900">THE BURGERS BROTHER — <span id="qr-mesa-title" class="text-amber-600">Mesa 4</span></h3>
         </div>
-        <button type="button" data-close-modal="modal-qr" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" data-close-modal="modal-qr" aria-label="Cerrar códigos QR" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
       <!-- Target Selector -->
@@ -1098,7 +1098,7 @@
     <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
         <h3 id="pay-mesa-title" class="font-extrabold text-sm text-slate-900">Cobrar Pedido de Mesa</h3>
-        <button type="button" data-close-modal="modal-pay-mesa" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" data-close-modal="modal-pay-mesa" aria-label="Cerrar cobro" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form id="form-pay-mesa" class="p-5 space-y-3 text-xs">
         <input type="hidden" id="pay-mesa-order-id" />
@@ -3105,7 +3105,7 @@
       function renderFlavorButtons(req) {
         document.getElementById('cust-flavors-grid').innerHTML = WING_FLAVORS.map(fl => {
           const on = custSelectedFlavors.includes(fl);
-          return `<button type="button" data-toggle-flavor="${fl}" data-req="${req}" class="p-2 rounded-lg border text-left font-semibold transition-colors ${on ? 'bg-orange-600 text-white border-orange-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${fl}</button>`;
+          return `<button type="button" data-toggle-flavor="${fl}" data-req="${req}" aria-pressed="${on}" class="p-2 rounded-lg border text-left font-semibold transition-colors ${on ? 'bg-orange-600 text-white border-orange-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}">${fl}</button>`;
         }).join('');
       }
 
