@@ -23,7 +23,7 @@ body { background: var(--paper); color: var(--ink); }
 .brand-mark { display: block; width: 44px; height: 44px; object-fit: contain; border-radius: 50%; }
 .brand-name { font: 800 1.32rem/.95 var(--display); letter-spacing: .04em; }
 #staff-menu-mobile { display: none; }
-#staff-access, #role-tabs { margin-inline-start: auto; }
+#role-tabs { margin-inline-start: auto; }
 #role-tabs, #staff-sections { display: flex; align-items: center; gap: .35rem; min-width: 0; }
 #staff-sections .role-tab { min-height: 44px; padding-inline: .7rem; font-size: .84rem; transition: none; }
 #staff-sections .role-tab[aria-current="page"] { background: var(--gold); color: var(--ink); }
@@ -111,9 +111,7 @@ body { background: var(--paper); color: var(--ink); }
     box-shadow: none;
   }
 }
-#staff-login { margin: auto; }
-#staff-login::backdrop, #modal-customize::backdrop { background: rgb(24 19 17 / 77%); }
-#staff-login button { min-height: 44px; }
+#modal-customize::backdrop { background: rgb(24 19 17 / 77%); }
 
 .customer-hero {
   position: relative; isolation: isolate; overflow: hidden;
@@ -1026,7 +1024,7 @@ p.checkout-pay-info { display: block; }
 .gestion-panel table th, .gestion-panel table td { padding-block: .75rem; }
 .gestion-panel table tbody tr:hover { background: #f8ecda; }
 .gestion-panel table thead { color: #564333; }
-#modal-customize, #staff-login { background: var(--cream); color: var(--ink); border: 1px solid var(--line); }
+#modal-customize { background: var(--cream); color: var(--ink); border: 1px solid var(--line); }
 
 @media (max-width: 600px) {
   .customer-hero { min-height: 0; gap: .85rem; }
@@ -1075,7 +1073,7 @@ p.checkout-pay-info { display: block; }
   #client-cart :is([data-cc-inc], [data-cc-dec]) { width: 44px; height: 44px; }
   .checkout-taper-stepper button { width: 44px; height: 44px; }
   #client-cart-items { max-height: none; }
-  #client-cart :is(input, select), #staff-login input,
+  #client-cart :is(input, select),
   [id^="modal-"] :is(input:not([type="checkbox"]):not([type="hidden"]), select, textarea) {
     font-size: 16px;
     min-width: 0;
@@ -1124,7 +1122,7 @@ p.checkout-pay-info { display: block; }
 #admin-orders-grid .admin-order-items { font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
 #admin-orders-grid .admin-order-actions { justify-content: flex-start; }
 #chef-access-dialog::backdrop { background: rgb(24 19 17 / 77%); }
-#staff-sections button[hidden], #staff-access[hidden] { display: none; }
+#staff-sections button[hidden] { display: none; }
 @media (max-width: 600px) {
   #admin-order-search { flex-basis: 100%; }
 }
@@ -1767,27 +1765,43 @@ body[data-public-menu] .staff-skip-link { display: none; }
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: clamp(1.15rem, 3vw, 2rem);
-  border-radius: 1.1rem;
-  border-inline-start: 5px solid var(--gold);
-  background: var(--charcoal);
-  color: var(--cream);
+  gap: .75rem;
+  padding-block: .4rem .9rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
 }
-.modules-header h1 { font: 800 clamp(2rem, 5vw, 3.65rem)/1 var(--display); text-wrap: balance; }
-.modules-header h1:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
-.modules-header p {
+.modules-header h1 { font: 800 clamp(2rem, 5vw, 3.3rem)/1 var(--display); text-wrap: balance; }
+.modules-account, .modules-account p, #modules-logout {
   display: flex;
   align-items: center;
-  gap: .45rem;
-  padding: .45rem .65rem;
-  border: 1px solid #88673e;
-  border-radius: .45rem;
-  color: #ffe1a8;
-  font-size: .875rem;
-  font-weight: 700;
+  flex-wrap: wrap;
+  gap: .5rem;
 }
-.modules-header p svg { width: 1rem; height: 1rem; flex: none; }
+.modules-account p {
+  padding: .4rem .65rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--cream);
+  color: #65472d;
+  font-size: .875rem;
+  font-weight: 750;
+}
+.modules-account svg { width: 1rem; height: 1rem; flex: none; }
+#modules-logout {
+  display: none;
+  min-height: 48px;
+  padding: .55rem .75rem;
+  border: 1px solid #c7ae8b;
+  border-radius: .55rem;
+  background: var(--cream);
+  font-size: .875rem;
+  font-weight: 750;
+}
+#modules-logout:hover { background: #fff1d8; }
+@media (min-width: 960px), (min-width: 768px) and (min-height: 600px), (min-width: 768px) and (pointer: fine) {
+  body[data-modules-view] .brand-bar { display: none; }
+  #modules-logout { display: flex; }
+}
 .modules-section-title { margin: clamp(1.4rem, 3vw, 2rem) 0 .7rem; font-size: 1rem; font-weight: 800; }
 .modules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.55rem, 2vw, 1rem); }
 .module-tile {
@@ -1870,3 +1884,74 @@ body[data-public-menu] .staff-skip-link { display: none; }
 .management-dialog form { font-size: .9rem; }
 .management-dialog form :is(input, select) { min-height: 44px; font-size: 1rem; }
 .management-dialog form button { min-height: 44px; }
+
+/* The session page has its own layout, including when the app bundles are slow. */
+#staff-loading { display: none; }
+html[data-staff-loading] :is(.brand-bar, .role-view, .staff-alerts) { display: none; }
+html[data-staff-loading] #staff-loading {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  padding: 12vh 1rem 2rem;
+  text-align: center;
+  font: 600 1rem/1.5 system-ui, sans-serif;
+}
+#staff-loading-retry {
+  min-height: 48px;
+  padding: .5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--cream);
+}
+
+.staff-login-page {
+  box-sizing: border-box;
+  margin: 0;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  font: 400 1rem/1.5 system-ui, sans-serif;
+}
+.staff-login-page *, .staff-login-page *::before, .staff-login-page *::after { box-sizing: inherit; }
+.staff-login-card {
+  width: min(100%, 27rem);
+  padding: clamp(1.1rem, 5vw, 2rem);
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--gold);
+  border-radius: 1rem;
+  background: var(--cream);
+  box-shadow: 0 12px 32px rgb(55 26 8 / 8%);
+}
+.staff-login-heading { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.25rem; }
+.staff-login-heading img { border-radius: 50%; flex: none; }
+.staff-login-heading h1 { margin: 0; font-size: clamp(1.3rem, 5vw, 1.8rem); line-height: 1.15; text-wrap: balance; }
+.staff-login-card form { display: grid; gap: .5rem; }
+.staff-login-card label { font-size: .9rem; font-weight: 750; }
+.staff-login-card :is(input, select, button) {
+  width: 100%;
+  min-height: 48px;
+  padding: .6rem .75rem;
+  border: 1px solid #bcaa8e;
+  border-radius: .55rem;
+  background: #fffdf7;
+  color: inherit;
+  font: inherit;
+}
+.staff-login-card :is(input, select) { margin-bottom: .35rem; }
+.staff-login-card input[aria-invalid="true"] { border-color: var(--rust); }
+#staff-login-error { margin: 0; color: #8c331c; font-size: .9rem; font-weight: 650; }
+#staff-login-error:empty { display: none; }
+.staff-login-card button { margin-top: .2rem; border-color: transparent; background: var(--gold); font-weight: 800; }
+.staff-login-card button:hover:not(:disabled) { background: #efb138; }
+.staff-login-return {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: .45rem;
+  color: #703718;
+  font-size: .9rem;
+  font-weight: 650;
+  text-underline-offset: .2em;
+}

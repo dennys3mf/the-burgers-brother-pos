@@ -1,6 +1,6 @@
 # The Burgers Brother POS
 
-La [carta pública](https://the-burgers-brother-pos.pages.dev/) permite generar códigos de mesa y delivery desde **Ver QR**. Nicol usa la clave de Admin para acceder a Administración, Gestión y la vista de cocina. El equipo de cocina usa una clave independiente, configurable desde Configuración general → Cambiar clave de Cocina. El cliente recibe un código al guardar su pedido en D1. Sus tres pedidos más recientes se conservan para seguimiento al recargar la misma pestaña.
+La [carta pública](https://the-burgers-brother-pos.pages.dev/) permite generar códigos de mesa y delivery desde **Ver QR**. El personal inicia sesión en [Acceso del personal](https://the-burgers-brother-pos.pages.dev/personal/) y entra a Módulos. Nicol usa la clave de Admin para acceder a Administración, Gestión y Preparación. El equipo de cocina usa una clave independiente, configurable desde Configuración general → Cambiar clave de Cocina. El cliente recibe un código al guardar su pedido en D1. Sus tres pedidos más recientes se conservan para seguimiento al recargar la misma pestaña.
 
 El personal verifica el prepago de delivery antes de aprobar el pedido. La referencia ingresada por el cliente queda pendiente de verificación hasta ese momento. El inventario inicial contiene los insumos de la carta con existencias en cero.
 

@@ -103,7 +103,6 @@
         <span class="brand-name" aria-hidden="true">THE BURGERS BROTHER</span>
         <i data-lucide="chevron-down" aria-hidden="true"></i>
       </button>
-      <button id="staff-access" type="button" class="min-h-11 px-2 text-xs font-semibold text-amber-400">Personal</button>
       <nav id="role-tabs" aria-label="Secciones del POS">
         <div id="staff-sections">
           <button type="button" hidden data-role="modulos" class="role-tab">
@@ -139,21 +138,6 @@
       </nav>
     </div>
   </header>
-
-      <dialog id="staff-login" class="rounded-xl p-5 w-80 max-w-[90vw]">
-        <form id="staff-login-form" class="space-y-3">
-          <label for="staff-role" class="block text-sm font-bold">Área de trabajo</label>
-          <select id="staff-role" class="w-full rounded border p-2 text-base">
-            <option value="admin">Nicol · Administración</option>
-            <option value="chef">Cocina · Chef</option>
-          </select>
-          <label for="staff-password" class="block text-sm font-bold">Clave del personal</label>
-          <input id="staff-password" type="password" autocomplete="current-password" required class="w-full rounded border p-2">
-          <p id="staff-login-error" role="alert" class="text-sm text-rose-700"></p>
-          <button type="submit" class="rounded bg-slate-900 px-3 py-2 text-white">Entrar</button>
-          <button type="button" id="staff-login-cancel" class="px-3 py-2">Cancelar</button>
-        </form>
-      </dialog>
 
   <dialog id="staff-settings" class="prep-dialog" aria-labelledby="staff-settings-title">
     <header>
@@ -223,10 +207,18 @@
       <button id="staff-sync-retry" type="button" class="admin-tool">Actualizar</button>
     </div>
 
+    <div id="staff-loading">
+      <p id="staff-loading-status" role="status">Abriendo el POS…</p>
+      <button type="button" id="staff-loading-retry" hidden>Reintentar</button>
+    </div>
+
     <section id="view-modulos" class="role-view modules-page hidden" aria-labelledby="modules-title">
       <header class="modules-header">
         <h1 id="modules-title" tabindex="-1">Módulos del POS</h1>
-        <p><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
+        <div class="modules-account">
+          <p><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
+          <button id="modules-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i>Cerrar sesión</button>
+        </div>
       </header>
 
       <section aria-labelledby="modules-operation-title">
@@ -1154,6 +1146,7 @@
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js';
+    import { preparationEntry, staffLoginUrl } from './staff-entry.js';
 
     (function () {
       'use strict';
@@ -1682,7 +1675,7 @@
       });
 
       let staffMenu = false;
-      let prepReturnRole = 'admin';
+      let prepReturnRole = 'modulos';
 
       function updateMenuLayout(role) {
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
@@ -1700,12 +1693,6 @@
       }
 
       function switchRole(role) {
-        if (role !== 'cliente' && !staffReady) {
-          requestedRole = role;
-          staffRoleSelect.value = role === 'chef' ? 'chef' : 'admin';
-          if (!login.open) login.showModal();
-          return;
-        }
         if (!canOpenPosView(role)) return;
         if (role !== 'cliente') staffMenu = true;
         if (role === 'chef' && ['modulos', 'admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
@@ -1716,6 +1703,7 @@
         if (role === 'chef') document.getElementById('prep-menu-sections').append(staffSectionLinks);
         else staffNav.prepend(staffSectionLinks);
         document.body.toggleAttribute('data-prep-view', role === 'chef');
+        document.body.toggleAttribute('data-modules-view', role === 'modulos');
         updateMenuLayout(role);
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
@@ -3922,26 +3910,52 @@
         showToast('Kardex exportado en CSV.');
       });
 
+      let staffRouteGeneration = 0;
+      const staffLoadingStatus = document.getElementById('staff-loading-status');
+      const staffLoadingRetry = document.getElementById('staff-loading-retry');
+
       function applyHashRoute(hashStr) {
+        const generation = ++staffRouteGeneration;
         scannedPrepCode = '';
         const h = (hashStr || '').replace(/^#/, '');
         const params = new URLSearchParams(h);
-        if (params.get('estacion') === 'barra' || params.get('estacion') === 'cocina') {
-          prepStation = params.get('estacion') === 'barra' ? 'BARRA' : 'COCINA';
-          prepFilter = 'pending';
-          switchRole('chef');
+        const preparation = preparationEntry(params);
+        if (preparation || params.has('modulos') || params.has('personal')) {
+          const open = () => {
+            if (generation !== staffRouteGeneration) return;
+            document.documentElement.removeAttribute('data-staff-loading');
+            if (preparation) {
+              const station = preparation.get('estacion');
+              if (station) {
+                prepStation = station === 'barra' ? 'BARRA' : 'COCINA';
+                prepFilter = 'pending';
+              }
+              scannedPrepCode = preparation.get('chef') || '';
+              switchRole('chef');
+            } else {
+              if (params.has('personal')) history.replaceState(null, '', '#modulos');
+              switchRole('modulos');
+            }
+          };
+          if (staffReady) open();
+          else {
+            document.documentElement.setAttribute('data-staff-loading', '');
+            staffLoadingStatus.textContent = 'Abriendo el POS…';
+            staffLoadingRetry.hidden = true;
+            const failed = () => {
+              if (generation !== staffRouteGeneration) return;
+              staffLoadingStatus.textContent = 'No se pudo cargar el POS. Revisa tu conexión.';
+              staffLoadingRetry.hidden = false;
+            };
+            syncStaff(true).then(ready => {
+              if (ready) open();
+              else failed();
+            }).catch(failed);
+          }
           return;
         }
-        if (params.has('modulos')) {
-          switchRole('modulos');
-          return;
-        }
-        if (params.has('personal')) {
-          switchRole(staffArea === 'chef' ? 'chef' : 'admin');
-          return;
-        }
+        document.documentElement.removeAttribute('data-staff-loading');
         staffMenu = false;
-        if (!params.has('chef') && login.open) login.close();
         if (!h) { switchRole('cliente'); return; }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
@@ -3954,14 +3968,8 @@
           ui.clientMode = 'DELIVERY';
           switchRole('cliente');
         } else if (params.has('chef')) {
-          const scannedCode = params.get('chef').trim().toUpperCase().replace(/^BB-/, '');
-          if (!/^[A-Z0-9]{1,12}$/.test(scannedCode)) {
-            showToast('El QR no contiene un código de pedido válido.', 'err');
-            switchRole('cliente');
-            return;
-          }
-          scannedPrepCode = scannedCode;
-          switchRole('chef');
+          showToast('El QR no contiene un código de pedido válido.', 'err');
+          switchRole('cliente');
         } else {
           switchRole('cliente');
         }
@@ -3995,12 +4003,12 @@
         focusClientCart();
       });
       window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
+      staffLoadingRetry.onclick = () => applyHashRoute(window.location.hash);
 
       
       let staffReady = false;
       let staffArea = null;
       let observedOrders = null;
-      let requestedRole = 'admin';
       let revision = null;
       let pendingOrder = null;
       let staffWrites = Promise.resolve();
@@ -4024,9 +4032,10 @@
         document.getElementById('view-gestion').inert = needsStaffRefresh;
       }
 
-      async function syncStaff() {
+      async function syncStaff(requireSession = false) {
         if (writesPending) return false;
         const generation = writeGeneration;
+        const routeGeneration = staffRouteGeneration;
         const read = ++staffRead;
         const headers = staffReady && staffETag && !needsStaffRefresh ? { 'If-None-Match': staffETag } : {};
         let response = await fetch(staffArea === 'chef' ? '/api/kitchen' : '/api/state', { headers });
@@ -4034,7 +4043,9 @@
         const superseded = () => writesPending || generation !== writeGeneration || read !== staffRead;
         if (superseded()) return false;
         if (response.status === 401) {
-          if (staffReady) location.reload();
+          if (staffMenu || (requireSession && routeGeneration === staffRouteGeneration)) {
+            location.replace(staffLoginUrl(location.hash));
+          }
           return false;
         }
         if (response.status === 304) return staffReady;
@@ -4048,7 +4059,6 @@
         if (staffArea === 'admin') confirmedState = JSON.stringify({ state });
         if (needsStaffRefresh) setStaffRecovery();
         staffReady = true;
-        document.getElementById('staff-access').hidden = true;
         desktopStaffMenu.hidden = false;
         document.getElementById('staff-session-actions').hidden = false;
         updateStaffNavigation();
@@ -4069,7 +4079,6 @@
         return true;
       }
 
-      const login = document.getElementById('staff-login');
       function updateStaffNavigation() {
         const isAdmin = staffReady && staffArea === 'admin';
         document.getElementById('chef-access-settings').hidden = !isAdmin;
@@ -4082,12 +4091,7 @@
           tile.hidden = !canOpenPosView(tile.dataset.launchRole);
         });
       }
-      function requestedStaffView() {
-        return canOpenPosView(requestedRole) ? requestedRole : 'chef';
-      }
       updateStaffNavigation();
-      const staffRoleSelect = document.getElementById('staff-role');
-      document.getElementById('staff-access').onclick = () => switchRole('admin');
       const chefAccessDialog = document.getElementById('chef-access-dialog');
       const chefAccessForm = document.getElementById('chef-access-form');
       const chefAccessStatus = document.getElementById('chef-access-status');
@@ -4119,37 +4123,21 @@
           password.value = '';
         }
       };
-      document.getElementById('staff-login-cancel').onclick = () => login.close();
-      document.getElementById('staff-login-form').onsubmit = async (event) => {
-        event.preventDefault();
-        const password = document.getElementById('staff-password');
-        const error = document.getElementById('staff-login-error');
-        error.textContent = '';
+      async function signOutStaff(event) {
+        const button = event.currentTarget;
+        button.disabled = true;
         try {
-          const response = await fetch('/api/session', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: password.value, role: staffRoleSelect.value })
-          });
-          if (response.status === 401) throw new Error('La clave es incorrecta.');
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || 'No se pudo iniciar sesión.');
-          staffArea = result.role;
-          if (!await syncStaff()) throw new Error('No se pudo abrir el panel.');
-          login.close();
-          switchRole(requestedStaffView());
-        } catch (failure) {
-          error.textContent = failure.message;
-        } finally {
-          password.value = '';
+          await staffWrites;
+          const response = await fetch('/api/session', { method: 'DELETE' });
+          if (!response.ok) throw new Error();
+          location.replace(staffLoginUrl());
+        } catch {
+          showToast('No se pudo cerrar sesión. Intenta de nuevo.', 'err');
+          button.disabled = false;
         }
-      };
-
-      async function signOutStaff() {
-        await staffWrites;
-        await fetch('/api/session', { method: 'DELETE' });
-        location.reload();
       }
       staffLogout.onclick = signOutStaff;
+      document.getElementById('modules-logout').onclick = signOutStaff;
 
       async function refreshAfterWrite() {
         staffSyncRetry.disabled = true;
@@ -4178,7 +4166,7 @@
               body: snapshot
             });
             if (response.status === 401) {
-              location.reload();
+              location.replace(staffLoginUrl(location.hash));
               return false;
             }
             if (!response.ok) throw new Error();
@@ -4211,7 +4199,7 @@
         try {
           const activeOrders = ui.receivedOrders.slice(0, 3).filter(order => !finishedCustomerStatuses.has(order.status));
           const results = await Promise.allSettled([
-            staffReady ? syncStaff() : Promise.resolve(false),
+            staffReady && staffMenu ? syncStaff() : Promise.resolve(false),
             ...activeOrders.map(async order => {
               const response = await fetch('/api/orders/' + order.id);
               if (!response.ok) return false;
@@ -4230,14 +4218,6 @@
         }
       }
 
-      syncStaff().then((ready) => {
-        if (ready && login.open) {
-          login.close();
-          switchRole(requestedStaffView());
-        } else if (ready && !location.hash) {
-          switchRole(staffArea === 'chef' ? 'chef' : 'admin');
-        }
-      }).catch(() => {});
       setInterval(pollCloudflare, 4000);
       window.addEventListener('online', pollCloudflare);
       document.addEventListener('visibilitychange', () => {
