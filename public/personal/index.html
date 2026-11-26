@@ -13,7 +13,14 @@
   <main class="staff-login-card">
     <div class="staff-login-heading">
       <img src="../logo-burgers-brother.webp" width="56" height="56" alt="The Burgers Brother">
-      <h1>Acceso del personal</h1>
+      <div>
+        <p class="staff-login-eyebrow">The Burgers Brother</p>
+        <h1>Acceso del personal</h1>
+      </div>
+    </div>
+    <div id="staff-active-session" class="staff-active-session" hidden>
+      <p id="staff-active-session-label"></p>
+      <a id="staff-active-session-link" class="staff-active-session-cta" href="../#modulos">Ir a Módulos</a>
     </div>
     <form id="staff-login-form" method="post" action="../api/session">
       <label for="staff-role">Área de trabajo</label>

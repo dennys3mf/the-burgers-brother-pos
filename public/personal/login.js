@@ -5,9 +5,24 @@ const role = document.getElementById('staff-role');
 const password = document.getElementById('staff-password');
 const error = document.getElementById('staff-login-error');
 const submit = document.getElementById('staff-login-submit');
+const activeBanner = document.getElementById('staff-active-session');
+const activeLabel = document.getElementById('staff-active-session-label');
+const activeLink = document.getElementById('staff-active-session-link');
 const preparation = preparationEntry(new URLSearchParams(location.search));
+const targetHash = '#' + (preparation || 'modulos');
 
 if (preparation) role.value = 'chef';
+
+fetch('../api/kitchen', { cache: 'no-store' })
+  .then(async response => {
+    if (!response.ok) return;
+    const data = await response.json().catch(() => null);
+    if (!data?.role) return;
+    activeLabel.textContent = `Sesión iniciada como ${data.role === 'admin' ? 'Admin · Nicol' : 'Cocina'}`;
+    activeLink.href = '../' + targetHash;
+    activeBanner.hidden = false;
+  })
+  .catch(() => {});
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -28,7 +43,7 @@ form.addEventListener('submit', async event => {
       throw new Error(result.error || 'No se pudo iniciar sesión. Intenta de nuevo.');
     }
     password.value = '';
-    location.replace('../#' + (preparation || 'modulos'));
+    location.replace('../' + targetHash);
   } catch (failure) {
     error.textContent = failure instanceof TypeError
       ? 'No se pudo conectar. Revisa tu conexión y vuelve a intentar.'

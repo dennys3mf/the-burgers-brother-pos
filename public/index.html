@@ -94,44 +94,36 @@
   <!-- TOP NAVIGATION BAR -->
   <header class="brand-bar sticky top-0 z-40 border-b">
     <div class="staff-header max-w-7xl mx-auto px-3 sm:px-5 h-16">
-      <div class="brand-lockup brand-desktop">
-        <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
-        <span class="brand-name">THE BURGERS BROTHER</span>
+      <div class="brand-left">
+        <button type="button" id="bar-modules-btn" data-back-modules class="bar-modules-btn" hidden aria-label="Ir a Módulos del POS" title="Módulos">
+          <i data-lucide="layout-grid" aria-hidden="true"></i>
+          <span>Módulos</span>
+        </button>
+        <div class="brand-lockup">
+          <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
+          <span class="brand-name">THE BURGERS BROTHER</span>
+        </div>
       </div>
-      <button type="button" id="staff-menu-mobile" class="brand-lockup" aria-label="Menú de The Burgers Brother" aria-expanded="false" aria-controls="role-tabs">
-        <img class="brand-mark" src="./logo-burgers-brother.webp" width="44" height="44" alt="">
-        <span class="brand-name" aria-hidden="true">THE BURGERS BROTHER</span>
-        <i data-lucide="chevron-down" aria-hidden="true"></i>
-      </button>
-      <nav id="role-tabs" aria-label="Secciones del POS">
-        <div id="staff-sections">
-          <button type="button" hidden data-role="modulos" class="role-tab">
-            <i data-lucide="layout-grid" class="w-4 h-4" aria-hidden="true"></i>
-            <span>Módulos</span>
+      <nav id="role-tabs" aria-label="Accesos rápidos del POS">
+        <div id="modules-bar-tools" class="modules-bar-tools" hidden>
+          <button type="button" id="modules-bar-pending" class="modules-bar-pill" data-alert="false" hidden aria-label="Pedidos por aprobar">
+            <i data-lucide="bell-ring" aria-hidden="true"></i>
+            <span id="modules-bar-pending-count">0</span>
           </button>
-          <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
-            <i data-lucide="qr-code" class="w-4 h-4"></i>
-            <span>Carta</span>
+          <button type="button" id="modules-bar-cooking" class="modules-bar-pill" data-alert="false" aria-label="Pedidos en preparación">
+            <i data-lucide="chef-hat" aria-hidden="true"></i>
+            <span id="modules-bar-cooking-count">0</span>
           </button>
-          <button type="button" hidden data-role="admin" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
-            <i data-lucide="bell-ring" class="w-4 h-4"></i>
-            <span>Admin</span>
-            <span id="badge-admin-pending" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-extrabold">0</span>
-          </button>
-          <button type="button" hidden data-role="chef" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative">
-            <i data-lucide="chef-hat" class="w-4 h-4"></i>
-            <span>Preparación</span>
-            <span id="badge-chef-cooking" class="hidden px-1.5 py-0.5 text-[10px] rounded-full bg-amber-500 text-slate-950 font-extrabold">0</span>
-          </button>
-          <button type="button" hidden data-role="gestion" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
-            <i data-lucide="database" class="w-4 h-4"></i>
-            <span>Gestión</span>
+          <button type="button" id="modules-bar-sound" class="modules-bar-sound" aria-pressed="false" title="Activar o silenciar avisos">
+            <i data-lucide="volume-x" aria-hidden="true"></i>
+            <span>Sonido</span>
           </button>
         </div>
         <button type="button" id="staff-menu-desktop" hidden aria-label="Opciones de sesión" aria-expanded="false" aria-controls="staff-session-actions">
           <i data-lucide="ellipsis" aria-hidden="true"></i>
         </button>
         <div id="staff-session-actions" hidden>
+          <button type="button" id="staff-menu-modules" data-back-modules hidden><i data-lucide="layout-grid" aria-hidden="true"></i> Ir a Módulos</button>
           <button type="button" id="staff-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración general</button>
           <button id="staff-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
         </div>
@@ -214,61 +206,189 @@
 
     <section id="view-modulos" class="role-view modules-page hidden" aria-labelledby="modules-title">
       <header class="modules-header">
-        <h1 id="modules-title" tabindex="-1">Módulos del POS</h1>
+        <div class="modules-heading">
+          <p id="modules-shift-date" class="modules-eyebrow"></p>
+          <h1 id="modules-title" tabindex="-1">Módulos del POS</h1>
+          <p id="modules-subtitle" class="modules-subtitle"></p>
+        </div>
         <div class="modules-account">
-          <p><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
-          <button id="modules-logout" type="button"><i data-lucide="log-out" aria-hidden="true"></i>Cerrar sesión</button>
+          <p class="modules-profile-pill"><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
+          <button id="modules-sound-toggle" type="button" class="modules-header-btn" aria-pressed="false">
+            <i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span>
+          </button>
+          <button id="modules-logout" type="button" class="modules-header-btn modules-header-logout">
+            <i data-lucide="log-out" aria-hidden="true"></i><span>Cerrar sesión</span>
+          </button>
         </div>
       </header>
 
+      <div id="modules-kpi-strip" class="modules-kpi-strip" aria-label="Resumen operativo en vivo">
+        <button type="button" id="kpi-pending" class="modules-kpi-chip" data-staff-scope="admin" data-launch-role="admin" data-alert="false" hidden>
+          <i data-lucide="bell-ring" aria-hidden="true"></i>
+          <span><strong id="kpi-pending-num">0</strong> por aprobar</span>
+        </button>
+        <button type="button" id="kpi-cocina" class="modules-kpi-chip" data-launch-role="chef" data-launch-station="COCINA" data-launch-filter="pending" data-alert="false">
+          <i data-lucide="cooking-pot" aria-hidden="true"></i>
+          <span><strong id="kpi-cocina-num">0</strong> en Cocina</span>
+        </button>
+        <button type="button" id="kpi-barra" class="modules-kpi-chip" data-launch-role="chef" data-launch-station="BARRA" data-launch-filter="pending" data-alert="false">
+          <i data-lucide="cup-soda" aria-hidden="true"></i>
+          <span><strong id="kpi-barra-num">0</strong> en Barra</span>
+        </button>
+        <button type="button" id="kpi-ready" class="modules-kpi-chip" data-staff-scope="admin" data-launch-role="admin" data-launch-admin-filter="LISTO_CHEF" data-alert="false" hidden>
+          <i data-lucide="check-circle-2" aria-hidden="true"></i>
+          <span><strong id="kpi-ready-num">0</strong> listos</span>
+        </button>
+      </div>
+
       <section aria-labelledby="modules-operation-title">
-        <h2 id="modules-operation-title" class="modules-section-title">Operación</h2>
+        <h2 id="modules-operation-title" class="modules-section-title">Operación en vivo</h2>
         <div class="modules-grid">
-          <button type="button" data-launch-role="cliente" class="module-tile" data-tone="gold">
-            <span class="module-icon"><i data-lucide="book-open" aria-hidden="true"></i></span>
-            <span class="module-title">Carta</span>
-            <span class="module-description">Menú y códigos QR</span>
-          </button>
-          <button type="button" data-launch-role="admin" class="module-tile" data-tone="rust" hidden>
-            <span class="module-icon"><i data-lucide="clipboard-list" aria-hidden="true"></i></span>
+          <button type="button" data-staff-scope="admin" data-launch-role="admin" class="module-tile" data-tone="rust" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="clipboard-list" aria-hidden="true"></i></span>
+              <span id="mod-badge-admin" class="module-badge" data-alert="false">Al día</span>
+            </span>
             <span class="module-title">Pedidos</span>
-            <span class="module-description">Aprobación, cobro e historial</span>
+            <span id="mod-desc-admin" class="module-description">Aprobar, cobrar y boletas</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
           </button>
-          <button type="button" data-launch-role="chef" class="module-tile" data-tone="green">
-            <span class="module-icon"><i data-lucide="cooking-pot" aria-hidden="true"></i></span>
-            <span class="module-title">Preparación</span>
-            <span class="module-description">Cocina y Barra</span>
+
+          <button type="button" data-launch-role="chef" data-launch-station="COCINA" data-launch-filter="pending" class="module-tile" data-tone="orange">
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="cooking-pot" aria-hidden="true"></i></span>
+              <span id="mod-badge-cocina" class="module-badge" data-alert="false">Sin cola</span>
+            </span>
+            <span class="module-title">Cocina</span>
+            <span class="module-description">Plancha, burgers y combos</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
           </button>
-          <button type="button" data-launch-role="gestion" class="module-tile" data-tone="blue" hidden>
-            <span class="module-icon"><i data-lucide="database" aria-hidden="true"></i></span>
-            <span class="module-title">Gestión</span>
-            <span class="module-description">Stock, compras y caja</span>
+
+          <button type="button" data-launch-role="chef" data-launch-station="BARRA" data-launch-filter="pending" class="module-tile" data-tone="teal">
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="cup-soda" aria-hidden="true"></i></span>
+              <span id="mod-badge-barra" class="module-badge" data-alert="false">Sin cola</span>
+            </span>
+            <span class="module-title">Barra</span>
+            <span class="module-description">Bebidas, jugos y cócteles</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+          </button>
+
+          <button type="button" data-staff-scope="chef" data-launch-role="chef" data-launch-filter="ready" class="module-tile" data-tone="green" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="check-circle-2" aria-hidden="true"></i></span>
+              <span id="mod-badge-ready" class="module-badge">0 listas</span>
+            </span>
+            <span class="module-title">Terminados</span>
+            <span class="module-description">Historial de comandas listas</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+          </button>
+
+          <button type="button" data-staff-scope="chef" data-launch-action="prep-code" class="module-tile" data-tone="indigo" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="scan-line" aria-hidden="true"></i></span>
+              <span class="module-badge">BB-…</span>
+            </span>
+            <span class="module-title">Código de comanda</span>
+            <span class="module-description">Marcar listo por código</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+          </button>
+
+          <button type="button" data-staff-scope="admin" data-launch-action="new-order" class="module-tile" data-tone="green" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="plus-circle" aria-hidden="true"></i></span>
+              <span class="module-badge">Mostrador</span>
+            </span>
+            <span class="module-title">Nuevo pedido</span>
+            <span class="module-description">Tomar pedido rápido en local</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+          </button>
+
+          <button type="button" data-launch-role="cliente" class="module-tile" data-tone="gold">
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="book-open" aria-hidden="true"></i></span>
+              <span id="mod-badge-carta" class="module-badge">QR y menú</span>
+            </span>
+            <span class="module-title">Carta</span>
+            <span id="mod-desc-carta" class="module-description">Menú visual, precios y QR</span>
+            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
           </button>
         </div>
       </section>
 
       <section aria-labelledby="modules-shortcuts-title">
-        <h2 id="modules-shortcuts-title" class="modules-section-title">Accesos directos</h2>
-        <div class="modules-grid">
-          <button type="button" data-launch-role="gestion" data-launch-subtab="inventario" class="module-tile module-tile-compact" data-tone="green" hidden>
-            <span class="module-icon"><i data-lucide="package" aria-hidden="true"></i></span>
+        <h2 id="modules-shortcuts-title" class="modules-section-title">Gestión y sistema</h2>
+        <div class="modules-grid modules-grid-compact">
+          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="inventario" class="module-tile module-tile-compact" data-tone="green" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="package" aria-hidden="true"></i></span>
+              <span id="mod-badge-inv" class="module-badge" data-alert="false">Óptimo</span>
+            </span>
             <span class="module-title">Inventario</span>
+            <span class="module-description">Insumos y recetas</span>
           </button>
-          <button type="button" data-launch-role="gestion" data-launch-subtab="kardex" class="module-tile module-tile-compact" data-tone="blue" hidden>
-            <span class="module-icon"><i data-lucide="list-restart" aria-hidden="true"></i></span>
+
+          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="kardex" class="module-tile module-tile-compact" data-tone="blue" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="list-restart" aria-hidden="true"></i></span>
+              <span id="mod-badge-kardex" class="module-badge">0 movs.</span>
+            </span>
             <span class="module-title">Kardex</span>
+            <span class="module-description">Entradas, mermas y CSV</span>
           </button>
-          <button type="button" data-launch-role="gestion" data-launch-subtab="caja" class="module-tile module-tile-compact" data-tone="gold" hidden>
-            <span class="module-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
-            <span class="module-title">Caja</span>
+
+          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="proveedores" class="module-tile module-tile-compact" data-tone="indigo" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="truck" aria-hidden="true"></i></span>
+              <span id="mod-badge-purchases" class="module-badge">0 compras</span>
+            </span>
+            <span class="module-title">Proveedores</span>
+            <span class="module-description">Compras y directorio</span>
           </button>
+
+          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="caja" class="module-tile module-tile-compact" data-tone="gold" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
+              <span id="mod-badge-caja" class="module-badge">S/ 0.00</span>
+            </span>
+            <span class="module-title">Caja y Boletas</span>
+            <span class="module-description">Efectivo, Yape y egresos</span>
+          </button>
+
+          <button type="button" data-staff-scope="admin" data-launch-action="open-qr" class="module-tile module-tile-compact" data-tone="charcoal" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="qr-code" aria-hidden="true"></i></span>
+              <span class="module-badge">Mesas 1–6</span>
+            </span>
+            <span class="module-title">Códigos QR</span>
+            <span class="module-description">Descargar y probar QR</span>
+          </button>
+
+          <button type="button" data-staff-scope="chef" data-launch-action="prep-settings" class="module-tile module-tile-compact" data-tone="blue" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></span>
+              <span class="module-badge">Pantalla</span>
+            </span>
+            <span class="module-title">Tiempos y pantalla</span>
+            <span class="module-description">Volumen, alertas y texto</span>
+          </button>
+
           <button type="button" id="launch-settings" class="module-tile module-tile-compact" data-tone="stone" aria-haspopup="dialog">
-            <span class="module-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
+              <span id="mod-badge-sound" class="module-badge" data-alert="false">Silenciado</span>
+            </span>
             <span class="module-title">Configuración</span>
+            <span id="mod-desc-settings" class="module-description">Sonido, avisos y claves</span>
           </button>
-          <button type="button" id="launch-roles" class="module-tile module-tile-compact" data-tone="rust" aria-haspopup="dialog" hidden>
-            <span class="module-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
+
+          <button type="button" id="launch-roles" data-staff-scope="admin" class="module-tile module-tile-compact" data-tone="plum" aria-haspopup="dialog" hidden>
+            <span class="module-tile-top">
+              <span class="module-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
+              <span class="module-badge">3 perfiles</span>
+            </span>
             <span class="module-title">Roles y accesos</span>
+            <span class="module-description">Nicol, Cocina y QR</span>
           </button>
         </div>
       </section>
@@ -284,9 +404,15 @@
       </div>
       <!-- Mode Banner -->
       <div class="customer-hero" id="staff-menu-hero">
-        <div>
-          <h1>The Burgers Brother</h1>
-          <p>Carta y pedidos</p>
+        <div class="prep-heading">
+          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos">
+            <i data-lucide="arrow-left" aria-hidden="true"></i>
+          </button>
+          <div>
+            <p class="modules-eyebrow">Módulo · Carta</p>
+            <h1>The Burgers Brother</h1>
+            <p>Carta y pedidos</p>
+          </div>
         </div>
 
         <div id="menu-mode-controls" class="customer-hero-controls">
@@ -320,49 +446,53 @@
         <div class="lg:col-span-8 space-y-4 menu-catalog-col">
           <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
             <div class="menu-browser-head">
-              <div>
+              <div class="menu-browser-brand">
                 <h2 id="carta-title" class="menu-title">La carta</h2>
-                <p id="menu-order-context" class="menu-order-context" hidden></p>
+                <button type="button" id="menu-order-context" class="menu-order-context" hidden aria-label="Cambiar mesa o tipo de pedido"></button>
+              </div>
+              <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
+                <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
+                <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
+                <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
+                  <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
+                  <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+                </div>
               </div>
               <span id="cart-announcement" class="sr-only" role="status"></span>
-              <a id="carta-cart-link" hidden class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
+              <button type="button" id="carta-cart-link" hidden class="carta-cart-link" aria-controls="client-cart" aria-expanded="false">Ver pedido (0)</button>
             </div>
-            <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
-              <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
-              <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
-              <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
-                <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
-                <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+            <div id="carta-visual" class="carta-visual-shell">
+              <div class="carta-book-toolbar">
+                <div id="carta-pages" class="carta-controls" role="navigation" aria-label="Páginas de la carta"></div>
+                <p class="carta-caption">Toca un plato para personalizarlo o pasa de página.</p>
               </div>
-            </div>
-            <div id="carta-visual" class="space-y-3">
-              <div id="carta-pages" class="carta-controls" role="navigation" aria-label="Páginas de la carta"></div>
               <div class="carta-mobile-jump">
                 <label for="carta-page-select" class="sr-only">Ir a una página de la carta</label>
                 <select id="carta-page-select" aria-label="Categoría de la carta" class="w-full rounded-lg font-semibold"></select>
               </div>
-              <p class="carta-caption">Toca un plato para personalizarlo o pasa de página.</p>
-              <div id="carta-book-stage" class="carta-book-stage">
-                <div id="carta-sheet" class="carta-sheet"></div>
-                <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
-              </div>
-              <nav class="carta-book-nav" aria-label="Pasar páginas de la carta">
-                <button type="button" id="carta-prev" class="carta-nav-btn" aria-label="Página anterior">
-                  <i data-lucide="chevron-left" class="w-4 h-4" aria-hidden="true"></i>
+              <div id="carta-book-workspace" class="carta-book-workspace">
+                <button type="button" id="carta-prev" class="carta-nav-btn carta-nav-prev" aria-label="Página anterior">
+                  <i data-lucide="chevron-left" class="w-5 h-5" aria-hidden="true"></i>
                   <span>Anterior</span>
                 </button>
-                <div class="carta-book-indicator">
-                  <span id="carta-page-counter" class="carta-page-counter">Página 1 de 5</span>
-                  <span id="carta-page-title" class="carta-page-name">Hamburguesas</span>
-                  <div id="carta-book-dots" class="carta-book-dots" aria-hidden="true"></div>
+                <div id="carta-book-stage" class="carta-book-stage">
+                  <div id="carta-sheet" class="carta-sheet"></div>
+                  <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
                 </div>
-                <button type="button" id="carta-next" class="carta-nav-btn" aria-label="Siguiente página">
+                <button type="button" id="carta-next" class="carta-nav-btn carta-nav-next" aria-label="Siguiente página">
                   <span>Siguiente</span>
-                  <i data-lucide="chevron-right" class="w-4 h-4" aria-hidden="true"></i>
+                  <i data-lucide="chevron-right" class="w-5 h-5" aria-hidden="true"></i>
                 </button>
-              </nav>
+                <div class="carta-book-indicator" aria-live="off">
+                  <div class="carta-book-meta">
+                    <span id="carta-page-counter" class="carta-page-counter">Página 1 de 5</span>
+                    <span id="carta-page-title" class="carta-page-name">Hamburguesas</span>
+                  </div>
+                  <div id="carta-book-dots" class="carta-book-dots" aria-hidden="true"></div>
+                  <p id="carta-drinks-note" class="carta-drinks-note" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
+                </div>
+              </div>
               <p id="carta-book-status" class="sr-only" aria-live="polite"></p>
-              <p id="carta-drinks-note" class="carta-caption" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
             </div>
           </section>
           <div id="carta-list" hidden class="space-y-3">
@@ -378,17 +508,23 @@
           </div>
         </div>
 
-        <!-- Client Cart & Checkout -->
+        <!-- Client Cart Backdrop & Checkout Drawer / Sidebar -->
+        <div id="cart-drawer-backdrop" class="cart-drawer-backdrop" hidden></div>
         <section id="client-cart" hidden class="lg:col-span-4 rounded-2xl border" aria-labelledby="client-cart-title">
           <header class="checkout-header">
             <div class="checkout-header-title">
               <h2 id="client-cart-title" class="cart-heading">Tu pedido</h2>
               <p id="client-cart-origin" class="checkout-origin"></p>
             </div>
-            <button type="button" id="btn-client-clear" class="checkout-clear" aria-label="Vaciar todo el pedido">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
-              <span>Vaciar</span>
-            </button>
+            <div class="checkout-header-actions">
+              <button type="button" id="btn-client-clear" class="checkout-clear" aria-label="Vaciar todo el pedido">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <span>Vaciar</span>
+              </button>
+              <button type="button" id="btn-close-cart-drawer" class="checkout-close" hidden aria-label="Cerrar tu pedido">
+                <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+              </button>
+            </div>
           </header>
           <div id="client-cart-items"></div>
 
@@ -484,9 +620,16 @@
 
     <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
     <section id="view-admin" class="role-view hidden space-y-5" aria-labelledby="admin-view-title">
-      <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <h1 id="admin-view-title" class="operator-title">Panel de pedidos</h1>
-        <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
+      <div class="operator-head module-hero">
+        <div class="prep-heading">
+          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
+          <span class="module-icon module-icon-sm" data-tone="rust" aria-hidden="true"><i data-lucide="clipboard-list"></i></span>
+          <div>
+            <p class="modules-eyebrow">Módulo · Operación</p>
+            <h1 id="admin-view-title" class="operator-title">Panel de pedidos</h1>
+            <p class="operator-caption">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
+          </div>
+        </div>
       </div>
 
       <div id="admin-filter-tabs" role="group" aria-label="Bandejas de pedidos">
@@ -516,8 +659,13 @@
     <section id="view-chef" class="role-view hidden prep-board" aria-labelledby="prep-view-title">
       <header class="prep-header">
         <div class="prep-heading">
-          <button type="button" id="prep-back" aria-label="Volver" title="Volver"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
-          <div><h1 id="prep-view-title" class="operator-title">Preparación</h1><p id="chef-active-count" aria-live="polite"></p></div>
+          <button type="button" id="prep-back" class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
+          <span class="module-icon module-icon-sm" data-tone="orange" aria-hidden="true"><i data-lucide="cooking-pot"></i></span>
+          <div>
+            <p class="modules-eyebrow">Módulo · Estaciones</p>
+            <h1 id="prep-view-title" class="operator-title">Preparación</h1>
+            <p id="chef-active-count" aria-live="polite"></p>
+          </div>
         </div>
         <div class="prep-header-actions">
           <div class="prep-switch" role="group" aria-label="Estación de preparación">
@@ -527,7 +675,6 @@
           <details id="prep-menu" class="prep-menu">
             <summary aria-label="Opciones de preparación"><i data-lucide="ellipsis" aria-hidden="true"></i></summary>
             <div class="prep-menu-actions">
-              <nav id="prep-menu-sections" aria-label="Secciones del POS"></nav>
               <button type="button" id="prep-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración</button>
               <button type="button" id="prep-code-open"><i data-lucide="qr-code" aria-hidden="true"></i> Ingresar código de comanda</button>
               <button type="button" id="prep-logout"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
@@ -608,13 +755,21 @@
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
     <section id="view-gestion" class="role-view hidden space-y-5" aria-labelledby="management-view-title">
-      <div class="operator-head management-nav bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-3">
-        <h1 id="management-view-title" class="operator-title">Gestión</h1>
-        <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Módulos de gestión">
-          <button type="button" data-subtab="inventario" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="package"></i> Inventario</button>
-          <button type="button" data-subtab="kardex" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="list-restart"></i> Kardex</button>
-          <button type="button" data-subtab="proveedores" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="truck"></i> Proveedores</button>
-          <button type="button" data-subtab="caja" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="wallet"></i> Caja</button>
+      <div class="operator-head module-hero management-nav">
+        <div class="prep-heading">
+          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
+          <span class="module-icon module-icon-sm" data-tone="blue" aria-hidden="true"><i data-lucide="database"></i></span>
+          <div>
+            <p class="modules-eyebrow">Módulo · Administración</p>
+            <h1 id="management-view-title" class="operator-title">Gestión</h1>
+            <p class="operator-caption">Controla inventario, Kardex, compras a proveedores y movimientos de caja.</p>
+          </div>
+        </div>
+        <div class="gestion-tabs" role="group" aria-label="Módulos de gestión">
+          <button type="button" data-subtab="inventario" class="gestion-tab"><i data-lucide="package" aria-hidden="true"></i> Inventario</button>
+          <button type="button" data-subtab="kardex" class="gestion-tab"><i data-lucide="list-restart" aria-hidden="true"></i> Kardex</button>
+          <button type="button" data-subtab="proveedores" class="gestion-tab"><i data-lucide="truck" aria-hidden="true"></i> Proveedores</button>
+          <button type="button" data-subtab="caja" class="gestion-tab"><i data-lucide="wallet" aria-hidden="true"></i> Caja</button>
         </div>
       </div>
 
@@ -1234,6 +1389,8 @@
       let soundEnabled = false;
       let nextSound = 0;
       const prepSoundButton = document.getElementById('prep-sound');
+      const modulesSoundButton = document.getElementById('modules-sound-toggle');
+      const barSoundButton = document.getElementById('modules-bar-sound');
 
       function playOrderSound() {
         const inPrep = ui.role === 'chef';
@@ -1257,21 +1414,34 @@
         return true;
       }
 
+      function setSoundButtonState(button, label) {
+        if (!button) return;
+        button.setAttribute('aria-pressed', String(soundEnabled));
+        button.querySelector('span').textContent = label;
+        button.querySelector('svg, i')?.remove();
+        const icon = document.createElement('i');
+        icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
+        icon.setAttribute('aria-hidden', 'true');
+        button.prepend(icon);
+      }
+
       function renderSoundButtons() {
-        for (const button of [soundButton, prepSoundButton]) {
-          button.setAttribute('aria-pressed', String(soundEnabled));
-          button.querySelector('span').textContent = soundEnabled ? 'Silenciar' : 'Activar sonido';
-          button.querySelector('svg, i')?.remove();
-          const icon = document.createElement('i');
-          icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
-          icon.setAttribute('aria-hidden', 'true');
-          button.prepend(icon);
+        const fullLabel = soundEnabled ? 'Silenciar' : 'Activar sonido';
+        for (const button of [soundButton, prepSoundButton, modulesSoundButton]) {
+          setSoundButtonState(button, fullLabel);
+        }
+        setSoundButtonState(barSoundButton, soundEnabled ? 'Sonido ON' : 'Sonido OFF');
+        const soundBadge = document.getElementById('mod-badge-sound');
+        if (soundBadge) {
+          soundBadge.textContent = soundEnabled ? 'Activo' : 'Silenciado';
+          soundBadge.dataset.active = String(soundEnabled);
         }
         lucide.createIcons();
       }
 
       async function toggleSound(event) {
-        const inPrep = event.currentTarget === prepSoundButton;
+        const trigger = event.currentTarget;
+        const inPrep = trigger === prepSoundButton;
         const status = inPrep ? prepSoundStatus : document.getElementById('staff-sound-status');
         if (!inPrep || prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
         if (soundEnabled && audio?.state === 'running') {
@@ -1289,8 +1459,11 @@
           }
         }
         renderSoundButtons();
+        if (trigger === modulesSoundButton || trigger === barSoundButton) {
+          showToast(soundEnabled ? 'Avisos sonoros activados.' : 'Sonido silenciado.', 'info');
+        }
       }
-      soundButton.onclick = prepSoundButton.onclick = toggleSound;
+      soundButton.onclick = prepSoundButton.onclick = modulesSoundButton.onclick = barSoundButton.onclick = toggleSound;
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function recipeIngredients(product) {
@@ -1592,50 +1765,125 @@
       }
 
       // ==================== ROLE SWITCHER & BADGES ====================
+      function countPendingStation(orders, station) {
+        return orders.filter(order =>
+          ['EN_COCINA', 'LISTO_CHEF'].includes(order.status)
+          && orderStations(order).includes(station)
+          && !stationReady(order, station)
+        ).length;
+      }
+
+      function renderModuleStats() {
+        if (!staffReady) return;
+        const orders = state.orders || [];
+        const pendingCount = orders.filter(o => o.status === 'POR_APROBAR').length;
+        const cookingCount = orders.filter(o => o.status === 'EN_COCINA').length;
+        const readyCount = orders.filter(o => o.status === 'LISTO_CHEF').length;
+        const cocinaPending = countPendingStation(orders, 'COCINA');
+        const barraPending = countPendingStation(orders, 'BARRA');
+
+        const setText = (id, text) => {
+          const el = document.getElementById(id);
+          if (el && el.textContent !== text) el.textContent = text;
+        };
+        const setAlert = (id, flag) => {
+          const el = document.getElementById(id);
+          if (el) el.dataset.alert = String(Boolean(flag));
+        };
+
+        setText('modules-bar-pending-count', String(pendingCount));
+        setAlert('modules-bar-pending', pendingCount > 0);
+        setText('modules-bar-cooking-count', String(cookingCount));
+        setAlert('modules-bar-cooking', cookingCount > 0);
+
+        setText('kpi-pending-num', String(pendingCount));
+        setAlert('kpi-pending', pendingCount > 0);
+        setText('kpi-cocina-num', String(cocinaPending));
+        setAlert('kpi-cocina', cocinaPending > 0);
+        setText('kpi-barra-num', String(barraPending));
+        setAlert('kpi-barra', barraPending > 0);
+        setText('kpi-ready-num', String(readyCount));
+        setAlert('kpi-ready', readyCount > 0);
+
+        setText('mod-badge-cocina', cocinaPending ? `${cocinaPending} pend.` : 'Sin cola');
+        setAlert('mod-badge-cocina', cocinaPending > 0);
+        setText('mod-badge-barra', barraPending ? `${barraPending} pend.` : 'Sin cola');
+        setAlert('mod-badge-barra', barraPending > 0);
+
+        const dateEl = document.getElementById('modules-shift-date');
+        if (dateEl) {
+          dateEl.textContent = new Intl.DateTimeFormat('es-PE', {
+            timeZone: 'America/Lima',
+            weekday: 'long',
+            day: 'numeric',
+            month: 'short'
+          }).format(new Date());
+        }
+
+        if (staffArea === 'admin') {
+          setText('mod-badge-admin', pendingCount ? `${pendingCount} por aprobar` : 'Al día');
+          setAlert('mod-badge-admin', pendingCount > 0);
+          setText('mod-desc-admin', readyCount ? `${readyCount} ${readyCount === 1 ? 'listo por despachar' : 'listos por despachar'}` : 'Aprobar, cobrar y boletas');
+
+          const ingredients = state.ingredients || [];
+          const lowCount = ingredients.filter(i => i.stock <= i.minStock).length;
+          setText('mod-badge-inv', lowCount ? `${lowCount} stock bajo` : `${ingredients.length} insumos`);
+          setAlert('mod-badge-inv', lowCount > 0);
+          setText('mod-badge-kardex', `${(state.kardex || []).length} movs.`);
+          setText('mod-badge-purchases', `${(state.purchases || []).length} compras`);
+
+          const movements = state.caja?.movements || [];
+          let cashIn = 0;
+          let expOut = 0;
+          for (const m of movements) {
+            if (m.type === 'EGRESO') expOut += Math.abs(m.amount);
+            else if (m.type === 'VENTA' && m.method === 'Efectivo') cashIn += m.amount;
+          }
+          setText('mod-badge-caja', money((state.caja?.opening || 0) + cashIn - expOut));
+
+          const summaryParts = [];
+          if (pendingCount) summaryParts.push(`${pendingCount} por aprobar`);
+          if (cookingCount) summaryParts.push(`${cookingCount} en cocina`);
+          if (readyCount) summaryParts.push(`${readyCount} listos`);
+          setText('modules-subtitle', summaryParts.length ? summaryParts.join(' · ') : 'Turno al día — elige un módulo para empezar');
+        } else {
+          const doneTotal = prepHistory(orders, prepStation).length;
+          setText('mod-badge-ready', `${doneTotal} ${doneTotal === 1 ? 'lista' : 'listas'}`);
+          const parts = [];
+          if (cocinaPending) parts.push(`${cocinaPending} en Cocina`);
+          if (barraPending) parts.push(`${barraPending} en Barra`);
+          setText('modules-subtitle', parts.length ? parts.join(' · ') : 'Estaciones sin comandas pendientes');
+        }
+      }
+
       function updateBadges() {
-        const pendingCount = state.orders.filter(o => o.status === 'POR_APROBAR').length;
-        const cookingCount = state.orders.filter(o => o.status === 'EN_COCINA').length;
-
-        const bAdmin = document.getElementById('badge-admin-pending');
-        bAdmin.textContent = pendingCount;
-        bAdmin.classList.toggle('hidden', pendingCount === 0);
-
-        const bChef = document.getElementById('badge-chef-cooking');
-        bChef.textContent = cookingCount;
-        bChef.classList.toggle('hidden', cookingCount === 0);
+        if (staffReady) renderModuleStats();
       }
 
       const staffHeader = document.querySelector('.staff-header');
-      const staffSectionLinks = document.getElementById('staff-sections');
-      const staffNav = document.getElementById('role-tabs');
-      const mobileStaffMenu = document.getElementById('staff-menu-mobile');
+      const barModulesBtn = document.getElementById('bar-modules-btn');
+      const staffMenuModules = document.getElementById('staff-menu-modules');
       const desktopStaffMenu = document.getElementById('staff-menu-desktop');
       const staffLogout = document.getElementById('staff-logout');
       const staffSettingsDialog = document.getElementById('staff-settings');
-      const mobileHeader = matchMedia('(max-width: 959px)');
-      const staffMenuTrigger = () => mobileHeader.matches ? mobileStaffMenu : desktopStaffMenu;
 
       function showStaffMenu(open) {
         staffHeader.toggleAttribute('data-menu-open', open);
-        mobileStaffMenu.setAttribute('aria-expanded', String(open && mobileHeader.matches));
-        desktopStaffMenu.setAttribute('aria-expanded', String(open && !mobileHeader.matches));
+        desktopStaffMenu.setAttribute('aria-expanded', String(open));
       }
 
-      for (const trigger of [mobileStaffMenu, desktopStaffMenu]) {
-        trigger.onclick = () => showStaffMenu(!staffHeader.hasAttribute('data-menu-open'));
-      }
+      desktopStaffMenu.onclick = () => showStaffMenu(!staffHeader.hasAttribute('data-menu-open'));
       document.addEventListener('click', event => {
         if (staffHeader.hasAttribute('data-menu-open') && !staffHeader.contains(event.target)) showStaffMenu(false);
       });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape' || !staffHeader.hasAttribute('data-menu-open')) return;
         showStaffMenu(false);
-        staffMenuTrigger().focus();
+        desktopStaffMenu.focus();
       });
-      mobileHeader.addEventListener('change', () => showStaffMenu(false));
       document.getElementById('staff-settings-open').onclick = () => {
         showStaffMenu(false);
-        staffMenuTrigger().focus();
+        desktopStaffMenu.focus();
         staffSettingsDialog.showModal();
       };
       document.getElementById('staff-settings-close').onclick = () => staffSettingsDialog.close();
@@ -1658,15 +1906,58 @@
         event.preventDefault();
         document.getElementById('pos-content').focus();
       };
+      document.getElementById('modules-bar-pending').onclick = () => {
+        if (!canOpenPosView('admin')) return;
+        ui.adminFilter = 'POR_APROBAR';
+        switchRole('admin');
+      };
+      document.getElementById('modules-bar-cooking').onclick = () => {
+        if (!canOpenPosView('chef')) return;
+        prepFilter = 'pending';
+        switchRole('chef');
+      };
       document.getElementById('view-modulos').addEventListener('click', event => {
-        const tile = event.target.closest('[data-launch-role]');
-        if (!tile || !canOpenPosView(tile.dataset.launchRole)) return;
-        if (tile.dataset.launchSubtab) ui.gestionSubtab = tile.dataset.launchSubtab;
-        const role = tile.dataset.launchRole;
+        const trigger = event.target.closest('[data-launch-action], [data-launch-role]');
+        if (!trigger || trigger.hidden) return;
+        const action = trigger.dataset.launchAction;
+        if (action === 'new-order') {
+          startCounterOrder();
+          return;
+        }
+        if (action === 'open-qr') {
+          openQrModal();
+          return;
+        }
+        if (action === 'prep-code') {
+          if (!canOpenPosView('chef')) return;
+          prepFilter = 'pending';
+          switchRole('chef');
+          openPrepCode();
+          return;
+        }
+        if (action === 'prep-settings') {
+          if (!canOpenPosView('chef')) return;
+          switchRole('chef');
+          renderPrepPreferences();
+          prepSettings.showModal();
+          return;
+        }
+        const role = trigger.dataset.launchRole;
+        if (!role || !canOpenPosView(role)) return;
+        if (trigger.dataset.launchSubtab) ui.gestionSubtab = trigger.dataset.launchSubtab;
+        if (trigger.dataset.launchAdminFilter) ui.adminFilter = trigger.dataset.launchAdminFilter;
+        if (trigger.dataset.launchStation) {
+          prepStation = trigger.dataset.launchStation;
+          localStorage.setItem('pos-prep-station', prepStation);
+        }
+        if (trigger.dataset.launchFilter) {
+          prepFilter = trigger.dataset.launchFilter;
+          prepHistoryPage = 0;
+        }
         switchRole(role);
         const view = document.getElementById('view-' + role);
         const target = role === 'chef' ? document.getElementById('prep-back')
-          : view.querySelector(tile.dataset.launchSubtab ? '[data-subtab="' + tile.dataset.launchSubtab + '"]' : 'h1, h2');
+          : view.querySelector(trigger.dataset.launchSubtab ? '[data-subtab="' + trigger.dataset.launchSubtab + '"]' : 'h1, h2');
         if (target) {
           if (target.matches('h1, h2')) target.tabIndex = -1;
           target.focus({ preventScroll: true });
@@ -1676,10 +1967,55 @@
 
       let staffMenu = false;
       let prepReturnRole = 'modulos';
+      let cartDrawerOpen = false;
+      let lastCartTrigger = null;
+
+      function syncPublicBackgroundInert(isOpen) {
+        const isPublic = document.body.hasAttribute('data-public-menu');
+        const active = isPublic && isOpen;
+        const catalogCol = document.querySelector('.menu-catalog-col');
+        const trackerWrap = document.getElementById('client-tracker-wrap');
+        if (catalogCol) catalogCol.inert = active;
+        if (trackerWrap) trackerWrap.inert = active;
+        document.body.toggleAttribute('data-cart-open', active);
+      }
+
+      function openCartDrawer(triggerEl = null, { openSettings = false } = {}) {
+        if (!document.body.hasAttribute('data-public-menu')) {
+          focusClientCart();
+          return;
+        }
+        lastCartTrigger = triggerEl || document.activeElement;
+        cartDrawerOpen = true;
+        if (openSettings) {
+          document.getElementById('public-order-settings').open = true;
+        }
+        renderClientCart();
+        requestAnimationFrame(() => {
+          const target = openSettings
+            ? document.getElementById('public-order-settings-label')
+            : document.getElementById('btn-close-cart-drawer');
+          target?.focus();
+        });
+      }
+
+      function closeCartDrawer({ restoreFocus = true } = {}) {
+        if (!cartDrawerOpen) return;
+        cartDrawerOpen = false;
+        renderClientCart();
+        if (restoreFocus && lastCartTrigger instanceof HTMLElement && lastCartTrigger.isConnected) {
+          lastCartTrigger.focus();
+        }
+      }
 
       function updateMenuLayout(role) {
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
         document.body.toggleAttribute('data-public-menu', isPublic);
+        document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry));
+        if (!isPublic) {
+          cartDrawerOpen = false;
+          syncPublicBackgroundInert(false);
+        }
         const controls = document.getElementById('menu-mode-controls');
         const destination = document.getElementById(isPublic ? 'public-order-controls' : 'staff-menu-hero');
         if (controls.parentElement !== destination) destination.append(controls);
@@ -1692,7 +2028,18 @@
         return ['modulos', 'chef'].includes(role) || (staffArea === 'admin' && ['admin', 'gestion'].includes(role));
       }
 
-      function switchRole(role) {
+      function syncStaffHash(role) {
+        if (!staffMenu || ui.staffOrderEntry) return;
+        const targetHash = role === 'admin' ? '#admin'
+          : role === 'gestion' ? '#gestion=' + ui.gestionSubtab
+          : role === 'chef' ? (scannedPrepCode ? '#chef=' + scannedPrepCode : '#estacion=' + (prepStation === 'BARRA' ? 'barra' : 'cocina'))
+          : '#modulos';
+        if (location.hash !== targetHash) {
+          history.replaceState(null, '', location.pathname + location.search + targetHash);
+        }
+      }
+
+      function switchRole(role, { updateHash = true } = {}) {
         if (!canOpenPosView(role)) return;
         if (role !== 'cliente') staffMenu = true;
         if (role === 'chef' && ['modulos', 'admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
@@ -1700,23 +2047,17 @@
         showStaffMenu(false);
         prepMenu.open = false;
         ui.role = role;
-        if (role === 'chef') document.getElementById('prep-menu-sections').append(staffSectionLinks);
-        else staffNav.prepend(staffSectionLinks);
         document.body.toggleAttribute('data-prep-view', role === 'chef');
         document.body.toggleAttribute('data-modules-view', role === 'modulos');
         updateMenuLayout(role);
+        const showModulesBack = staffReady && (staffMenu || ui.staffOrderEntry) && role !== 'modulos';
+        barModulesBtn.hidden = !showModulesBack;
+        staffMenuModules.hidden = !showModulesBack;
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
 
-        document.querySelectorAll('.role-tab').forEach(btn => {
-          const active = btn.dataset.role === role;
-          btn.setAttribute('aria-current', active ? 'page' : 'false');
-          btn.className = `role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors relative ${
-            active ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`;
-        });
-
         renderActiveRole();
+        if (updateHash) syncStaffHash(role);
         if (role === 'chef' && scannedPrepCode) {
           openPrepCode(scannedPrepCode);
           scannedPrepCode = '';
@@ -1725,8 +2066,13 @@
           window.scrollTo(0, 0);
         } else if (fromMenu) {
           if (role === 'chef') document.getElementById('prep-back').focus();
-          else if (mobileHeader.matches) mobileStaffMenu.focus();
-          else staffSectionLinks.querySelector('[aria-current="page"]')?.focus();
+          else {
+            const heading = document.querySelector(`#view-${role} h1, #view-${role} h2`);
+            if (heading) {
+              heading.tabIndex = -1;
+              heading.focus({ preventScroll: true });
+            }
+          }
         }
       }
 
@@ -1749,7 +2095,7 @@
         document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
         document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
         document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
-        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu);
+        document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu || staffArea !== 'admin');
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
         document.getElementById('client-cart-origin').textContent = isMesa
           ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '') : 'Delivery';
@@ -1845,9 +2191,10 @@
         .replaceAll("'", '&#39;');
 
       function renderClientCart() {
+        const isPublic = document.body.hasAttribute('data-public-menu');
         const wrap = document.getElementById('client-cart-items');
         if (ui.clientCart.length === 0) {
-          wrap.innerHTML = '<div class="checkout-empty"><p>Tu pedido está vacío.</p><span>Toca un plato de la carta para personalizarlo y añadirlo aquí.</span></div>';
+          wrap.innerHTML = `<div class="checkout-empty"><p>Tu pedido está vacío.</p><span>Toca un plato de la carta para personalizarlo y añadirlo aquí.</span>${isPublic ? '<button type="button" data-close-cart-drawer class="checkout-empty-browse">Explorar la carta</button>' : ''}</div>`;
         } else {
           wrap.innerHTML = ui.clientCart.map((it, idx) => {
             const safeName = escapeHtml(it.name);
@@ -1896,16 +2243,43 @@
           row.querySelector('dd').textContent = money(value);
         }
         const context = document.getElementById('menu-order-context');
-        context.hidden = !document.body.hasAttribute('data-public-menu');
-        context.textContent = delivery ? 'Estás pidiendo para delivery' : 'Estás pidiendo para ' + ui.clientMesa;
+        context.hidden = !isPublic;
+        const originLabel = delivery ? 'Delivery' : ui.clientMesa;
+        context.textContent = `${originLabel} · Cambiar`;
+        context.setAttribute('aria-label', `Estás pidiendo para ${originLabel}. Toca para cambiar mesa o tipo de pedido`);
         document.getElementById('public-order-settings-label').textContent = delivery ? 'Cambiar tipo de pedido' : 'Cambiar mesa o tipo de pedido';
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
-        const showCart = units > 0 || staffMenu || ui.staffOrderEntry;
-        document.getElementById('client-cart').hidden = !showCart;
+        const cartEl = document.getElementById('client-cart');
+        const backdrop = document.getElementById('cart-drawer-backdrop');
+        const closeDrawerBtn = document.getElementById('btn-close-cart-drawer');
+        const showInlineCart = units > 0 || staffMenu || ui.staffOrderEntry;
+        if (isPublic) {
+          cartEl.hidden = !cartDrawerOpen;
+          backdrop.hidden = !cartDrawerOpen;
+          closeDrawerBtn.hidden = false;
+          if (cartDrawerOpen) {
+            cartEl.setAttribute('role', 'dialog');
+            cartEl.setAttribute('aria-modal', 'true');
+          } else {
+            cartEl.removeAttribute('role');
+            cartEl.removeAttribute('aria-modal');
+          }
+          syncPublicBackgroundInert(cartDrawerOpen);
+        } else {
+          cartDrawerOpen = false;
+          backdrop.hidden = true;
+          closeDrawerBtn.hidden = true;
+          cartEl.hidden = !showInlineCart;
+          cartEl.removeAttribute('role');
+          cartEl.removeAttribute('aria-modal');
+          syncPublicBackgroundInert(false);
+        }
         document.getElementById('btn-client-clear').hidden = !units;
         document.getElementById('client-checkout').hidden = !units;
         const cartLink = document.getElementById('carta-cart-link');
-        cartLink.hidden = !showCart;
+        cartLink.hidden = isPublic ? false : !showInlineCart;
+        cartLink.dataset.hasItems = String(units > 0);
+        cartLink.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
         cartLink.textContent = units > 0 ? `Ver pedido (${units}) · ${money(total)}` : 'Ver pedido (0)';
         document.getElementById('client-cart-total').textContent = money(total);
         const backCartLink = document.querySelector('.carta-back-cart-link');
@@ -2114,11 +2488,6 @@
         prepAlertMessage.textContent = '';
         const destination = canOpenPosView(prepReturnRole) ? prepReturnRole : 'cliente';
         switchRole(destination);
-        const landing = destination === 'modulos' ? '#modulos' : location.hash && staffArea === 'admin' ? '#personal' : '';
-        if (location.hash !== landing) history.replaceState(null, '', location.pathname + location.search + landing);
-        if (destination === 'modulos') return;
-        if (mobileHeader.matches) mobileStaffMenu.focus();
-        else staffSectionLinks.querySelector('[aria-current="page"]')?.focus();
       };
       document.getElementById('prep-code-open').onclick = () => openPrepCode();
       document.getElementById('prep-logout').onclick = signOutStaff;
@@ -2295,6 +2664,7 @@
             localStorage.setItem('pos-prep-station', prepStation);
           } else prepFilter = button.dataset.prepFilter;
           resetPrepHistoryPage();
+          if (ui.role === 'chef') syncStaffHash('chef');
         };
       });
       document.getElementById('chef-orders-list').onclick = event => {
@@ -2307,7 +2677,6 @@
         document.querySelectorAll('.gestion-tab').forEach(btn => {
           const active = btn.dataset.subtab === ui.gestionSubtab;
           btn.setAttribute('aria-pressed', String(active));
-          btn.className = `gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold transition-colors ${active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`;
         });
         document.querySelectorAll('.gestion-panel').forEach(p => p.classList.add('hidden'));
         document.getElementById(`subtab-${ui.gestionSubtab}`).classList.remove('hidden');
@@ -2403,6 +2772,7 @@
 
       const cartaVisual = document.getElementById('carta-visual');
       const cartaPages = document.getElementById('carta-pages');
+      const cartaBookWorkspace = document.getElementById('carta-book-workspace');
       const cartaBookStage = document.getElementById('carta-book-stage');
       const cartaSheet = document.getElementById('carta-sheet');
       const cartaBookFlip = document.getElementById('carta-book-flip');
@@ -2444,7 +2814,9 @@
       }
 
       function canFitSpread() {
-        return desktopSpreadQuery.matches && cartaBookStage.clientWidth >= 780;
+        const width = cartaBookWorkspace.clientWidth;
+        const threshold = document.body.hasAttribute('data-public-menu') ? 900 : 780;
+        return desktopSpreadQuery.matches && width >= threshold;
       }
 
       function isSpreadActive() {
@@ -2533,7 +2905,7 @@
             <div class="carta-back-actions">
               <button type="button" data-carta-go="0" class="carta-back-btn carta-back-btn-primary">Volver a la página 1</button>
               <button type="button" data-carta-switch-list class="carta-back-btn">Ver lista y buscar</button>
-              <a href="#client-cart" class="carta-back-cart-link" ${units > 0 ? '' : 'hidden'}>Ir a tu pedido (${units}) · ${money(total)}</a>
+              <button type="button" class="carta-back-cart-link" ${units > 0 ? '' : 'hidden'}>Ir a tu pedido (${units}) · ${money(total)}</button>
             </div>
             <p class="carta-back-meta">Pedidos y Yape/Plin: <strong>958 656 930</strong><br>Arequipa · Perú</p>
           </div>
@@ -2682,7 +3054,7 @@
 
       function syncBookLayout() {
         updateBookLayoutControls();
-        if (cartaVisual.hidden || cartaBookStage.clientWidth === 0) return;
+        if (cartaVisual.hidden || cartaBookWorkspace.clientWidth === 0) return;
         const spread = isSpreadActive();
         const expectedLeft = spread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
         if (spread !== lastBookView.spread || expectedLeft !== lastBookView.left) {
@@ -2714,10 +3086,10 @@
         } else if (event.key === 'ArrowRight') {
           event.preventDefault();
           stepCartaBook(1);
-        } else if (event.key === 'Home' && event.target.closest('#carta-pages, .carta-book-nav')) {
+        } else if (event.key === 'Home' && event.target.closest('#carta-pages, .carta-book-workspace')) {
           event.preventDefault();
           showCartaPage(0, { animate: true, announce: true });
-        } else if (event.key === 'End' && event.target.closest('#carta-pages, .carta-book-nav')) {
+        } else if (event.key === 'End' && event.target.closest('#carta-pages, .carta-book-workspace')) {
           event.preventDefault();
           showCartaPage(menuPages.length - 1, { animate: true, announce: true });
         }
@@ -2748,7 +3120,7 @@
       }, true);
 
       if ('ResizeObserver' in window) {
-        new ResizeObserver(() => syncBookLayout()).observe(cartaBookStage);
+        new ResizeObserver(() => syncBookLayout()).observe(cartaBookWorkspace);
       } else {
         window.addEventListener('resize', syncBookLayout);
       }
@@ -2866,8 +3238,14 @@
           return;
         }
 
-        const rt = e.target.closest('.role-tab');
-        if (rt) { switchRole(rt.dataset.role); return; }
+        const backModules = e.target.closest('[data-back-modules]');
+        if (backModules) {
+          if (canOpenPosView('modulos')) {
+            ui.staffOrderEntry = false;
+            switchRole('modulos');
+          }
+          return;
+        }
 
         const cc = e.target.closest('[data-client-cat]');
         if (cc) { ui.clientCategory = cc.dataset.clientCat; renderCliente(); return; }
@@ -2892,6 +3270,11 @@
         if (switchList) {
           showMenuFormat('list');
           document.getElementById('client-search')?.focus();
+          return;
+        }
+
+        if (e.target.closest('[data-close-cart-drawer]')) {
+          closeCartDrawer();
           return;
         }
 
@@ -3056,7 +3439,7 @@
         // Chef keypad & quick fill
         // Gestión subtabs
         const gt = e.target.closest('[data-subtab]');
-        if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); return; }
+        if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); syncStaffHash('gestion'); return; }
       });
 
       const clientTakeaway = document.getElementById('client-takeaway');
@@ -3225,16 +3608,18 @@
         }
       }
 
-      document.getElementById('admin-order-search').addEventListener('input', renderActiveRole);
-      document.getElementById('btn-admin-new-order').onclick = () => {
-        if (!staffReady) return;
+      function startCounterOrder() {
+        if (!staffReady || staffArea !== 'admin') return;
         if (!ui.staffOrderEntry && ui.clientCart.length &&
             !window.confirm('¿Descartar el carrito actual para crear un pedido de mostrador?')) return;
         if (!ui.staffOrderEntry) resetOrderEntry();
         ui.staffOrderEntry = true;
-        switchRole('cliente');
+        switchRole('cliente', { updateHash: false });
         document.getElementById('admin-order-entry').scrollIntoView();
-      };
+      }
+
+      document.getElementById('admin-order-search').addEventListener('input', renderActiveRole);
+      document.getElementById('btn-admin-new-order').onclick = startCounterOrder;
       document.getElementById('btn-admin-exit-entry').onclick = () => {
         if (ui.clientCart.length && !window.confirm('¿Descartar este pedido sin guardar?')) return;
         resetOrderEntry();
@@ -3299,7 +3684,11 @@
         document.getElementById('qr-host-notice').classList.toggle('hidden', isPublicUrl);
       }
 
-      document.getElementById('btn-show-qr').addEventListener('click', () => {
+      function openQrModal() {
+        if (ui.role !== 'cliente') {
+          ui.clientMode = 'MESA';
+          switchRole('cliente', { updateHash: false });
+        }
         const mNum = ui.clientMesa.replace(/\D/g, '') || '1';
         document.getElementById('qr-target-select').value = `mesa=${mNum}`;
         const baseField = document.getElementById('qr-base-url');
@@ -3308,7 +3697,9 @@
         }
         renderQrModalContent();
         openModal('modal-qr');
-      });
+      }
+
+      document.getElementById('btn-show-qr').addEventListener('click', openQrModal);
 
       document.getElementById('qr-target-select').addEventListener('change', renderQrModalContent);
       document.getElementById('qr-base-url').addEventListener('input', renderQrModalContent);
@@ -3440,8 +3831,12 @@
         ui.clientCart.push(item);
         customizeDialog.close();
         renderClientCart();
+        const cartLink = document.getElementById('carta-cart-link');
+        cartLink.classList.remove('is-updated');
+        void cartLink.offsetWidth;
+        cartLink.classList.add('is-updated');
         document.getElementById('cart-announcement').textContent = m.name + ' agregado. ' +
-          document.getElementById('carta-cart-link').textContent;
+          cartLink.textContent;
       });
 
       const clientCheckout = document.getElementById('client-checkout');
@@ -3550,8 +3945,13 @@
           showToast('Pedido ' + newOrder.code + ' creado.');
           return;
         }
+        closeCartDrawer({ restoreFocus: false });
         renderActiveRole();
         showToast(`Pedido ${newOrder.code} enviado. Esperando confirmación.`);
+        document.getElementById('client-tracker-wrap')?.scrollIntoView({
+          block: 'nearest',
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
       });
 
       const chefInput = document.getElementById('chef-code-input');
@@ -3920,7 +4320,15 @@
         const h = (hashStr || '').replace(/^#/, '');
         const params = new URLSearchParams(h);
         const preparation = preparationEntry(params);
-        if (preparation || params.has('modulos') || params.has('personal')) {
+        const isStaffRoute = Boolean(
+          preparation ||
+          params.has('modulos') ||
+          params.has('personal') ||
+          params.has('admin') ||
+          params.has('gestion') ||
+          (params.has('chef') && !params.get('chef'))
+        );
+        if (isStaffRoute) {
           const open = () => {
             if (generation !== staffRouteGeneration) return;
             document.documentElement.removeAttribute('data-staff-loading');
@@ -3931,6 +4339,14 @@
                 prepFilter = 'pending';
               }
               scannedPrepCode = preparation.get('chef') || '';
+              switchRole('chef');
+            } else if (params.has('admin') && canOpenPosView('admin')) {
+              switchRole('admin');
+            } else if (params.has('gestion') && canOpenPosView('gestion')) {
+              const sub = params.get('gestion');
+              if (['inventario', 'kardex', 'proveedores', 'caja'].includes(sub)) ui.gestionSubtab = sub;
+              switchRole('gestion');
+            } else if (params.has('chef') && !params.get('chef')) {
               switchRole('chef');
             } else {
               if (params.has('personal')) history.replaceState(null, '', '#modulos');
@@ -3956,22 +4372,22 @@
         }
         document.documentElement.removeAttribute('data-staff-loading');
         staffMenu = false;
-        if (!h) { switchRole('cliente'); return; }
+        if (!h) { switchRole('cliente', { updateHash: false }); return; }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
           ui.clientMode = 'MESA';
           ui.clientMesa = m;
           const sel = document.getElementById('client-mesa-select');
           if (sel && Array.from(sel.options).some(o => o.value === m)) sel.value = m;
-          switchRole('cliente');
+          switchRole('cliente', { updateHash: false });
         } else if (params.has('delivery')) {
           ui.clientMode = 'DELIVERY';
-          switchRole('cliente');
+          switchRole('cliente', { updateHash: false });
         } else if (params.has('chef')) {
           showToast('El QR no contiene un código de pedido válido.', 'err');
-          switchRole('cliente');
+          switchRole('cliente', { updateHash: false });
         } else {
-          switchRole('cliente');
+          switchRole('cliente', { updateHash: false });
         }
       }
 
@@ -3995,12 +4411,30 @@
 
       document.getElementById('carta-cart-link').addEventListener('click', event => {
         event.preventDefault();
-        focusClientCart();
+        if (document.body.hasAttribute('data-public-menu')) {
+          if (cartDrawerOpen) closeCartDrawer();
+          else openCartDrawer(event.currentTarget);
+        } else {
+          focusClientCart();
+        }
       });
+      document.getElementById('menu-order-context').addEventListener('click', event => {
+        openCartDrawer(event.currentTarget, { openSettings: true });
+      });
+      document.getElementById('btn-close-cart-drawer').addEventListener('click', () => closeCartDrawer());
+      document.getElementById('cart-drawer-backdrop').addEventListener('click', () => closeCartDrawer());
       document.getElementById('carta-sheet').addEventListener('click', event => {
-        if (!event.target.closest('.carta-back-cart-link')) return;
+        const backBtn = event.target.closest('.carta-back-cart-link');
+        if (!backBtn) return;
         event.preventDefault();
-        focusClientCart();
+        if (document.body.hasAttribute('data-public-menu')) openCartDrawer(backBtn);
+        else focusClientCart();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !cartDrawerOpen) return;
+        if (document.querySelector('dialog[open], [id^="modal-"].fixed:not(.hidden)')) return;
+        event.preventDefault();
+        closeCartDrawer({ restoreFocus: true });
       });
       window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
       staffLoadingRetry.onclick = () => applyHashRoute(window.location.hash);
@@ -4081,15 +4515,27 @@
 
       function updateStaffNavigation() {
         const isAdmin = staffReady && staffArea === 'admin';
+        const isChef = staffReady && staffArea === 'chef';
         document.getElementById('chef-access-settings').hidden = !isAdmin;
-        document.getElementById('launch-roles').hidden = !isAdmin;
+        document.getElementById('modules-bar-tools').hidden = !staffReady;
+        document.getElementById('modules-bar-pending').hidden = !isAdmin;
         document.getElementById('modules-profile').textContent = isAdmin ? 'Admin · Nicol' : 'Cocina';
-        staffSectionLinks.querySelectorAll('[data-role]').forEach(button => {
-          button.hidden = !canOpenPosView(button.dataset.role);
+        document.getElementById('modules-operation-title').textContent = isChef ? 'Tu estación' : 'Operación en vivo';
+        document.getElementById('modules-shortcuts-title').textContent = isChef ? 'Herramientas y ajustes' : 'Gestión y sistema';
+        document.getElementById('mod-desc-carta').textContent = isChef ? 'Consultar platos e ingredientes' : 'Menú visual, precios y QR';
+        document.getElementById('mod-badge-carta').textContent = isChef ? 'Menú' : 'QR y menú';
+        document.getElementById('mod-desc-settings').textContent = isChef ? 'Sonido y avisos de llegada' : 'Sonido, avisos y clave Cocina';
+        const showModulesBack = staffReady && (staffMenu || ui.staffOrderEntry) && ui.role !== 'modulos';
+        barModulesBtn.hidden = !showModulesBack;
+        staffMenuModules.hidden = !showModulesBack;
+        document.querySelectorAll('[data-staff-scope]').forEach(el => {
+          const scope = el.dataset.staffScope;
+          el.hidden = (scope === 'admin' && !isAdmin) || (scope === 'chef' && !isChef);
         });
-        document.querySelectorAll('[data-launch-role]').forEach(tile => {
+        document.querySelectorAll('#view-modulos [data-launch-role]:not([data-staff-scope])').forEach(tile => {
           tile.hidden = !canOpenPosView(tile.dataset.launchRole);
         });
+        if (staffReady) renderModuleStats();
       }
       updateStaffNavigation();
       const chefAccessDialog = document.getElementById('chef-access-dialog');
