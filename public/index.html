@@ -89,7 +89,9 @@
   <!-- TOAST CONTAINER -->
   <div id="toast-container" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[95] flex flex-col gap-2 max-w-md w-full px-4 pointer-events-none"></div>
 
-  <!-- TOP NAVIGATION BAR (4-ACTOR SWITCHER) -->
+  <a id="staff-skip-link" class="staff-skip-link" href="#pos-content">Saltar al contenido</a>
+
+  <!-- TOP NAVIGATION BAR -->
   <header class="brand-bar sticky top-0 z-40 border-b">
     <div class="staff-header max-w-7xl mx-auto px-3 sm:px-5 h-16">
       <div class="brand-lockup brand-desktop">
@@ -104,6 +106,10 @@
       <button id="staff-access" type="button" class="min-h-11 px-2 text-xs font-semibold text-amber-400">Personal</button>
       <nav id="role-tabs" aria-label="Secciones del POS">
         <div id="staff-sections">
+          <button type="button" hidden data-role="modulos" class="role-tab">
+            <i data-lucide="layout-grid" class="w-4 h-4" aria-hidden="true"></i>
+            <span>Módulos</span>
+          </button>
           <button type="button" data-role="cliente" class="role-tab px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors">
             <i data-lucide="qr-code" class="w-4 h-4"></i>
             <span>Carta</span>
@@ -165,6 +171,7 @@
       <fieldset id="chef-access-settings" hidden>
         <legend>Accesos del personal</legend>
         <div class="prep-config-actions">
+          <button id="staff-roles-open" type="button" aria-haspopup="dialog"><i data-lucide="shield-check" aria-hidden="true"></i> Ver roles</button>
           <button id="btn-chef-access" type="button"><i data-lucide="key-round" aria-hidden="true"></i> Cambiar clave de Cocina</button>
         </div>
         <p id="chef-access-status" role="status"></p>
@@ -172,8 +179,41 @@
     </div>
   </dialog>
 
+  <dialog id="staff-roles" class="prep-dialog role-directory" aria-labelledby="staff-roles-title">
+    <header>
+      <h2 id="staff-roles-title">Roles y accesos</h2>
+      <button type="button" id="staff-roles-close" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+    </header>
+    <div class="role-directory-list">
+      <article class="role-profile">
+        <h3><i data-lucide="shield-check" aria-hidden="true"></i> Admin · Nicol</h3>
+        <ul>
+          <li>Aprueba, edita y cobra pedidos.</li>
+          <li>Supervisa Cocina y Barra.</li>
+          <li>Gestiona inventario, Kardex, proveedores y caja.</li>
+          <li>Administra la clave de Cocina.</li>
+        </ul>
+      </article>
+      <article class="role-profile">
+        <h3><i data-lucide="chef-hat" aria-hidden="true"></i> Cocina</h3>
+        <ul>
+          <li>Consulta comandas de Cocina y Barra.</li>
+          <li>Marca cada estación lista y revisa Terminados.</li>
+          <li>Abre la carta y ajusta sus avisos.</li>
+        </ul>
+      </article>
+      <article class="role-profile">
+        <h3><i data-lucide="qr-code" aria-hidden="true"></i> Cliente</h3>
+        <ul>
+          <li>Abre la carta desde el QR de mesa o delivery.</li>
+          <li>Personaliza platos, envía su pedido y consulta su estado.</li>
+        </ul>
+      </article>
+    </div>
+  </dialog>
+
   <!-- MAIN WORKSPACE -->
-  <main class="max-w-7xl mx-auto p-3 sm:p-6">
+  <main id="pos-content" tabindex="-1" class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
       <p id="staff-alert-message" role="status"></p>
     </div>
@@ -182,6 +222,65 @@
       <p id="staff-sync-message" role="status"></p>
       <button id="staff-sync-retry" type="button" class="admin-tool">Actualizar</button>
     </div>
+
+    <section id="view-modulos" class="role-view modules-page hidden" aria-labelledby="modules-title">
+      <header class="modules-header">
+        <h1 id="modules-title" tabindex="-1">Módulos del POS</h1>
+        <p><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
+      </header>
+
+      <section aria-labelledby="modules-operation-title">
+        <h2 id="modules-operation-title" class="modules-section-title">Operación</h2>
+        <div class="modules-grid">
+          <button type="button" data-launch-role="cliente" class="module-tile" data-tone="gold">
+            <span class="module-icon"><i data-lucide="book-open" aria-hidden="true"></i></span>
+            <span class="module-title">Carta</span>
+            <span class="module-description">Menú y códigos QR</span>
+          </button>
+          <button type="button" data-launch-role="admin" class="module-tile" data-tone="rust" hidden>
+            <span class="module-icon"><i data-lucide="clipboard-list" aria-hidden="true"></i></span>
+            <span class="module-title">Pedidos</span>
+            <span class="module-description">Aprobación, cobro e historial</span>
+          </button>
+          <button type="button" data-launch-role="chef" class="module-tile" data-tone="green">
+            <span class="module-icon"><i data-lucide="cooking-pot" aria-hidden="true"></i></span>
+            <span class="module-title">Preparación</span>
+            <span class="module-description">Cocina y Barra</span>
+          </button>
+          <button type="button" data-launch-role="gestion" class="module-tile" data-tone="blue" hidden>
+            <span class="module-icon"><i data-lucide="database" aria-hidden="true"></i></span>
+            <span class="module-title">Gestión</span>
+            <span class="module-description">Stock, compras y caja</span>
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="modules-shortcuts-title">
+        <h2 id="modules-shortcuts-title" class="modules-section-title">Accesos directos</h2>
+        <div class="modules-grid">
+          <button type="button" data-launch-role="gestion" data-launch-subtab="inventario" class="module-tile module-tile-compact" data-tone="green" hidden>
+            <span class="module-icon"><i data-lucide="package" aria-hidden="true"></i></span>
+            <span class="module-title">Inventario</span>
+          </button>
+          <button type="button" data-launch-role="gestion" data-launch-subtab="kardex" class="module-tile module-tile-compact" data-tone="blue" hidden>
+            <span class="module-icon"><i data-lucide="list-restart" aria-hidden="true"></i></span>
+            <span class="module-title">Kardex</span>
+          </button>
+          <button type="button" data-launch-role="gestion" data-launch-subtab="caja" class="module-tile module-tile-compact" data-tone="gold" hidden>
+            <span class="module-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
+            <span class="module-title">Caja</span>
+          </button>
+          <button type="button" id="launch-settings" class="module-tile module-tile-compact" data-tone="stone" aria-haspopup="dialog">
+            <span class="module-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
+            <span class="module-title">Configuración</span>
+          </button>
+          <button type="button" id="launch-roles" class="module-tile module-tile-compact" data-tone="rust" aria-haspopup="dialog" hidden>
+            <span class="module-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
+            <span class="module-title">Roles y accesos</span>
+          </button>
+        </div>
+      </section>
+    </section>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
@@ -392,9 +491,9 @@
     </section>
 
     <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
-    <section id="view-admin" class="role-view hidden space-y-5">
+    <section id="view-admin" class="role-view hidden space-y-5" aria-labelledby="admin-view-title">
       <div class="operator-head bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
-        <h2 class="operator-title">Panel de pedidos</h2>
+        <h1 id="admin-view-title" class="operator-title">Panel de pedidos</h1>
         <p class="operator-caption text-slate-600">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
       </div>
 
@@ -422,11 +521,11 @@
     </section>
 
     <!-- ==================== VIEW 3: INTERFAZ MÓVIL DEL CHEF ==================== -->
-    <section id="view-chef" class="role-view hidden prep-board">
+    <section id="view-chef" class="role-view hidden prep-board" aria-labelledby="prep-view-title">
       <header class="prep-header">
         <div class="prep-heading">
           <button type="button" id="prep-back" aria-label="Volver" title="Volver"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
-          <div><h2 class="operator-title">Preparación</h2><p id="chef-active-count" aria-live="polite"></p></div>
+          <div><h1 id="prep-view-title" class="operator-title">Preparación</h1><p id="chef-active-count" aria-live="polite"></p></div>
         </div>
         <div class="prep-header-actions">
           <div class="prep-switch" role="group" aria-label="Estación de preparación">
@@ -516,10 +615,10 @@
     </section>
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
-    <section id="view-gestion" class="role-view hidden space-y-5">
+    <section id="view-gestion" class="role-view hidden space-y-5" aria-labelledby="management-view-title">
       <div class="operator-head management-nav bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-3">
-        <h2 class="operator-title">Gestión</h2>
-        <div class="flex flex-wrap items-center gap-1.5" aria-label="Módulos de gestión">
+        <h1 id="management-view-title" class="operator-title">Gestión</h1>
+        <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Módulos de gestión">
           <button type="button" data-subtab="inventario" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="package"></i> Inventario</button>
           <button type="button" data-subtab="kardex" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="list-restart"></i> Kardex</button>
           <button type="button" data-subtab="proveedores" class="gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold"><i data-lucide="truck"></i> Proveedores</button>
@@ -956,102 +1055,96 @@
     </form>
   </dialog>
 
-  <div id="modal-adjust" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 class="font-extrabold text-sm text-slate-900">Ajuste de Inventario (Kardex)</h3>
-        <button type="button" data-close-modal="modal-adjust" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <dialog id="modal-adjust" class="prep-dialog management-dialog" aria-labelledby="adjust-dialog-title">
+    <header>
+      <h2 id="adjust-dialog-title">Ajuste de Inventario (Kardex)</h2>
+      <button type="button" data-close-modal="modal-adjust" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+    </header>
+    <form id="form-adjust" class="p-5 space-y-3 text-xs">
+      <div>
+        <label for="adj-ing" class="block font-bold text-slate-700 mb-1">Insumo</label>
+        <select id="adj-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
       </div>
-      <form id="form-adjust" class="p-5 space-y-3 text-xs">
+      <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Insumo</label>
-          <select id="adj-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Tipo</label>
-            <select id="adj-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
-              <option value="ENTRADA">Entrada (+)</option>
-              <option value="CONTEO">Conteo físico</option>
-              <option value="MERMA">Merma / Salida (-)</option>
-            </select>
-          </div>
-          <div>
-            <label id="adj-quantity-label" for="adj-qty" class="block font-bold text-slate-700 mb-1">Cantidad</label>
-            <input id="adj-qty" type="number" min="1" max="1000000" required value="5" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
-          </div>
+          <label for="adj-type" class="block font-bold text-slate-700 mb-1">Tipo</label>
+          <select id="adj-type" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
+            <option value="ENTRADA">Entrada (+)</option>
+            <option value="CONTEO">Conteo físico</option>
+            <option value="MERMA">Merma / Salida (-)</option>
+          </select>
         </div>
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Motivo</label>
-          <input id="adj-reason" type="text" required placeholder="Ej. Conteo físico, merma plancha" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          <label id="adj-quantity-label" for="adj-qty" class="block font-bold text-slate-700 mb-1">Cantidad</label>
+          <input id="adj-qty" type="number" min="1" max="1000000" required value="5" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
         </div>
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" data-close-modal="modal-adjust" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Registrar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+      </div>
+      <div>
+        <label for="adj-reason" class="block font-bold text-slate-700 mb-1">Motivo</label>
+        <input id="adj-reason" type="text" required placeholder="Ej. Conteo físico, merma plancha" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" data-close-modal="modal-adjust" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Registrar</button>
+      </div>
+    </form>
+  </dialog>
 
-  <div id="modal-purchase" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 class="font-extrabold text-sm text-slate-900">Registrar Compra a Proveedor</h3>
-        <button type="button" data-close-modal="modal-purchase" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <dialog id="modal-purchase" class="prep-dialog management-dialog" aria-labelledby="purchase-dialog-title">
+    <header>
+      <h2 id="purchase-dialog-title">Registrar Compra a Proveedor</h2>
+      <button type="button" data-close-modal="modal-purchase" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+    </header>
+    <form id="form-purchase" class="p-5 space-y-3 text-xs">
+      <div>
+        <label for="pur-sup" class="block font-bold text-slate-700 mb-1">Proveedor</label>
+        <select id="pur-sup" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
       </div>
-      <form id="form-purchase" class="p-5 space-y-3 text-xs">
+      <div>
+        <label for="pur-ing" class="block font-bold text-slate-700 mb-1">Insumo</label>
+        <select id="pur-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Proveedor</label>
-          <select id="pur-sup" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Insumo</label>
-          <select id="pur-ing" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Cantidad</label>
-            <input id="pur-qty" type="number" min="1" required value="20" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Total Compra (S/)</label>
-            <input id="pur-total" type="number" step="0.50" min="1" required value="120" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
-          </div>
+          <label for="pur-qty" class="block font-bold text-slate-700 mb-1">Cantidad</label>
+          <input id="pur-qty" type="number" min="1" required value="20" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
         </div>
         <div>
-          <label class="block font-bold text-slate-700 mb-1">N° Factura / Guía</label>
-          <input id="pur-doc" type="text" required value="F001-00921" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          <label for="pur-total" class="block font-bold text-slate-700 mb-1">Total Compra (S/)</label>
+          <input id="pur-total" type="number" step="0.50" min="1" required value="120" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
         </div>
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" data-close-modal="modal-purchase" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Ingresar a Kardex</button>
-        </div>
-      </form>
-    </div>
-  </div>
+      </div>
+      <div>
+        <label for="pur-doc" class="block font-bold text-slate-700 mb-1">N° Factura / Guía</label>
+        <input id="pur-doc" type="text" required value="F001-00921" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" data-close-modal="modal-purchase" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-orange-600 text-white font-bold">Ingresar a Kardex</button>
+      </div>
+    </form>
+  </dialog>
 
-  <div id="modal-expense" class="fixed inset-0 z-50 hidden bg-slate-950/70 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 class="font-extrabold text-sm text-slate-900">Registrar Egreso de Caja</h3>
-        <button type="button" data-close-modal="modal-expense" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <dialog id="modal-expense" class="prep-dialog management-dialog" aria-labelledby="expense-dialog-title">
+    <header>
+      <h2 id="expense-dialog-title">Registrar Egreso de Caja</h2>
+      <button type="button" data-close-modal="modal-expense" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+    </header>
+    <form id="form-expense" class="p-5 space-y-3 text-xs">
+      <div>
+        <label for="exp-desc" class="block font-bold text-slate-700 mb-1">Concepto</label>
+        <input id="exp-desc" type="text" required placeholder="Ej. Hielo, bolsas delivery, gas" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
       </div>
-      <form id="form-expense" class="p-5 space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Concepto</label>
-          <input id="exp-desc" type="text" required placeholder="Ej. Hielo, bolsas delivery, gas" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Monto (S/)</label>
-          <input id="exp-amt" type="number" step="0.50" min="0.50" required class="w-full px-3 py-2 rounded-lg border border-slate-200" />
-        </div>
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" data-close-modal="modal-expense" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 text-white font-bold">Registrar Egreso</button>
-        </div>
-      </form>
-    </div>
-  </div>
+      <div>
+        <label for="exp-amt" class="block font-bold text-slate-700 mb-1">Monto (S/)</label>
+        <input id="exp-amt" type="number" step="0.50" min="0.50" required class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" data-close-modal="modal-expense" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 text-white font-bold">Registrar Egreso</button>
+      </div>
+    </form>
+  </dialog>
 
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
@@ -1526,7 +1619,7 @@
       const desktopStaffMenu = document.getElementById('staff-menu-desktop');
       const staffLogout = document.getElementById('staff-logout');
       const staffSettingsDialog = document.getElementById('staff-settings');
-      const mobileHeader = matchMedia('(max-width: 767px)');
+      const mobileHeader = matchMedia('(max-width: 959px)');
       const staffMenuTrigger = () => mobileHeader.matches ? mobileStaffMenu : desktopStaffMenu;
 
       function showStaffMenu(open) {
@@ -1554,6 +1647,40 @@
       };
       document.getElementById('staff-settings-close').onclick = () => staffSettingsDialog.close();
 
+      const rolesDialog = document.getElementById('staff-roles');
+      for (const trigger of [document.getElementById('launch-roles'), document.getElementById('staff-roles-open')]) {
+        trigger.onclick = () => {
+          if (!staffReady || staffArea !== 'admin') return;
+          trigger.focus({ preventScroll: true });
+          rolesDialog.showModal();
+        };
+      }
+      document.getElementById('staff-roles-close').onclick = () => rolesDialog.close();
+      document.getElementById('launch-settings').onclick = event => {
+        if (!staffReady) return;
+        event.currentTarget.focus({ preventScroll: true });
+        staffSettingsDialog.showModal();
+      };
+      document.getElementById('staff-skip-link').onclick = event => {
+        event.preventDefault();
+        document.getElementById('pos-content').focus();
+      };
+      document.getElementById('view-modulos').addEventListener('click', event => {
+        const tile = event.target.closest('[data-launch-role]');
+        if (!tile || !canOpenPosView(tile.dataset.launchRole)) return;
+        if (tile.dataset.launchSubtab) ui.gestionSubtab = tile.dataset.launchSubtab;
+        const role = tile.dataset.launchRole;
+        switchRole(role);
+        const view = document.getElementById('view-' + role);
+        const target = role === 'chef' ? document.getElementById('prep-back')
+          : view.querySelector(tile.dataset.launchSubtab ? '[data-subtab="' + tile.dataset.launchSubtab + '"]' : 'h1, h2');
+        if (target) {
+          if (target.matches('h1, h2')) target.tabIndex = -1;
+          target.focus({ preventScroll: true });
+        }
+        window.scrollTo(0, 0);
+      });
+
       let staffMenu = false;
       let prepReturnRole = 'admin';
 
@@ -1566,6 +1693,12 @@
         document.getElementById('public-order-settings').hidden = !isPublic;
       }
 
+      function canOpenPosView(role) {
+        if (role === 'cliente') return true;
+        if (!staffReady) return false;
+        return ['modulos', 'chef'].includes(role) || (staffArea === 'admin' && ['admin', 'gestion'].includes(role));
+      }
+
       function switchRole(role) {
         if (role !== 'cliente' && !staffReady) {
           requestedRole = role;
@@ -1573,9 +1706,9 @@
           if (!login.open) login.showModal();
           return;
         }
-        if (staffArea === 'chef' && !['cliente', 'chef'].includes(role)) return;
+        if (!canOpenPosView(role)) return;
         if (role !== 'cliente') staffMenu = true;
-        if (role === 'chef' && ['admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
+        if (role === 'chef' && ['modulos', 'admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
         const fromMenu = staffHeader.hasAttribute('data-menu-open') || prepMenu.open;
         showStaffMenu(false);
         prepMenu.open = false;
@@ -1599,6 +1732,9 @@
         if (role === 'chef' && scannedPrepCode) {
           openPrepCode(scannedPrepCode);
           scannedPrepCode = '';
+        } else if (role === 'modulos') {
+          document.getElementById('modules-title').focus({ preventScroll: true });
+          window.scrollTo(0, 0);
         } else if (fromMenu) {
           if (role === 'chef') document.getElementById('prep-back').focus();
           else if (mobileHeader.matches) mobileStaffMenu.focus();
@@ -1988,9 +2124,11 @@
       };
       document.getElementById('prep-back').onclick = () => {
         prepAlertMessage.textContent = '';
-        switchRole(staffArea === 'chef' ? 'cliente' : prepReturnRole);
-        const landing = location.hash ? (staffArea === 'chef' ? '' : '#personal') : '';
+        const destination = canOpenPosView(prepReturnRole) ? prepReturnRole : 'cliente';
+        switchRole(destination);
+        const landing = destination === 'modulos' ? '#modulos' : location.hash && staffArea === 'admin' ? '#personal' : '';
         if (location.hash !== landing) history.replaceState(null, '', location.pathname + location.search + landing);
+        if (destination === 'modulos') return;
         if (mobileHeader.matches) mobileStaffMenu.focus();
         else staffSectionLinks.querySelector('[aria-current="page"]')?.focus();
       };
@@ -2180,6 +2318,7 @@
       function renderGestion() {
         document.querySelectorAll('.gestion-tab').forEach(btn => {
           const active = btn.dataset.subtab === ui.gestionSubtab;
+          btn.setAttribute('aria-pressed', String(active));
           btn.className = `gestion-tab px-3.5 py-2 rounded-xl text-xs font-bold transition-colors ${active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`;
         });
         document.querySelectorAll('.gestion-panel').forEach(p => p.classList.add('hidden'));
@@ -2720,19 +2859,22 @@
       }
 
       function openModal(id) {
-        document.getElementById(id).classList.remove('hidden');
+        const modal = document.getElementById(id);
+        if (modal instanceof HTMLDialogElement) modal.showModal();
+        else modal.classList.remove('hidden');
         lucide.createIcons();
       }
       function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
+        const modal = document.getElementById(id);
+        if (modal instanceof HTMLDialogElement) modal.close();
+        else modal.classList.add('hidden');
       }
 
       // ==================== EVENT DELEGATION ====================
       document.addEventListener('click', (e) => {
         const cm = e.target.closest('[data-close-modal]');
         if (cm) {
-          if (cm.dataset.closeModal === customizeDialog.id || cm.dataset.closeModal === 'modal-bixolon') document.getElementById(cm.dataset.closeModal).close();
-          else closeModal(cm.dataset.closeModal);
+          closeModal(cm.dataset.closeModal);
           return;
         }
 
@@ -3702,10 +3844,11 @@
       }
 
       adjustmentIngredient.onchange = adjustmentType.onchange = updateAdjustmentInputs;
-      document.getElementById('btn-open-adjust').addEventListener('click', () => {
+      document.getElementById('btn-open-adjust').addEventListener('click', event => {
         document.getElementById('form-adjust').reset();
         adjustmentIngredient.replaceChildren(...state.ingredients.map(item => new Option(item.name + ' (' + item.stock + ' ' + item.unit + ')', item.id)));
         updateAdjustmentInputs();
+        event.currentTarget.focus({ preventScroll: true });
         openModal('modal-adjust');
       });
       document.getElementById('form-adjust').addEventListener('submit', async event => {
@@ -3722,9 +3865,10 @@
         if (await saveState()) showToast('Ajuste registrado en Kardex.');
       });
 
-      document.getElementById('btn-open-purchase').addEventListener('click', () => {
+      document.getElementById('btn-open-purchase').addEventListener('click', event => {
         document.getElementById('pur-sup').innerHTML = state.suppliers.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
         document.getElementById('pur-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
+        event.currentTarget.focus({ preventScroll: true });
         openModal('modal-purchase');
       });
       document.getElementById('form-purchase').addEventListener('submit', async (e) => {
@@ -3747,8 +3891,9 @@
         showToast(`Compra ingresada: +${qty} ${ing.unit} de ${ing.name}.`);
       });
 
-      document.getElementById('btn-open-expense').addEventListener('click', () => {
+      document.getElementById('btn-open-expense').addEventListener('click', event => {
         document.getElementById('form-expense').reset();
+        event.currentTarget.focus({ preventScroll: true });
         openModal('modal-expense');
       });
       document.getElementById('form-expense').addEventListener('submit', async (e) => {
@@ -3787,11 +3932,16 @@
           switchRole('chef');
           return;
         }
+        if (params.has('modulos')) {
+          switchRole('modulos');
+          return;
+        }
         if (params.has('personal')) {
           switchRole(staffArea === 'chef' ? 'chef' : 'admin');
           return;
         }
         staffMenu = false;
+        if (!params.has('chef') && login.open) login.close();
         if (!h) { switchRole('cliente'); return; }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
@@ -3921,11 +4071,19 @@
 
       const login = document.getElementById('staff-login');
       function updateStaffNavigation() {
-        document.getElementById('chef-access-settings').hidden = !staffReady || staffArea !== 'admin';
+        const isAdmin = staffReady && staffArea === 'admin';
+        document.getElementById('chef-access-settings').hidden = !isAdmin;
+        document.getElementById('launch-roles').hidden = !isAdmin;
+        document.getElementById('modules-profile').textContent = isAdmin ? 'Admin · Nicol' : 'Cocina';
         staffSectionLinks.querySelectorAll('[data-role]').forEach(button => {
-          const role = button.dataset.role;
-          button.hidden = role !== 'cliente' && (!staffReady || (staffArea === 'chef' && role !== 'chef'));
+          button.hidden = !canOpenPosView(button.dataset.role);
         });
+        document.querySelectorAll('[data-launch-role]').forEach(tile => {
+          tile.hidden = !canOpenPosView(tile.dataset.launchRole);
+        });
+      }
+      function requestedStaffView() {
+        return canOpenPosView(requestedRole) ? requestedRole : 'chef';
       }
       updateStaffNavigation();
       const staffRoleSelect = document.getElementById('staff-role');
@@ -3978,7 +4136,7 @@
           staffArea = result.role;
           if (!await syncStaff()) throw new Error('No se pudo abrir el panel.');
           login.close();
-          switchRole(staffArea === 'chef' ? 'chef' : requestedRole);
+          switchRole(requestedStaffView());
         } catch (failure) {
           error.textContent = failure.message;
         } finally {
@@ -4075,7 +4233,7 @@
       syncStaff().then((ready) => {
         if (ready && login.open) {
           login.close();
-          switchRole(staffArea === 'chef' ? 'chef' : requestedRole);
+          switchRole(requestedStaffView());
         } else if (ready && !location.hash) {
           switchRole(staffArea === 'chef' ? 'chef' : 'admin');
         }

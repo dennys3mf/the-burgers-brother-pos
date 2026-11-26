@@ -74,7 +74,7 @@ body { background: var(--paper); color: var(--ink); }
 #prep-menu-sections .role-tab { color: var(--ink); justify-content: flex-start; }
 #prep-menu-sections :focus-visible { outline-offset: -2px; }
 
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 959px) {
   .staff-header { min-height: 60px; height: auto; }
   .brand-desktop, #staff-menu-desktop { display: none; }
   #staff-menu-mobile { display: flex; min-height: 48px; text-align: left; }
@@ -1509,7 +1509,7 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
   padding: clamp(.8rem, 3vw, 1.4rem); border-radius: var(--radius-4);
   background: var(--charcoal); color: var(--cream);
 }
-.prep-header h2 { color: var(--cream); }
+.prep-header .operator-title { color: var(--cream); }
 .prep-header p { color: #f4d8ac; font-size: .85rem; }
 .prep-switch, .prep-filters { display: flex; gap: .5rem; flex-wrap: wrap; }
 .prep-switch button, .prep-filters button, .prep-code button, .prep-card button {
@@ -1744,3 +1744,129 @@ body[data-prep-view] main { max-width: 100rem; }
 
 body[data-public-menu] #staff-sync-notice { display: none; }
 #staff-sync-notice:not([hidden]) { border-color: #c88d52; background: #fff1d7; }
+
+/* Staff launcher */
+.staff-skip-link {
+  position: fixed;
+  z-index: 100;
+  inset-block-start: max(.5rem, env(safe-area-inset-top));
+  inset-inline-start: max(.5rem, env(safe-area-inset-left));
+  padding: .65rem 1rem;
+  border-radius: .5rem;
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 750;
+}
+.staff-skip-link:not(:focus-visible) { clip-path: inset(50%); }
+body[data-public-menu] .staff-skip-link { display: none; }
+#pos-content { scroll-margin-block-start: 5rem; }
+.modules-page, .modules-page section { min-width: 0; }
+.modules-page { max-width: 68rem; margin-inline: auto; padding-block: clamp(.1rem, 1.3vw, 1rem) 2rem; }
+.modules-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
+  border-radius: 1.1rem;
+  border-inline-start: 5px solid var(--gold);
+  background: var(--charcoal);
+  color: var(--cream);
+}
+.modules-header h1 { font: 800 clamp(2rem, 5vw, 3.65rem)/1 var(--display); text-wrap: balance; }
+.modules-header h1:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.modules-header p {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .45rem .65rem;
+  border: 1px solid #88673e;
+  border-radius: .45rem;
+  color: #ffe1a8;
+  font-size: .875rem;
+  font-weight: 700;
+}
+.modules-header p svg { width: 1rem; height: 1rem; flex: none; }
+.modules-section-title { margin: clamp(1.4rem, 3vw, 2rem) 0 .7rem; font-size: 1rem; font-weight: 800; }
+.modules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.55rem, 2vw, 1rem); }
+.module-tile {
+  --tile-accent: #42342b;
+  --tile-ink: var(--cream);
+  display: flex;
+  min-width: 0;
+  min-height: 9rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .35rem;
+  padding: clamp(.75rem, 2vw, 1.15rem);
+  border: 1px solid #c7ae8b;
+  border-radius: .95rem;
+  background: var(--cream);
+  color: var(--ink);
+  text-align: start;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+  scroll-margin-block: 5rem 1rem;
+}
+.module-tile[hidden] { display: none; }
+.module-tile:focus-visible { outline-offset: 3px; }
+.module-tile:active { background: #f7e5c5; border-color: var(--rust); }
+@media (hover: hover) {
+  .module-tile:hover { background: #fff1d8; border-color: var(--rust); }
+}
+.module-tile[data-tone="gold"] { --tile-accent: #ffc346; --tile-ink: #30200e; }
+.module-tile[data-tone="rust"] { --tile-accent: #983f28; }
+.module-tile[data-tone="green"] { --tile-accent: #305f46; }
+.module-tile[data-tone="blue"] { --tile-accent: #34596d; }
+.module-icon {
+  width: 2.9rem;
+  height: 2.9rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: .3rem;
+  border-radius: .65rem;
+  background: var(--tile-accent);
+  color: var(--tile-ink);
+}
+.module-icon svg { width: 1.5rem; height: 1.5rem; }
+.module-title { font-size: clamp(.95rem, 2vw, 1.15rem); font-weight: 800; line-height: 1.2; }
+.module-description { color: #644d3a; font-size: .85rem; line-height: 1.4; }
+.module-tile-compact { min-height: 7rem; }
+.module-tile-compact .module-icon { width: 2.5rem; height: 2.5rem; }
+.module-tile-compact .module-icon svg { width: 1.25rem; height: 1.25rem; }
+.role-directory { width: min(calc(100% - 1.5rem), 41rem); }
+.role-directory-list { display: grid; gap: .7rem; padding: .85rem; }
+.role-profile { padding: .85rem; border: 1px solid var(--line); border-radius: .65rem; }
+.role-profile h3 { display: flex; align-items: center; gap: .55rem; }
+.role-profile h3 svg { width: 1.15rem; height: 1.15rem; color: var(--rust); flex: none; }
+.role-profile ul { margin-top: .55rem; padding-inline-start: 1.15rem; list-style: disc; font-size: .92rem; line-height: 1.5; }
+.role-profile li + li { margin-top: .2rem; }
+@media (max-width: 355px) {
+  .modules-header { gap: .65rem; }
+}
+@media (min-width: 640px) {
+  .modules-grid { grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr)); }
+}
+@media (max-width: 959px) {
+  #role-tabs .role-tab, #staff-session-actions button { min-height: 48px; }
+}
+
+@media (any-pointer: coarse) {
+  #staff-sections .role-tab, #staff-session-actions button,
+  #admin-filter-tabs button, .gestion-tab, #view-admin .admin-tool,
+  #admin-orders-grid button, #view-gestion .admin-tool,
+  #view-chef :is(button, summary), .prep-dialog button,
+  #client-cart button, .carta-book-nav button, .carta-controls button,
+  [id^="modal-"] [data-close-modal] {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+  #client-cart :is([data-cc-inc], [data-cc-dec]), .checkout-taper-stepper button,
+  [id^="modal-"] [data-close-modal] { min-width: 48px; }
+}
+
+.management-dialog { max-width: 28rem; }
+.management-dialog form { font-size: .9rem; }
+.management-dialog form :is(input, select) { min-height: 44px; font-size: 1rem; }
+.management-dialog form button { min-height: 44px; }
