@@ -3,6 +3,9 @@ import { receiptLogo } from './receipt-logo.js';
 
 const statusCommand = { checkPrinterStatus: [] };
 
+const wait = ms =>
+  new Promise(resolve => setTimeout(resolve, ms));
+
 async function request(url, data) {
   let response;
 
@@ -18,25 +21,29 @@ async function request(url, data) {
       redirect: 'error',
       cache: 'no-store',
       targetAddressSpace: 'loopback',
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(12000)
     });
   } catch (error) {
     throw new Error(
-      'No se pudo comunicar con BIXOLON por HTTPS. Verifica que WebPrintSDK esté abierto, que HTTPS local esté activado y que Chrome permita el acceso a la red local. Detalle: ' +
+      'No se pudo comunicar con BIXOLON por HTTPS. ' +
+      'Verifica que WebPrintSDK esté abierto y que Chrome permita ' +
+      'el acceso a la red local. Detalle: ' +
       (error?.message || 'Error de conexión')
     );
   }
 
   if (response.status === 404) {
-    throw new Error('El puente no encontró ese nombre de impresora.');
+    throw new Error(
+      'BIXOLON no encontró ese nombre de impresora.'
+    );
   }
 
   const responseText = await response.text();
 
   if (!response.ok) {
     throw new Error(
-      'El puente devolvió el error HTTP ' +
-      response.status + ': ' + responseText.slice(0, 160)
+      'Error HTTP ' + response.status + ': ' +
+      responseText.slice(0, 200)
     );
   }
 
@@ -44,16 +51,34 @@ async function request(url, data) {
     return JSON.parse(responseText);
   } catch {
     throw new Error(
-      'La respuesta del puente no tiene el formato JSON de BIXOLON: ' +
-      responseText.slice(0, 160)
+      'BIXOLON devolvió una respuesta no válida: ' +
+      responseText.slice(0, 200)
     );
   }
 }
 
-export async function runBixolon({ name, secure }, text, qrCode) {
+function getStatus(result) {
+  return String(result?.Result ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+function isPending(status) {
+  return /^(ready|progress|in progress|timeout)$/i.test(status);
+}
+
+function isSuccessful(status) {
+  return /^(success|ok|complete|completed|0)$/i.test(status);
+}
+
+export async function runBixolon(
+  { name, secure },
+  text,
+  qrCode
+) {
   if (!/^[a-zA-Z0-9]{1,32}$/.test(name)) {
     throw new Error(
-      'Indica el nombre lógico registrado en BIXOLON, usando letras o números.'
+      'Indica el nombre lógico de la impresora registrado en BIXOLON.'
     );
   }
 
@@ -64,13 +89,22 @@ export async function runBixolon({ name, secure }, text, qrCode) {
   const id =
     crypto.getRandomValues(new Uint32Array(1))[0] & 0x7fffffff;
 
-  const functions = { func1: statusCommand };
+  const functions = {
+    func1: statusCommand
+  };
 
   if (text) {
-    functions.func2 = { setCharacterset: [1252] };
+    functions.func2 = {
+      setCharacterset: [1252]
+    };
 
     const printText = value => ({
-      printText: [value, 0, 0, false, false, false, 0, 0]
+      printText: [
+        value,
+        0, 0,
+        false, false, false,
+        0, 0
+      ]
     });
 
     const feed = '\n\n\n\n';
@@ -81,14 +115,19 @@ export async function runBixolon({ name, secure }, text, qrCode) {
 
     if (brandedReceipt) {
       functions.func3 = {
-        printBitmap: [receiptLogo, 384, 1, false]
+        printBitmap: [
+          receiptLogo,
+          384,
+          1,
+          false
+        ]
       };
     }
 
     const comandaHeading = 'COMANDA DE SERVICIO\n';
 
     const brandedComanda =
-      qrCode && text.startsWith(comandaHeading);
+      Boolean(qrCode) && text.startsWith(comandaHeading);
 
     const body = brandedReceipt
       ? text.slice(heading.length)
@@ -100,7 +139,9 @@ export async function runBixolon({ name, secure }, text, qrCode) {
       functions.func3 = {
         printText: [
           comandaHeading,
-          0, 1, true, false, false, 0, 1
+          0, 1,
+          true, false, false,
+          0, 1
         ]
       };
     }
@@ -113,16 +154,18 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     };
 
     if (brandedComanda) {
-      for (
-        const part of body.trimEnd()
-          .split(/(^\d+x [^\n]*\n?)/m)
-          .filter(Boolean)
-      ) {
+      const parts = body.trimEnd()
+        .split(/(^\d+x [^\n]*\n?)/m)
+        .filter(Boolean);
+
+      for (const part of parts) {
         if (/^\d+x /.test(part)) {
           append({
             printText: [
               part.trimEnd() + '\n',
-              0, 0, true, false, false, 0, 0
+              0, 0,
+              true, false, false,
+              0, 0
             ]
           });
         } else {
@@ -135,7 +178,9 @@ export async function runBixolon({ name, secure }, text, qrCode) {
       }
     } else {
       append(
-        printText(body.trimEnd() + (qrCode ? '\n' : feed))
+        printText(
+          body.trimEnd() + (qrCode ? '\n' : feed)
+        )
       );
     }
 
@@ -153,59 +198,84 @@ export async function runBixolon({ name, secure }, text, qrCode) {
     }
   }
 
-  let result = await request(url, { id, functions });
+  // 1. Enviar el trabajo de impresión UNA sola vez.
+  let result = await request(url, {
+    id,
+    functions
+  });
 
-  let status = String(result?.Result ?? '').trim();
+  let status = getStatus(result);
 
-  // En una comprobación sin impresión, READY confirma
-  // que la impresora está disponible.
+  // 2. Comprobación de disponibilidad sin imprimir.
   if (!text) {
-    if (/^(ready|success|ok|complete|completed|0)$/i.test(status)) {
+    if (isSuccessful(status) || status === 'ready') {
       return;
     }
 
     throw new Error(
-      status
-        ? 'Estado de BIXOLON: ' + status.slice(0, 160)
-        : 'BIXOLON no confirmó el estado de la impresora.'
+      'Estado de BIXOLON: ' +
+      (status || 'sin respuesta')
     );
   }
 
-  // Si se envió una impresión, consultar el resultado
-  // mientras el SDK informa que está procesando.
-  for (
-    let attempt = 0;
-    attempt < 3 &&
-    /^(ready|progress|in progress)$/i.test(status);
-    attempt++
-  ) {
-    if (result.ResponseID == null) {
-      break;
+  // 3. Consultar el resultado de impresión.
+  // Nunca volver a enviar el ticket durante estas consultas.
+  const responseId = result?.ResponseID;
+  const requestId = result?.RequestID ?? id;
+
+  if (responseId == null) {
+    if (isSuccessful(status)) {
+      return;
     }
 
+    throw new Error(
+      'BIXOLON recibió la solicitud, pero no devolvió ' +
+      'un ResponseID. Revisa la impresora antes de reenviar.'
+    );
+  }
+
+  let attempts = 0;
+  const maxAttempts = 8;
+
+  while (isPending(status) && attempts < maxAttempts) {
+    attempts++;
+
+    await wait(300);
+
     result = await request(url + '/checkStatus', {
-      RequestID: result.RequestID ?? id,
-      ResponseID: result.ResponseID,
+      RequestID: requestId,
+      ResponseID: responseId,
       Timeout: 5
     });
 
-    status = String(result?.Result ?? '').trim();
+    status = getStatus(result);
   }
 
-  if (!/^(success|ok|complete|completed|0)$/i.test(status)) {
+  // 4. Resultado final.
+  if (isSuccessful(status)) {
+    return;
+  }
+
+  if (isPending(status)) {
     throw new Error(
-      status
-        ? 'Respuesta de BIXOLON: ' + status.slice(0, 160)
-        : 'BIXOLON no confirmó el resultado de impresión.'
+      'BIXOLON todavía no confirmó la impresión. ' +
+      'Revisa si salió el ticket antes de reenviar. ' +
+      'Último estado: ' + status
     );
   }
+
+  throw new Error(
+    'BIXOLON informó un problema de impresión: ' +
+    (status || 'respuesta sin estado')
+  );
 }
 
 export function thermalReceiptText(order, issuedAt) {
   const total = Number(order.total);
   const subtotal = total / 1.18;
 
-  const amount = value => 'S/ ' + value.toFixed(2);
+  const amount = value =>
+    'S/ ' + value.toFixed(2);
 
   const clean = value =>
     String(value ?? '')
@@ -220,7 +290,10 @@ export function thermalReceiptText(order, issuedAt) {
 
   const pair = (label, value) =>
     label.padEnd(
-      Math.max(label.length + 1, width - value.length)
+      Math.max(
+        label.length + 1,
+        width - value.length
+      )
     ) + value;
 
   const rule = '-'.repeat(width);
@@ -236,7 +309,8 @@ export function thermalReceiptText(order, issuedAt) {
       'Pedido: ' + order.code +
       ' (' +
       (order.channel === 'MESA'
-        ? order.table + (order.takeaway ? ' · Para llevar' : '')
+        ? order.table +
+          (order.takeaway ? ' · Para llevar' : '')
         : 'Delivery') +
       ')'
     ),
@@ -248,9 +322,15 @@ export function thermalReceiptText(order, issuedAt) {
     rule,
     ...order.items.flatMap(item => [
       ...wrap(item.qty + ' x ' + item.name),
-      pair('Importe', amount(item.qty * item.unitPrice)),
+      pair(
+        'Importe',
+        amount(item.qty * item.unitPrice)
+      ),
       ...(item.extras?.length
-        ? wrap('+ ' + item.extras.map(extra => extra.name).join(', '))
+        ? wrap(
+            '+ ' +
+            item.extras.map(extra => extra.name).join(', ')
+          )
         : [])
     ]),
     rule,
