@@ -1529,6 +1529,38 @@ body[data-public-menu] #client-cart { scroll-margin-top: 1rem; }
 }
 .prep-code label { grid-column: 1 / -1; font-size: .83rem; font-weight: 800; }
 .prep-code input { min-width: 0; font: 700 1rem/1.2 monospace; min-height: 44px; border-radius: .55rem; border: 1px solid var(--line); padding: .5rem; }
+.prep-history-controls {
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: .8rem;
+  background: var(--cream);
+}
+.prep-history-fields { display: flex; align-items: end; flex-wrap: wrap; gap: .55rem; }
+.prep-history-fields label { display: grid; flex: 1 1 10rem; gap: .25rem; min-width: 0; font-size: .84rem; font-weight: 750; }
+.prep-history-fields label:first-child { flex-grow: 2; }
+.prep-history-fields input {
+  width: 100%; min-width: 0; min-height: 44px; padding: .45rem .6rem;
+  border: 1px solid var(--line); border-radius: .55rem; background: white;
+  color: var(--ink); font-size: 1rem;
+}
+.prep-history-fields button, .prep-history-pagination button {
+  display: inline-flex; align-items: center; justify-content: center; gap: .25rem;
+  min-height: 44px; padding: .4rem .65rem; border: 1px solid var(--line); border-radius: .55rem;
+  background: var(--cream); color: var(--ink); font-size: .8rem; font-weight: 750;
+}
+.prep-history-fields button[hidden], .prep-history-pagination[hidden] { display: none; }
+#prep-history-results { margin-top: .5rem; color: var(--text-muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.prep-history-pagination { display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap; }
+#prep-history-page { padding-inline: .2rem; font-size: .82rem; font-weight: 750; }
+.prep-history-pagination button:disabled { cursor: default; }
+.prep-history-detail { margin-top: .25rem; }
+.prep-history-detail summary {
+  min-height: 44px; padding: .65rem .9rem; cursor: pointer;
+  color: #285337; font-size: .88rem; font-weight: 750;
+}
+.prep-history-detail summary:hover { background: #e0edda; }
+.prep-history-detail summary:focus-visible { outline-offset: -3px; }
+.prep-card .prep-history-time { color: #285337; font-weight: 700; }
 .prep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr)); gap: .8rem; }
 .prep-card { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; background: var(--cream); border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; }
 .prep-card > header { display: flex; align-items: start; justify-content: space-between; gap: .5rem; padding: .65rem .9rem; background: #efe0c9; }
@@ -1709,3 +1741,6 @@ body[data-prep-view] main { max-width: 100rem; }
 .inventory-form #ingredient-error { color: #852719; }
 .inventory-form ul { display: grid; gap: .25rem; padding: .6rem .75rem; background: var(--paper); border-radius: .5rem; font-size: .85rem; }
 .inventory-form button[type="submit"] { justify-content: center; margin-top: .35rem; }
+
+body[data-public-menu] #staff-sync-notice { display: none; }
+#staff-sync-notice:not([hidden]) { border-color: #c88d52; background: #fff1d7; }

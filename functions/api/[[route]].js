@@ -193,24 +193,57 @@ async function saveState(db, body, expected) {
     : db.prepare("UPDATE pos_state SET payload = ?, revision = ?, updated_at = datetime('now') WHERE id = 1 AND revision = ?")
       .bind(payload, next, expected)
   ];
-  for (const order of state.orders.slice(0, 50)) {
-    statements.push(db.prepare(`INSERT INTO pos_orders (${orderColumns})
-      SELECT ${'?,'.repeat(17)}? WHERE EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)
-      ON CONFLICT(id) DO UPDATE SET status = excluded.status, payment_status = excluded.payment_status,
-        payment_method = excluded.payment_method, boleta_num = excluded.boleta_num,
-        total = excluded.total, items_json = excluded.items_json, note = excluded.note,
-        approved_at = excluded.approved_at, completed_at = excluded.completed_at`).bind(...orderValues(order), next));
-  }
-  for (const ingredient of state.ingredients) {
-    statements.push(db.prepare(`INSERT INTO ingredients (id, code, name, station, unit, stock, min_stock, cost)
-      SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM pos_state WHERE id = 1 AND revision = ?)
-      ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, cost = excluded.cost`)
-      .bind(ingredient.id, ingredient.code, ingredient.name, ingredient.station, ingredient.unit,
-        Number(ingredient.stock) || 0, Number(ingredient.minStock) || 0, Number(ingredient.cost) || 0, next));
-  }
+  // Project the accepted revision, including edits to orders outside the most recent page.
+  statements.push(db.prepare(`INSERT INTO pos_orders (${orderColumns})
+    SELECT json_extract(value, '$.id'), json_extract(value, '$.code'), json_extract(value, '$.channel'),
+      COALESCE(NULLIF(json_extract(value, '$.table'), ''), '-'),
+      COALESCE(json_extract(value, '$.customer'), ''),
+      COALESCE(json_extract(value, '$.phone'), ''), COALESCE(json_extract(value, '$.address'), ''),
+      COALESCE(NULLIF(json_extract(value, '$.paymentStatus'), ''), 'PENDIENTE'),
+      COALESCE(json_extract(value, '$.paymentMethod'), ''), COALESCE(json_extract(value, '$.paymentRef'), ''),
+      json_extract(value, '$.status'), NULLIF(json_extract(value, '$.boletaNum'), ''),
+      COALESCE(CAST(json_extract(value, '$.total') AS REAL), 0),
+      COALESCE(json_extract(value, '$.items'), '[]'), COALESCE(json_extract(value, '$.note'), ''),
+      COALESCE(json_extract(value, '$.createdAt'), ''), NULLIF(json_extract(value, '$.approvedAt'), ''),
+      NULLIF(json_extract(value, '$.completedAt'), '')
+    FROM pos_state, json_each(pos_state.payload, '$.orders')
+    WHERE pos_state.id = 1 AND pos_state.revision = ?
+    ON CONFLICT(id) DO UPDATE SET status = excluded.status, payment_status = excluded.payment_status,
+      payment_method = excluded.payment_method, boleta_num = excluded.boleta_num, total = excluded.total,
+      items_json = excluded.items_json, note = excluded.note, approved_at = excluded.approved_at,
+      completed_at = excluded.completed_at
+    WHERE pos_orders.status IS NOT excluded.status OR pos_orders.payment_status IS NOT excluded.payment_status
+      OR pos_orders.payment_method IS NOT excluded.payment_method OR pos_orders.boleta_num IS NOT excluded.boleta_num
+      OR pos_orders.total IS NOT excluded.total OR pos_orders.items_json IS NOT excluded.items_json
+      OR pos_orders.note IS NOT excluded.note OR pos_orders.approved_at IS NOT excluded.approved_at
+      OR pos_orders.completed_at IS NOT excluded.completed_at`).bind(next));
+  statements.push(db.prepare(`INSERT INTO ingredients (id, code, name, station, unit, stock, min_stock, cost)
+    SELECT json_extract(value, '$.id'), json_extract(value, '$.code'), json_extract(value, '$.name'),
+      json_extract(value, '$.station'), json_extract(value, '$.unit'),
+      COALESCE(CAST(json_extract(value, '$.stock') AS REAL), 0),
+      COALESCE(CAST(json_extract(value, '$.minStock') AS REAL), 0),
+      COALESCE(CAST(json_extract(value, '$.cost') AS REAL), 0)
+    FROM pos_state, json_each(pos_state.payload, '$.ingredients')
+    WHERE pos_state.id = 1 AND pos_state.revision = ?
+    ON CONFLICT(id) DO UPDATE SET stock = excluded.stock, cost = excluded.cost
+    WHERE ingredients.stock IS NOT excluded.stock OR ingredients.cost IS NOT excluded.cost`).bind(next));
   const [result] = await db.batch(statements);
   if (!result.meta.changes) return reject('El estado cambió. Actualiza el panel antes de reintentar.', 409);
   return json({ ok: true, revision: next });
+}
+
+async function readStaffState(db, request, scope) {
+  const validator = request.headers.get('If-None-Match')?.trim() || '';
+  const prefix = '"' + scope + '-';
+  const known = (validator.match(/"[^"]*"/g) || []).filter(tag => tag.startsWith(prefix))
+    .map(tag => tag.slice(prefix.length, -1));
+  const row = await db.prepare(`SELECT revision, updated_at,
+    CASE WHEN ? OR revision IN (SELECT value FROM json_each(?)) THEN NULL ELSE payload END AS payload
+    FROM pos_state WHERE id = 1`).bind(Number(validator === '*'), JSON.stringify(known)).first();
+  const revision = row?.revision || 'empty';
+  const headers = { ETag: prefix + revision + '"', 'Cache-Control': 'private, no-store' };
+  const notModified = validator === '*' || known.includes(revision);
+  return { row, headers, notModified };
 }
 
 export async function onRequest({ request, env }) {
@@ -254,15 +287,17 @@ export async function onRequest({ request, env }) {
     const role = await signedRole(request, env.STAFF_PASSWORD, db);
     if (!role) return reject('Inicia sesión para continuar.', 401);
     if (path === '/api/kitchen' && method === 'GET') {
-      const row = await db.prepare('SELECT payload FROM pos_state WHERE id = 1').first();
+      const { row, headers, notModified } = await readStaffState(db, request, 'kitchen-v1-' + role);
+      if (notModified) return new Response(null, { status: 304, headers });
       const orders = row ? JSON.parse(row.payload).orders : [];
-      return json({ ok: true, role, orders: orders.filter(order => ['POR_APROBAR','EN_COCINA','LISTO_CHEF'].includes(order.status))
-        .map(({ id, code, num, table, channel, status, takeaway, items, note, approvedAt, preparationStartedAt, stationCompletedAt }) => ({
-          id, code, num, table, channel, status, takeaway, approvedAt, preparationStartedAt, stationCompletedAt, note: status === 'POR_APROBAR' ? '' : note,
+      return json({ ok: true, role, orders: orders.filter(order => ['POR_APROBAR', 'EN_COCINA', 'LISTO_CHEF', 'ENTREGADO'].includes(order.status))
+        .map(({ id, code, num, table, channel, status, takeaway, items, note, approvedAt, preparationStartedAt, stationCompletedAt, completedAt }) => ({
+          id, code, num, table, channel, status, takeaway, approvedAt, preparationStartedAt, stationCompletedAt, completedAt,
+          note: status === 'POR_APROBAR' ? '' : note,
           items: status === 'POR_APROBAR' ? [] : items.filter(item => item.menuId !== 'delivery-card-fee').map(({ name, qty, station, menuId, flavors, extras, note }) => ({
             name, qty, station, menuId, flavors: flavors || [], extras: (extras || []).map(({ name }) => ({ name })), note
           }))
-        })) });
+        })) }, 200, headers);
     }
     if (path === '/api/kitchen/complete' && method === 'POST') {
       const { id, station } = await input(request, 1024) || {};
@@ -309,9 +344,10 @@ export async function onRequest({ request, env }) {
       return json({ ok: true });
     }
     if (path === '/api/state' && method === 'GET') {
-      const row = await db.prepare('SELECT payload, revision, updated_at FROM pos_state WHERE id = 1').first();
+      const { row, headers, notModified } = await readStaffState(db, request, 'state-v1-' + role);
+      if (notModified) return new Response(null, { status: 304, headers });
       return json({ ok: true, role, state: row ? withInventoryCatalog(JSON.parse(row.payload)) : initialState(),
-        revision: row?.revision || null, updatedAt: row?.updated_at || null });
+        revision: row?.revision || null, updatedAt: row?.updated_at || null }, 200, headers);
     }
     if (path === '/api/state' && method === 'PUT') {
       return await saveState(db, await input(request, 1_500_000), request.headers.get('If-Match'));

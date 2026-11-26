@@ -5,29 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <link rel="icon" type="image/png" href="./favicon.png">
   <title>The Burgers Brother — Sistema QR, Admin, BIXOLON SPP-R310 y Chef</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            white: '#fff9ec',
-            slate: {
-              50: '#fcf3e5', 100: '#f5e9d7', 200: '#e5d3bd', 300: '#d4bba0',
-              400: '#a78a6e', 500: '#785f4b', 600: '#654d3d', 700: '#523b2d',
-              800: '#38271e', 900: '#271b15', 950: '#181311'
-            },
-            amber: { 400: '#ffd374', 500: '#ffc346', 600: '#a95812', 700: '#87400e' },
-            orange: { 500: '#c65c31', 600: '#a93f22', 700: '#8c331c' },
-            sky: { 50: '#ecf1df', 100: '#e0ebd0', 200: '#bed1ae', 500: '#507754',
-                   600: '#366444', 700: '#2d5439', 800: '#22432e', 900: '#193324' }
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <link rel="stylesheet" href="./vendor/tailwind.css">
+  <script defer src="./vendor/lucide.min.js"></script>
+  <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -196,6 +176,11 @@
   <main class="max-w-7xl mx-auto p-3 sm:p-6">
     <div id="staff-alerts" hidden class="staff-alerts">
       <p id="staff-alert-message" role="status"></p>
+    </div>
+
+    <div id="staff-sync-notice" class="staff-alerts" hidden>
+      <p id="staff-sync-message" role="status"></p>
+      <button id="staff-sync-retry" type="button" class="admin-tool">Actualizar</button>
     </div>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
@@ -510,7 +495,24 @@
         </div>
       </dialog>
       <p id="prep-alert-message" class="prep-alert-message" role="status"></p>
-      <div id="chef-orders-list" class="prep-grid"></div>
+      <div id="prep-history-controls" class="prep-history-controls" hidden>
+        <div class="prep-history-fields">
+          <label>Buscar comanda
+            <input id="prep-history-search" type="search" placeholder="Código o mesa" maxlength="32" autocomplete="off">
+          </label>
+          <label>Fecha en Lima
+            <input id="prep-history-date" type="date">
+          </label>
+          <button id="prep-history-clear" type="button" hidden>Limpiar filtros</button>
+        </div>
+        <p id="prep-history-results" role="status"></p>
+      </div>
+      <div id="chef-orders-list" class="prep-grid" role="region" aria-label="Comandas de la estación" tabindex="-1"></div>
+      <nav id="prep-history-pagination" class="prep-history-pagination" aria-label="Páginas de comandas terminadas" hidden>
+        <button id="prep-history-prev" type="button"><i data-lucide="chevron-left" aria-hidden="true"></i> Anterior</button>
+        <span id="prep-history-page"></span>
+        <button id="prep-history-next" type="button">Siguiente <i data-lucide="chevron-right" aria-hidden="true"></i></button>
+      </nav>
     </section>
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
@@ -1054,7 +1056,7 @@
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
-    import { orderStations, preparationStartedAt, stationReady } from './preparation.js';
+    import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
@@ -1082,6 +1084,33 @@
 
       let state = { orders: [] };
 
+      const trackingKey = 'pos-tracked-orders-v1';
+
+      function trackedOrder(order) {
+        const { id, code, status, channel, table, total } = order;
+        return { id, code, status, channel, table, total };
+      }
+
+      function readTrackedOrders() {
+        try {
+          const orders = JSON.parse(sessionStorage.getItem(trackingKey));
+          return Array.isArray(orders) ? orders.filter(order => order && typeof order.id === 'string'
+            && /^BB-[A-Z0-9]{1,12}$/.test(order.code) && /^[A-Z_]+$/.test(order.status)
+            && ['MESA', 'DELIVERY'].includes(order.channel)
+            && (order.channel === 'DELIVERY' || /^Mesa [1-6]$/.test(order.table))).slice(0, 3).map(trackedOrder) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveTrackedOrders() {
+        try {
+          sessionStorage.setItem(trackingKey, JSON.stringify(ui.receivedOrders.slice(0, 3).map(trackedOrder)));
+        } catch {
+          // Keep tracking in this page even when browser storage is unavailable.
+        }
+      }
+
       const ui = {
         role: 'cliente',
         clientMode: 'MESA',
@@ -1090,7 +1119,7 @@
         clientSearch: '',
         clientDelPay: 'Yape',
         clientCart: [],
-        receivedOrders: [],
+        receivedOrders: readTrackedOrders(),
         staffOrderEntry: false,
         adminFilter: 'POR_APROBAR',
         gestionSubtab: 'inventario',
@@ -1625,7 +1654,8 @@
           const statusMap = {
             POR_APROBAR: { label: 'Esperando confirmación', cls: 'bg-amber-100 text-amber-800' },
             EN_COCINA: { label: 'Aprobado • Cocinando en plancha', cls: 'bg-orange-100 text-orange-800' },
-            LISTO_CHEF: { label: '¡Completado por el Chef! Saliendo', cls: 'bg-emerald-100 text-emerald-800' },
+            LISTO_CHEF: { label: 'Listo para entregar', cls: 'bg-emerald-100 text-emerald-800' },
+            ENTREGADO: { label: 'Entregado', cls: 'bg-emerald-100 text-emerald-800' },
             CANCELADO: { label: 'Pedido cancelado', cls: 'bg-rose-100 text-rose-800' },
             RECHAZADO: { label: 'Pedido rechazado', cls: 'bg-rose-100 text-rose-800' }
           };
@@ -1635,7 +1665,7 @@
               <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
                 <div>
                   <div class="font-mono-ticket text-xs font-extrabold text-slate-900">${o.code} • ${o.channel === 'MESA' ? o.table : 'Delivery'}</div>
-                  <div class="text-[11px] text-slate-500">${o.customer} • ${money(o.total)}</div>
+                  <div class="text-[11px] text-slate-500">${money(o.total)}</div>
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${st.cls}">${st.label}</span>
               </div>
@@ -1871,6 +1901,18 @@
       // ==================== RENDER 3: APP MÓVIL DEL CHEF ====================
       let prepStation = localStorage.getItem('pos-prep-station') === 'BARRA' ? 'BARRA' : 'COCINA';
       let prepFilter = 'pending';
+      let prepHistoryPage = 0;
+      let renderedPrepCards = '';
+      const prepHistoryPageSize = 20;
+      const prepHistoryControls = document.getElementById('prep-history-controls');
+      const prepHistoryNav = document.getElementById('prep-history-pagination');
+      const prepHistorySearch = document.getElementById('prep-history-search');
+      const prepHistoryDate = document.getElementById('prep-history-date');
+      const prepHistoryClear = document.getElementById('prep-history-clear');
+      const prepHistoryResults = document.getElementById('prep-history-results');
+      const prepHistoryPrev = document.getElementById('prep-history-prev');
+      const prepHistoryNext = document.getElementById('prep-history-next');
+      const prepOrderList = document.getElementById('chef-orders-list');
       const stationName = station => station === 'BARRA' ? 'Barra' : 'Cocina';
       const prepBusy = new Set();
 
@@ -1998,59 +2040,127 @@
         checkPrepReminders();
       }, 15000);
 
+      function renderPrepCard(order, station, completionTime) {
+        const done = completionTime !== undefined;
+        const start = preparationStartedAt(order);
+        const items = order.items.filter(item => item.station === station ||
+          (station === orderStations(order)[0] && item.menuId === 'taper'));
+        const contents = `
+          <ul>
+            ${items.map(item => `<li>
+              <b class="prep-qty">${escapeHtml(item.qty)}×</b>
+              <div><strong>${escapeHtml(item.name)}</strong>
+                ${item.flavors?.length ? `<p>Sabores: ${escapeHtml(item.flavors.join(', '))}</p>` : ''}
+                ${item.extras?.length ? `<p>Extras: ${escapeHtml(item.extras.map(extra => extra.name).join(', '))}</p>` : ''}
+                ${item.note ? `<p class="prep-note">${escapeHtml(item.note)}</p>` : ''}
+              </div>
+            </li>`).join('')}
+          </ul>
+          ${order.note ? `<p class="prep-note prep-order-note">Nota: ${escapeHtml(order.note)}</p>` : ''}`;
+        const key = escapeHtml(station + ':' + order.id);
+        const timeLabel = done ? escapeHtml(formatPrepCompletion(completionTime)) : '';
+        return `
+          <article class="prep-card"${done ? ' data-ready' : ''}${order.channel === 'DELIVERY' ? ' data-delivery' : ''}>
+            <header>
+              <div><h3>${order.channel === 'MESA' ? escapeHtml(order.table) : 'Delivery'}</h3>
+                <p class="font-mono-ticket">${escapeHtml(order.code)}</p>
+                ${done ? `<p class="prep-history-time">${Number.isFinite(completionTime)
+                  ? `<time datetime="${new Date(completionTime).toISOString()}">${timeLabel}</time>` : timeLabel}</p>` : ''}</div>
+              ${done ? '<span class="prep-done"><i data-lucide="check" aria-hidden="true"></i> Lista</span>' : Number.isFinite(start) ? `
+                <div class="prep-clock" data-prep-start="${start}" data-prep-target="${prepTarget(order)}" title="Tiempo desde la aprobación">
+                  <i data-lucide="clock" aria-hidden="true"></i><span></span>
+                </div>` : ''}
+            </header>
+            ${order.takeaway ? '<div class="prep-channel">Para llevar</div>' : ''}
+            ${done ? `<details class="prep-history-detail" data-history-key="${key}">
+              <summary>Ver comanda</summary>
+              ${contents}
+            </details>` : `${contents}
+            <button type="button" data-prep-complete="${escapeHtml(order.id)}" ${prepBusy.has(order.id + station) ? 'disabled' : ''}>
+              <i data-lucide="check" aria-hidden="true"></i> Marcar ${stationName(station).toLowerCase()} lista
+            </button>`}
+          </article>`;
+      }
+
+      function renderPrepCards(html) {
+        if (html === renderedPrepCards) return;
+        const expanded = new Set([...prepOrderList.querySelectorAll('details[open]')].map(detail => detail.dataset.historyKey));
+        const focused = prepOrderList.contains(document.activeElement)
+          ? document.activeElement.closest('details')?.dataset.historyKey : undefined;
+        prepOrderList.innerHTML = html;
+        renderedPrepCards = html;
+        for (const detail of prepOrderList.querySelectorAll('[data-history-key]')) {
+          if (expanded.has(detail.dataset.historyKey)) detail.open = true;
+          if (focused === detail.dataset.historyKey) detail.querySelector('summary').focus({ preventScroll: true });
+        }
+      }
+
+      function renderPrepHistory(station) {
+        const search = prepHistorySearch.value.trim();
+        const date = prepHistoryDate.value;
+        const matching = prepHistory(state.orders, station, { search, date });
+        const pageCount = Math.max(1, Math.ceil(matching.length / prepHistoryPageSize));
+        prepHistoryPage = Math.min(prepHistoryPage, pageCount - 1);
+        const offset = prepHistoryPage * prepHistoryPageSize;
+        const visible = matching.slice(offset, offset + prepHistoryPageSize);
+        const caption = visible.length ? `Mostrando ${offset + 1}–${offset + visible.length} de ${matching.length}` : '0 comandas';
+        if (prepHistoryResults.textContent !== caption) prepHistoryResults.textContent = caption;
+        prepHistoryClear.hidden = !(search || date);
+        prepHistoryNav.hidden = pageCount <= 1;
+        prepHistoryPrev.disabled = prepHistoryPage === 0;
+        prepHistoryNext.disabled = prepHistoryPage + 1 >= pageCount;
+        document.getElementById('prep-history-page').textContent = `Página ${prepHistoryPage + 1} de ${pageCount}`;
+        renderPrepCards(visible.length ? visible.map(({ order, time }) => renderPrepCard(order, station, time)).join('')
+          : `<p class="prep-empty">${search || date ? 'No se encontraron comandas con estos filtros.' : 'Todavía no hay comandas terminadas en esta estación.'}</p>`);
+        return matching.length;
+      }
+
       function renderChef() {
         const station = prepStation;
-        const belongs = state.orders.filter(order =>
-          ['EN_COCINA', 'LISTO_CHEF'].includes(order.status) && orderStations(order).includes(station));
-        const pending = belongs.filter(order => !stationReady(order, station));
-        const ready = belongs.filter(order => stationReady(order, station));
+        const historical = prepFilter === 'ready';
         for (const button of document.querySelectorAll('[data-prep-station], [data-prep-filter]')) {
           button.setAttribute('aria-pressed', String(button.dataset.prepStation === station || button.dataset.prepFilter === prepFilter));
         }
+        prepHistoryControls.hidden = !historical;
         const count = document.getElementById('chef-active-count');
-        const description = prepFilter === 'ready' ? ready.length + ' en Terminados' : pending.length + ' por preparar';
-        if (count.textContent !== description) count.textContent = description;
-        const orders = prepFilter === 'ready' ? ready : [...pending].sort((a, b) =>
-          (preparationStartedAt(a) || Infinity) - (preparationStartedAt(b) || Infinity));
-        const list = document.getElementById('chef-orders-list');
-        if (!orders.length) {
-          list.innerHTML = '<p class="prep-empty">' + (prepFilter === 'ready' ? 'Todavía no hay comandas terminadas en esta estación.' : 'No hay pedidos por preparar en esta estación.') + '</p>';
+
+        if (historical) {
+          const description = renderPrepHistory(station) + ' en Terminados';
+          if (count.textContent !== description) count.textContent = description;
           return;
         }
-        list.innerHTML = orders.map(order => {
-          const done = stationReady(order, station);
-          const start = preparationStartedAt(order);
-          const items = order.items.filter(item => item.station === station ||
-            (station === orderStations(order)[0] && item.menuId === 'taper'));
-          return `
-            <article class="prep-card"${done ? ' data-ready' : ''}${order.channel === 'DELIVERY' ? ' data-delivery' : ''}>
-              <header>
-                <div><h3>${order.channel === 'MESA' ? order.table : 'Delivery'}</h3>
-                  <p class="font-mono-ticket">${order.code}</p></div>
-                ${done ? '<span class="prep-done"><i data-lucide="check" aria-hidden="true"></i> Lista</span>' : Number.isFinite(start) ? `
-                  <div class="prep-clock" data-prep-start="${start}" data-prep-target="${prepTarget(order)}" title="Tiempo desde la aprobación">
-                    <i data-lucide="clock" aria-hidden="true"></i><span></span>
-                  </div>` : ''}
-              </header>
-              ${order.takeaway ? '<div class="prep-channel">Para llevar</div>' : ''}
-              <ul>
-                ${items.map(item => `<li>
-                  <b class="prep-qty">${item.qty}×</b>
-                  <div><strong>${item.name}</strong>
-                    ${item.flavors?.length ? `<p>Sabores: ${item.flavors.join(', ')}</p>` : ''}
-                    ${item.extras?.length ? `<p>Extras: ${item.extras.map(extra => extra.name).join(', ')}</p>` : ''}
-                    ${item.note ? `<p class="prep-note">${item.note}</p>` : ''}
-                  </div>
-                </li>`).join('')}
-              </ul>
-              ${order.note ? `<p class="prep-note prep-order-note">Nota: ${order.note}</p>` : ''}
-              ${done ? '' : `<button type="button" data-prep-complete="${order.id}" ${prepBusy.has(order.id + station) ? 'disabled' : ''}>
-                <i data-lucide="check" aria-hidden="true"></i> Marcar ${stationName(station).toLowerCase()} lista
-              </button>`}
-            </article>`;
-        }).join('');
+
+        prepHistoryNav.hidden = true;
+        const pending = state.orders.filter(order =>
+          ['EN_COCINA', 'LISTO_CHEF'].includes(order.status) && orderStations(order).includes(station) && !stationReady(order, station))
+          .sort((a, b) => (preparationStartedAt(a) || Infinity) - (preparationStartedAt(b) || Infinity));
+        const description = pending.length + ' por preparar';
+        if (count.textContent !== description) count.textContent = description;
+        renderPrepCards(pending.length ? pending.map(order => renderPrepCard(order, station)).join('')
+          : '<p class="prep-empty">No hay pedidos por preparar en esta estación.</p>');
         updatePrepTimers();
       }
+
+      const resetPrepHistoryPage = () => {
+        prepHistoryPage = 0;
+        renderActiveRole();
+      };
+      prepHistorySearch.addEventListener('input', resetPrepHistoryPage);
+      prepHistoryDate.addEventListener('input', resetPrepHistoryPage);
+      prepHistoryClear.onclick = () => {
+        prepHistorySearch.value = '';
+        prepHistoryDate.value = '';
+        prepHistorySearch.focus();
+        resetPrepHistoryPage();
+      };
+      function changePrepHistoryPage(step) {
+        prepHistoryPage = Math.max(0, prepHistoryPage + step);
+        renderActiveRole();
+        prepOrderList.focus({ preventScroll: true });
+        prepOrderList.scrollIntoView({ block: 'start' });
+      }
+      prepHistoryPrev.onclick = () => changePrepHistoryPage(-1);
+      prepHistoryNext.onclick = () => changePrepHistoryPage(1);
 
       document.querySelectorAll('[data-prep-station], [data-prep-filter]').forEach(button => {
         button.onclick = () => {
@@ -2058,7 +2168,7 @@
             prepStation = button.dataset.prepStation;
             localStorage.setItem('pos-prep-station', prepStation);
           } else prepFilter = button.dataset.prepFilter;
-          renderActiveRole();
+          resetPrepHistoryPage();
         };
       });
       document.getElementById('chef-orders-list').onclick = event => {
@@ -2801,12 +2911,15 @@
         const delivBtn = e.target.closest('[data-admin-deliver]');
         if (delivBtn) {
           const order = state.orders.find(o => o.id === delivBtn.dataset.adminDeliver);
-          if (!order) return;
+          if (!order || order.status !== 'LISTO_CHEF') return;
           order.status = 'ENTREGADO';
-          saveState();
+          const saved = saveState();
           renderActiveRole();
-          showToast(`Pedido ${order.code} despachado con Boleta Interna ${order.boletaNum}.`);
-          openBixolonModal(order);
+          saved.then(ok => {
+            if (!ok) return;
+            showToast(`Pedido ${order.code} despachado con Boleta Interna ${order.boletaNum}.`);
+            openBixolonModal(order);
+          });
           return;
         }
 
@@ -3279,7 +3392,10 @@
           const result = await response.json();
           if (!response.ok) throw new Error(result.error);
           newOrder = result.order;
-          if (!ui.staffOrderEntry) ui.receivedOrders.unshift(newOrder);
+          if (!ui.staffOrderEntry) {
+            ui.receivedOrders = [trackedOrder(newOrder), ...ui.receivedOrders.filter(order => order.id !== newOrder.id)].slice(0, 3);
+            saveTrackedOrders();
+          }
           pendingOrder = null;
         } catch (error) {
           showCheckoutError(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.');
@@ -3363,12 +3479,12 @@
       }
 
       // Pay Mesa & Emit Boleta
-      document.getElementById('form-pay-mesa').addEventListener('submit', (e) => {
+      document.getElementById('form-pay-mesa').addEventListener('submit', async (e) => {
         e.preventDefault();
         const oid = document.getElementById('pay-mesa-order-id').value;
         const method = document.getElementById('pay-mesa-method').value;
         const order = state.orders.find(o => o.id === oid);
-        if (!order) return;
+        if (!order || order.status !== 'LISTO_CHEF' || order.paymentStatus === 'PAGADO') return;
 
         state.counters.boleta += 1;
         order.boletaNum = `BI-001-${pad(state.counters.boleta, 5)}`;
@@ -3394,9 +3510,10 @@
           date: nowStr()
         });
 
-        saveState();
+        const saved = saveState();
         closeModal('modal-pay-mesa');
         renderActiveRole();
+        if (!await saved) return;
         showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`);
         openBixolonModal(order);
       });
@@ -3610,7 +3727,7 @@
         document.getElementById('pur-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
         openModal('modal-purchase');
       });
-      document.getElementById('form-purchase').addEventListener('submit', (e) => {
+      document.getElementById('form-purchase').addEventListener('submit', async (e) => {
         e.preventDefault();
         const sup = document.getElementById('pur-sup').value;
         const ing = state.ingredients.find(i => i.id === document.getElementById('pur-ing').value);
@@ -3623,9 +3740,10 @@
         state.counters.kardex += 1;
         state.kardex.unshift({ id: 'k' + state.counters.kardex, date: nowStr(), ingName: ing.name, type: 'ENTRADA', doc: `Compra ${doc}`, prev, qty, next: ing.stock, unit: ing.unit });
         state.purchases.unshift({ id: 'pur_' + Date.now(), date: nowStr(), doc, supplier: sup, item: `${ing.name} (${qty} ${ing.unit})`, total });
-        saveState();
+        const saved = saveState();
         closeModal('modal-purchase');
         renderGestion();
+        if (!await saved) return;
         showToast(`Compra ingresada: +${qty} ${ing.unit} de ${ing.name}.`);
       });
 
@@ -3633,15 +3751,16 @@
         document.getElementById('form-expense').reset();
         openModal('modal-expense');
       });
-      document.getElementById('form-expense').addEventListener('submit', (e) => {
+      document.getElementById('form-expense').addEventListener('submit', async (e) => {
         e.preventDefault();
         const desc = document.getElementById('exp-desc').value.trim();
         const amt = parseFloat(document.getElementById('exp-amt').value) || 0;
         if (!desc || amt <= 0) return;
         state.caja.movements.unshift({ id: 'cm_' + Date.now(), time: timeStr(), desc, method: 'Efectivo', amount: -amt, type: 'EGRESO' });
-        saveState();
+        const saved = saveState();
         closeModal('modal-expense');
         renderGestion();
+        if (!await saved) return;
         showToast('Egreso registrado en Caja.');
       });
 
@@ -3737,22 +3856,47 @@
       let staffWrites = Promise.resolve();
       let writesPending = 0;
       let writeGeneration = 0;
+      let staffRead = 0;
+      let staffETag = null;
+      let confirmedState = null;
+      let needsStaffRefresh = false;
       let polling = false;
 
+      const staffSyncNotice = document.getElementById('staff-sync-notice');
+      const staffSyncMessage = document.getElementById('staff-sync-message');
+      const staffSyncRetry = document.getElementById('staff-sync-retry');
+
+      function setStaffRecovery(message = '') {
+        needsStaffRefresh = Boolean(message);
+        staffSyncMessage.textContent = message;
+        staffSyncNotice.hidden = !needsStaffRefresh;
+        document.getElementById('view-admin').inert = needsStaffRefresh;
+        document.getElementById('view-gestion').inert = needsStaffRefresh;
+      }
+
       async function syncStaff() {
+        if (writesPending) return false;
         const generation = writeGeneration;
-        let response = await fetch(staffArea === 'chef' ? '/api/kitchen' : '/api/state');
+        const read = ++staffRead;
+        const headers = staffReady && staffETag && !needsStaffRefresh ? { 'If-None-Match': staffETag } : {};
+        let response = await fetch(staffArea === 'chef' ? '/api/kitchen' : '/api/state', { headers });
         if (response.status === 403 && !staffArea) response = await fetch('/api/kitchen');
+        const superseded = () => writesPending || generation !== writeGeneration || read !== staffRead;
+        if (superseded()) return false;
         if (response.status === 401) {
           if (staffReady) location.reload();
           return false;
         }
-        if (!response.ok || writesPending) return false;
+        if (response.status === 304) return staffReady;
+        if (!response.ok) return false;
         const data = await response.json();
-        if (writesPending || generation !== writeGeneration) return false;
+        if (superseded()) return false;
         staffArea = data.role || 'admin';
         state = staffArea === 'chef' ? { orders: data.orders } : data.state;
         revision = data.revision;
+        staffETag = response.headers.get('ETag');
+        if (staffArea === 'admin') confirmedState = JSON.stringify({ state });
+        if (needsStaffRefresh) setStaffRecovery();
         staffReady = true;
         document.getElementById('staff-access').hidden = true;
         desktopStaffMenu.hidden = false;
@@ -3849,45 +3993,80 @@
       }
       staffLogout.onclick = signOutStaff;
 
+      async function refreshAfterWrite() {
+        staffSyncRetry.disabled = true;
+        try {
+          await syncStaff();
+        } catch {
+          // A manual refresh or the next poll can recover when connectivity returns.
+        } finally {
+          staffSyncRetry.disabled = false;
+        }
+      }
+      staffSyncRetry.onclick = refreshAfterWrite;
+
       function saveState() {
-        if (!staffReady || staffArea !== 'admin') return;
+        if (!staffReady || staffArea !== 'admin' || needsStaffRefresh) return Promise.resolve(false);
         const snapshot = JSON.stringify({ state });
         writesPending++;
         writeGeneration++;
         staffWrites = staffWrites.then(async () => {
-          if (!staffReady) return;
-          const response = await fetch('/api/state', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'If-Match': revision || 'none' },
-            body: snapshot
-          });
-          if (!response.ok) throw new Error();
-          revision = (await response.json()).revision;
-          return true;
-        }).catch(() => {
-          staffReady = false;
-          switchRole('cliente');
-          showToast('No se guardó el cambio. Vuelve a abrir el panel y verifica el pedido antes de repetirlo.', 'err');
-        }).finally(() => { writesPending--; });
+          if (!staffReady || needsStaffRefresh) return false;
+          let response;
+          try {
+            response = await fetch('/api/state', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'If-Match': revision || 'none' },
+              body: snapshot
+            });
+            if (response.status === 401) {
+              location.reload();
+              return false;
+            }
+            if (!response.ok) throw new Error();
+            revision = (await response.json()).revision;
+            confirmedState = snapshot;
+            staffETag = null;
+            return true;
+          } catch {
+            const message = response?.status === 409
+              ? 'Otro equipo actualizó el POS. El cambio de este equipo no se guardó.'
+              : 'No se pudo confirmar el cambio. Revisa el estado antes de repetir la acción.';
+            setStaffRecovery(message);
+            if (confirmedState) state = JSON.parse(confirmedState).state;
+            renderActiveRole();
+            showToast(message, 'err');
+            return false;
+          }
+        }).finally(async () => {
+          writesPending--;
+          if (!writesPending && needsStaffRefresh) await refreshAfterWrite();
+        });
         return staffWrites;
       }
 
+      const finishedCustomerStatuses = new Set(['ENTREGADO', 'CANCELADO', 'RECHAZADO']);
+
       async function pollCloudflare() {
-        if (polling) return;
+        if (polling || (document.hidden && !soundEnabled)) return;
         polling = true;
         try {
-          if (staffReady && !writesPending) await syncStaff();
-          await Promise.all(ui.receivedOrders.slice(0, 3).map(async (order) => {
-            const response = await fetch('/api/orders/' + order.id);
-            if (!response.ok) return;
-            const { status } = await response.json();
-            if (status && status !== order.status) {
+          const activeOrders = ui.receivedOrders.slice(0, 3).filter(order => !finishedCustomerStatuses.has(order.status));
+          const results = await Promise.allSettled([
+            staffReady ? syncStaff() : Promise.resolve(false),
+            ...activeOrders.map(async order => {
+              const response = await fetch('/api/orders/' + order.id);
+              if (!response.ok) return false;
+              const { status } = await response.json();
+              if (!status || status === order.status) return false;
               order.status = status;
-              if (ui.role === 'cliente') renderCliente();
-            }
-          }));
-        } catch {
-          // Retain the last confirmed view during a connection interruption.
+              return true;
+            })
+          ]);
+          if (results.slice(1).some(result => result.status === 'fulfilled' && result.value)) {
+            saveTrackedOrders();
+            if (ui.role === 'cliente') renderCliente();
+          }
         } finally {
           polling = false;
         }
@@ -3902,6 +4081,10 @@
         }
       }).catch(() => {});
       setInterval(pollCloudflare, 4000);
+      window.addEventListener('online', pollCloudflare);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) pollCloudflare();
+      });
 
       // Init
       applyHashRoute(window.location.hash);
