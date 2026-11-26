@@ -26,4 +26,4 @@ Instala [BIXOLON Web Print SDK](https://es.bixolon.com/download_view.php?idx=14&
 
 En **Gestión → Caja**, abre una boleta y elige **Conectar impresora**. Cuando se verifique la conexión, pulsa **Imprimir directo**. Si el SDK tiene activado TLS, selecciona **HTTPS local en el SDK**. El POS usa el puerto local predeterminado 18080. El diálogo del sistema y el PDF siguen disponibles como opciones de impresión.
 
-Activa el sonido desde Configuración general o la configuración de Preparación en cada dispositivo. Los avisos se comprueban periódicamente mientras el POS permanece abierto.
+Activa el sonido desde Módulos, Configuración general o Preparación en cada dispositivo. El POS usa los sonidos locales de pedido nuevo, demora, pedido listo, cobro, confirmación y error. En Preparación se aplican el volumen y la pausa configurados. Los avisos se comprueban mientras el POS permanece abierto.

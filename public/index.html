@@ -1262,6 +1262,7 @@
     import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
+    import { createPosSounds } from './pos-sounds.js';
 
     (function () {
       'use strict';
@@ -1328,7 +1329,7 @@
       };
 
       // ==================== TOAST & PUSH NOTIFICATION ====================
-      function showToast(msg, tone = 'ok') {
+      function showToast(msg, tone = 'ok', cue = tone === 'ok' ? 'action-success' : tone === 'err' ? 'error' : null) {
         const wrap = document.getElementById('toast-container');
         const cls = {
           ok: 'bg-slate-900 text-white border-l-4 border-emerald-400',
@@ -1340,37 +1341,22 @@
         el.textContent = msg;
         wrap.appendChild(el);
         setTimeout(() => el.remove(), 3400);
+        if (cue) playPosSound(cue);
       }
 
       const alertMessage = document.getElementById('staff-alert-message');
       const prepAlertMessage = document.getElementById('prep-alert-message');
       const soundButton = document.getElementById('staff-sound');
-      let audio;
+      const posSounds = createPosSounds();
       let soundEnabled = false;
-      let nextSound = 0;
       const prepSoundButton = document.getElementById('prep-sound');
       const modulesSoundButton = document.getElementById('modules-sound-toggle');
 
-      function playOrderSound() {
+      function playPosSound(cue) {
+        if (!soundEnabled || !staffMenu) return false;
         const inPrep = ui.role === 'chef';
-        if (!soundEnabled || audio?.state !== 'running' || (inPrep && prepPreferences.snoozeUntil > Date.now())) return false;
-        const level = inPrep ? prepPreferences.volume / 100 : 1;
-        const start = Math.max(audio.currentTime, nextSound);
-        nextSound = start + .95;
-        for (const [index, frequency] of [740, 980, 1240].entries()) {
-          const tone = audio.createOscillator();
-          const volume = audio.createGain();
-          const time = start + index * .23;
-          tone.type = 'triangle';
-          tone.frequency.value = frequency;
-          volume.gain.setValueAtTime(.001, time);
-          volume.gain.exponentialRampToValueAtTime(.42 * level, time + .025);
-          volume.gain.exponentialRampToValueAtTime(.001, time + .21);
-          tone.connect(volume).connect(audio.destination);
-          tone.start(time);
-          tone.stop(time + .22);
-        }
-        return true;
+        if (inPrep && prepPreferences.snoozeUntil > Date.now()) return false;
+        return posSounds.play(cue, inPrep ? prepPreferences.volume / 100 : 1);
       }
 
       function setSoundButtonState(button, label) {
@@ -1402,17 +1388,21 @@
         const inPrep = trigger === prepSoundButton;
         const status = inPrep ? prepSoundStatus : document.getElementById('staff-sound-status');
         if (!inPrep || prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
-        if (soundEnabled && audio?.state === 'running') {
+        if (soundEnabled) {
           soundEnabled = false;
+          posSounds.mute();
         } else {
+          trigger.disabled = true;
           try {
-            const Audio = window.AudioContext || window.webkitAudioContext;
-            audio ||= new Audio();
-            await audio.resume();
-            soundEnabled = audio.state === 'running';
-            if (soundEnabled) playOrderSound();
-            else status.textContent = 'No se pudo activar el sonido en este navegador.';
+            soundEnabled = await posSounds.enable();
           } catch {
+            soundEnabled = false;
+          } finally {
+            trigger.disabled = false;
+          }
+          if (soundEnabled) {
+            posSounds.ready().then(() => playPosSound('action-success'));
+          } else {
             status.textContent = 'No se pudo activar el sonido en este navegador.';
           }
         }
@@ -2379,7 +2369,11 @@
           savePrepPreference(name, isCheckbox ? input.checked : Number(input.value));
         });
       }
-      prepSnooze.onclick = () => savePrepPreference('snoozeUntil', prepPreferences.snoozeUntil > Date.now() ? 0 : Date.now() + 15 * 60000);
+      prepSnooze.onclick = () => {
+        const until = prepPreferences.snoozeUntil > Date.now() ? 0 : Date.now() + 15 * 60000;
+        if (until) posSounds.stop();
+        savePrepPreference('snoozeUntil', until);
+      };
       renderPrepPreferences();
 
       function openPrepDialog(dialog) {
@@ -2424,7 +2418,7 @@
           order.status === 'EN_COCINA' && orderStations(order).includes(prepStation) && !stationReady(order, prepStation)
           && !prepReminderKeys.has(prepStation + order.id)
           && now - preparationStartedAt(order) >= prepTarget(order) * 60000);
-        if (overdue.length && playOrderSound()) {
+        if (overdue.length && playPosSound('order-delayed')) {
           overdue.forEach(order => prepReminderKeys.add(prepStation + order.id));
           prepAlertMessage.textContent = overdue.length === 1
             ? 'Comanda demorada · ' + overdue[0].code
@@ -3297,7 +3291,8 @@
           renderActiveRole();
           saved.then(ok => {
             if (!ok) return;
-            showToast(`Pedido ${order.code} aprobado y enviado a Preparación.`);
+            showToast(`Pedido ${order.code} aprobado y enviado a Preparación.`,
+              'ok', order.channel === 'DELIVERY' ? 'payment-success' : 'action-success');
             openBixolonModal(order);
           });
           return;
@@ -3758,6 +3753,7 @@
 
       function showCheckoutError(message, field) {
         checkoutError.textContent = message;
+        playPosSound('error');
         if (field) {
           field.setAttribute('aria-invalid', 'true');
           field.focus();
@@ -3908,13 +3904,16 @@
             prepCodeDialog.close();
           }
           await syncStaff();
+          playPosSound('order-ready');
           prepAlertMessage.textContent = result.ready
             ? 'Pedido ' + order.code + ' listo.'
             : stationName(station) + ' lista para ' + order.code + '.';
         } catch (error) {
           const message = error.message || 'No se pudo terminar la preparación.';
-          if (byCode && prepCodeDialog.open) prepCodeError.textContent = message;
-          else showToast(message, 'err');
+          if (byCode && prepCodeDialog.open) {
+            prepCodeError.textContent = message;
+            playPosSound('error');
+          } else showToast(message, 'err');
         } finally {
           prepBusy.delete(key);
           button.disabled = false;
@@ -3958,7 +3957,7 @@
         closeModal('modal-pay-mesa');
         renderActiveRole();
         if (!await saved) return;
-        showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`);
+        showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`, 'ok', 'payment-success');
         openBixolonModal(order);
       });
 
@@ -4417,8 +4416,14 @@
               ? 'Nuevo pedido ' + arrivals[0].code + ' · ' + (arrivals[0].channel === 'DELIVERY' ? 'Delivery' : arrivals[0].table)
               : arrivals.length + ' pedidos nuevos';
             prepAlertMessage.textContent = alertMessage.textContent;
-            arrivals.forEach(playOrderSound);
+            playPosSound('new-order');
           }
+          const justReady = state.orders.some(order => {
+            const previous = observedOrders.get(order.id);
+            return order.status === 'LISTO_CHEF' && previous === 'EN_COCINA'
+              && !orderStations(order).some(station => prepBusy.has(order.id + station));
+          });
+          if (justReady) playPosSound('order-ready');
         }
         observedOrders = nextOrders;
         if (ui.role !== 'cliente') renderActiveRole();
