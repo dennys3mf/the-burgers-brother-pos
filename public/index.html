@@ -45,23 +45,21 @@
     #carta-page-select { display: none; }
     @media (max-width: 600px) {
       #carta-pages { display: none; }
-      #carta-page-select { display: block; }
+      #carta-page-select { display: inline-block; }
     }
-    .carta-cart-link { display: inline-flex; align-items: center; background: #fef3c7; color: #78350f; }
-    .carta-sheet {
-      position: relative; max-width: 560px; margin-inline: auto; overflow: hidden;
-      border-radius: .75rem; background: #121212;
-    }
-    .carta-sheet img { display: block; width: 100%; height: auto; aspect-ratio: 559 / 790; }
+    .carta-cart-link { display: inline-flex; align-items: center; gap: .4rem; background: #fef3c7; color: #78350f; }
+    .carta-sheet { position: relative; margin-inline: auto; }
+    .carta-page-leaf { position: relative; width: 100%; aspect-ratio: 559 / 790; background: #121212; }
+    .carta-page-leaf > img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .carta-spot {
       position: absolute; border: 1px solid transparent;
       border-inline-start: 2px solid #fbbf24; border-radius: .3rem;
     }
-    .carta-spot:hover { border-color: #fbbf24; background: rgb(251 191 36 / 12%); }
+    .carta-spot:hover { border-color: #fbbf24; background: rgb(251 191 36 / 14%); }
     .carta-spot:focus-visible, .carta-controls button:focus-visible, .carta-cart-link:focus-visible {
       outline: 3px solid #d97706; outline-offset: 2px;
     }
-    .carta-spot:focus-visible { outline: 2px solid #fff; z-index: 1; }
+    .carta-spot:focus-visible { outline: 3px solid #fff; outline-offset: -2px; box-shadow: 0 0 0 2px #181311; z-index: 2; }
     #client-cart { scroll-margin-top: 7rem; }
     .font-mono-ticket {
       font-family: 'JetBrains Mono', 'Courier New', monospace;
@@ -241,25 +239,53 @@
       </div>
 
       <!-- Menu + Client Cart -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start client-workspace-grid">
         <!-- Menu Catalog -->
-        <div class="lg:col-span-8 space-y-4">
+        <div class="lg:col-span-8 space-y-4 menu-catalog-col">
           <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="carta-title" class="menu-title">La carta</h2>
+            <div class="menu-browser-head">
+              <div>
+                <h2 id="carta-title" class="menu-title">La carta</h2>
+                <p id="menu-order-context" class="menu-order-context" hidden></p>
+              </div>
               <span id="cart-announcement" class="sr-only" role="status"></span>
-              <p id="menu-order-context" class="menu-order-context" hidden></p>
               <a id="carta-cart-link" hidden class="carta-cart-link" href="#client-cart">Ver pedido (0)</a>
             </div>
-            <div class="carta-controls menu-modes" aria-label="Formato de la carta">
-              <button type="button" data-menu-format="visual" aria-pressed="true">Carta ilustrada</button>
+            <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
+              <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
               <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
+              <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
+                <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
+                <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+              </div>
             </div>
             <div id="carta-visual" class="space-y-3">
-              <div id="carta-pages" class="carta-controls" aria-label="Páginas de la carta"></div>
-              <select id="carta-page-select" aria-label="Categoría de la carta" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 font-semibold"></select>
-              <p class="carta-caption">Toca un plato para personalizarlo.</p>
-              <div id="carta-sheet" class="carta-sheet"></div>
+              <div id="carta-pages" class="carta-controls" role="navigation" aria-label="Páginas de la carta"></div>
+              <div class="carta-mobile-jump">
+                <label for="carta-page-select" class="sr-only">Ir a una página de la carta</label>
+                <select id="carta-page-select" aria-label="Categoría de la carta" class="w-full rounded-lg font-semibold"></select>
+              </div>
+              <p class="carta-caption">Toca un plato para personalizarlo o pasa de página.</p>
+              <div id="carta-book-stage" class="carta-book-stage">
+                <div id="carta-sheet" class="carta-sheet"></div>
+                <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
+              </div>
+              <nav class="carta-book-nav" aria-label="Pasar páginas de la carta">
+                <button type="button" id="carta-prev" class="carta-nav-btn" aria-label="Página anterior">
+                  <i data-lucide="chevron-left" class="w-4 h-4" aria-hidden="true"></i>
+                  <span>Anterior</span>
+                </button>
+                <div class="carta-book-indicator">
+                  <span id="carta-page-counter" class="carta-page-counter">Página 1 de 5</span>
+                  <span id="carta-page-title" class="carta-page-name">Hamburguesas</span>
+                  <div id="carta-book-dots" class="carta-book-dots" aria-hidden="true"></div>
+                </div>
+                <button type="button" id="carta-next" class="carta-nav-btn" aria-label="Siguiente página">
+                  <span>Siguiente</span>
+                  <i data-lucide="chevron-right" class="w-4 h-4" aria-hidden="true"></i>
+                </button>
+              </nav>
+              <p id="carta-book-status" class="sr-only" aria-live="polite"></p>
               <p id="carta-drinks-note" class="carta-caption" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
             </div>
           </section>
@@ -277,73 +303,106 @@
         </div>
 
         <!-- Client Cart & Checkout -->
-        <div id="client-cart" hidden class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-20">
-          <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-            <div>
-              <h2 class="cart-heading">Tu pedido</h2>
-              <p id="client-cart-origin" class="text-xs text-amber-700 font-semibold">Mesa 4 (Escaneado por QR)</p>
+        <section id="client-cart" hidden class="lg:col-span-4 rounded-2xl border" aria-labelledby="client-cart-title">
+          <header class="checkout-header">
+            <div class="checkout-header-title">
+              <h2 id="client-cart-title" class="cart-heading">Tu pedido</h2>
+              <p id="client-cart-origin" class="checkout-origin"></p>
             </div>
-            <button type="button" id="btn-client-clear" class="text-xs font-semibold text-rose-600 hover:underline">Vaciar</button>
-          </div>
-
-          <div id="client-cart-items" class="p-3.5 space-y-2.5 max-h-64 overflow-y-auto min-h-[120px]"></div>
+            <button type="button" id="btn-client-clear" class="checkout-clear" aria-label="Vaciar todo el pedido">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+              <span>Vaciar</span>
+            </button>
+          </header>
+          <div id="client-cart-items"></div>
 
           <details id="public-order-settings" hidden>
             <summary id="public-order-settings-label">Cambiar tipo de pedido</summary>
             <div id="public-order-controls"></div>
           </details>
-          <!-- Customer Info & Delivery Payment Gate -->
-          <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Tu Nombre</label>
-              <input id="client-name" type="text" autocomplete="name" placeholder="Ej. Carlos Quispe" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
-            </div>
 
-            <label id="client-takeaway-label" class="block py-2 font-bold">
-              <input id="client-takeaway" type="checkbox" class="h-5 w-5 accent-amber-600"> Para llevar
-            </label>
-            <label id="client-tapers-label" hidden class="font-semibold">Táperes (S/ 1.00 cada uno)
-              <input id="client-tapers" type="number" min="0" max="99" step="1" value="0" inputmode="numeric" class="mt-1 block w-24 rounded-lg border p-2">
-            </label>
-            <!-- Delivery-only fields + Mandatory Prepayment -->
-            <div id="client-delivery-fields" class="hidden space-y-2.5 p-3 rounded-xl bg-sky-50 border border-sky-200">
-              <div class="font-bold text-sky-900 flex items-center gap-1.5">
-                <i data-lucide="shield-check" class="w-4 h-4 text-sky-600"></i>
-                Pago previo obligatorio para Delivery
+          <form id="client-checkout" novalidate>
+            <div class="checkout-fields">
+              <div class="checkout-field">
+                <label for="client-name">
+                  <span>Nombre</span>
+                  <span id="client-name-optional" class="checkout-badge-opt">Opcional</span>
+                  <span id="client-name-required" class="checkout-badge-req" hidden>Requerido</span>
+                </label>
+                <input id="client-name" type="text" autocomplete="name" enterkeyhint="next" maxlength="100" placeholder="Tu nombre">
               </div>
-              <input id="client-phone" type="tel" autocomplete="tel" aria-label="Teléfono o WhatsApp" placeholder="Teléfono / WhatsApp (ej. 958123456)" class="w-full px-3 py-2 rounded-lg border border-sky-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
-              <input id="client-address" type="text" autocomplete="street-address" aria-label="Dirección de entrega" placeholder="Dirección exacta y referencia" class="w-full px-3 py-2 rounded-lg border border-sky-200 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
-              <div class="grid grid-cols-3 gap-1.5">
-                <button type="button" data-del-pay="Yape" class="del-pay-btn py-1.5 rounded-lg font-bold border">Yape</button>
-                <button type="button" data-del-pay="Plin" class="del-pay-btn py-1.5 rounded-lg font-bold border">Plin</button>
-                <button type="button" data-del-pay="Tarjeta" class="del-pay-btn py-1.5 rounded-lg font-bold border">Tarjeta +5 %</button>
+              <label id="client-takeaway-label" class="checkout-option">
+                <input id="client-takeaway" type="checkbox">
+                <span>Para llevar</span>
+              </label>
+              <div id="client-tapers-label" class="checkout-tapers" hidden>
+                <div class="checkout-tapers-info">
+                  <label for="client-tapers">Táperes</label>
+                  <span>S/ 1.00 c/u</span>
+                </div>
+                <div class="checkout-taper-stepper">
+                  <button type="button" data-taper-step="-1" aria-label="Reducir táperes">−</button>
+                  <input id="client-tapers" type="number" min="0" max="99" step="1" value="0" inputmode="numeric">
+                  <button type="button" data-taper-step="1" aria-label="Aumentar táperes">+</button>
+                </div>
               </div>
-              <div class="text-[11px] text-sky-800 bg-white/80 p-2 rounded-lg border border-sky-100">
-                Yape / Plin oficial: <b>958 656 930</b> (The Burgers Brother)
+
+              <div id="client-delivery-fields" class="hidden">
+                <div class="checkout-delivery-head">
+                  <i data-lucide="bike" class="w-4 h-4" aria-hidden="true"></i>
+                  <span>Datos de entrega y pago previo</span>
+                </div>
+                <div class="checkout-field">
+                  <label for="client-phone"><span>Teléfono o WhatsApp</span><span class="checkout-badge-req">Requerido</span></label>
+                  <input id="client-phone" type="tel" autocomplete="tel" inputmode="tel" enterkeyhint="next" maxlength="40" placeholder="Ej. 958 123 456">
+                </div>
+                <div class="checkout-field">
+                  <label for="client-address"><span>Dirección de entrega</span><span class="checkout-badge-req">Requerido</span></label>
+                  <input id="client-address" type="text" autocomplete="street-address" enterkeyhint="next" maxlength="240" placeholder="Calle, número y referencia">
+                </div>
+                <fieldset class="checkout-payment">
+                  <legend>Pago previo para delivery</legend>
+                  <div class="checkout-methods">
+                    <button type="button" data-del-pay="Yape" class="del-pay-btn" aria-pressed="true">Yape</button>
+                    <button type="button" data-del-pay="Plin" class="del-pay-btn" aria-pressed="false">Plin</button>
+                    <button type="button" data-del-pay="Tarjeta" class="del-pay-btn" aria-pressed="false">Tarjeta <span>+5 %</span></button>
+                  </div>
+                  <div id="client-mobile-payment" class="checkout-pay-info">
+                    <p>Yape o Plin al <strong>958 656 930</strong> (The Burgers Brother).</p>
+                    <button type="button" id="btn-copy-pay-phone" class="checkout-copy-btn" aria-label="Copiar número 958 656 930">Copiar</button>
+                  </div>
+                  <p id="client-card-payment" class="checkout-pay-info" hidden>El recargo del 5 % está incluido en el total.</p>
+                  <div class="checkout-field">
+                    <label for="client-pay-ref"><span>N° de operación o código</span><span class="checkout-badge-req">Requerido</span></label>
+                    <input id="client-pay-ref" type="text" maxlength="80" autocomplete="off" enterkeyhint="next" placeholder="Ej. 123456">
+                  </div>
+                </fieldset>
               </div>
-              <input id="client-pay-ref" type="text" aria-label="Número de operación o código de pago" placeholder="N° de operación o código de pago *" class="w-full px-3 py-2 rounded-lg border border-sky-300 bg-white font-mono-ticket focus:outline-none focus:ring-2 focus:ring-sky-500" />
+
+              <div class="checkout-field">
+                <label for="client-order-note"><span>Indicaciones del pedido</span><span class="checkout-badge-opt">Opcional</span></label>
+                <input id="client-order-note" type="text" maxlength="350" enterkeyhint="done" placeholder="Ej. Cremas aparte">
+              </div>
             </div>
 
-            <div>
-              <input id="client-order-note" type="text" aria-label="Nota general del pedido" placeholder="Nota general (ej. Cremas aparte, sin ají)..." class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+            <div class="checkout-summary">
+              <dl id="client-order-breakdown" class="order-breakdown" hidden>
+                <div><dt>Productos</dt><dd id="client-subtotal"></dd></div>
+                <div id="client-taper-charge" hidden><dt>Táperes</dt><dd></dd></div>
+                <div id="client-card-charge" hidden><dt>Recargo tarjeta (5 %)</dt><dd></dd></div>
+              </dl>
+              <div class="checkout-total">
+                <span id="client-total-label">Total</span>
+                <output id="client-cart-total">S/ 0.00</output>
+              </div>
+              <p id="client-checkout-error" role="alert"></p>
+              <button type="submit" id="btn-submit-client-order">
+                <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+                <span id="btn-submit-client-label">Enviar pedido</span>
+              </button>
             </div>
-
-            <dl id="client-order-breakdown" class="order-breakdown" hidden>
-              <div><dt>Productos</dt><dd id="client-subtotal"></dd></div>
-              <div id="client-taper-charge" hidden><dt>Táperes</dt><dd></dd></div>
-              <div id="client-card-charge" hidden><dt>Recargo tarjeta (5 %)</dt><dd></dd></div>
-            </dl>
-            <div class="flex items-center justify-between pt-2 border-t border-slate-200 text-base font-extrabold">
-              <span id="client-total-label">Total</span>
-              <span id="client-cart-total" class="text-orange-600">S/ 0.00</span>
-            </div>
-
-            <button type="button" id="btn-submit-client-order" class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 transition-all">
-              <i data-lucide="send" class="w-4 h-4"></i>
-              <span id="btn-submit-client-label">Enviar pedido</span>
-            </button>
-          </div>
-        </div>
+          </form>
+        </section>
       </div>
     </section>
 
@@ -1539,12 +1598,23 @@
         document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
         document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu);
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
-        document.getElementById('client-cart-origin').textContent = isMesa ? `${ui.clientMesa} (${ui.staffOrderEntry ? 'Mostrador' : 'QR'})` : 'Delivery — Requiere Pago Previo';
-        document.getElementById('btn-submit-client-label').textContent = ui.staffOrderEntry ? 'Crear pedido' : isMesa ? 'Enviar Pedido al Admin' : 'Confirmar Pago y Enviar Delivery';
-
+        document.getElementById('client-cart-origin').textContent = isMesa
+          ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '') : 'Delivery';
+        if (!document.getElementById('btn-submit-client-order').disabled) {
+          document.getElementById('btn-submit-client-label').textContent = ui.staffOrderEntry ? 'Crear pedido' : 'Enviar pedido';
+        }
+        document.getElementById('client-name-optional').hidden = !isMesa;
+        document.getElementById('client-name-required').hidden = isMesa;
+        document.getElementById('client-name').required = !isMesa;
+        for (const field of document.querySelectorAll('#client-delivery-fields input')) {
+          field.disabled = isMesa;
+          field.required = !isMesa;
+        }
+        const cardPayment = ui.clientDelPay === 'Tarjeta';
+        document.getElementById('client-mobile-payment').hidden = cardPayment;
+        document.getElementById('client-card-payment').hidden = !cardPayment;
         document.querySelectorAll('.del-pay-btn').forEach(btn => {
-          const active = btn.dataset.delPay === ui.clientDelPay;
-          btn.className = `del-pay-btn py-1.5 rounded-lg font-bold border transition-colors ${active ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-sky-200 hover:bg-sky-100'}`;
+          btn.setAttribute('aria-pressed', String(btn.dataset.delPay === ui.clientDelPay));
         });
 
         // Client live order tracker
@@ -1553,11 +1623,11 @@
         if (tracked.length > 0) {
           trackerWrap.classList.remove('hidden');
           const statusMap = {
-            POR_APROBAR: { label: 'Esperando aprobación del Admin', cls: 'bg-amber-100 text-amber-800' },
+            POR_APROBAR: { label: 'Esperando confirmación', cls: 'bg-amber-100 text-amber-800' },
             EN_COCINA: { label: 'Aprobado • Cocinando en plancha', cls: 'bg-orange-100 text-orange-800' },
             LISTO_CHEF: { label: '¡Completado por el Chef! Saliendo', cls: 'bg-emerald-100 text-emerald-800' },
             CANCELADO: { label: 'Pedido cancelado', cls: 'bg-rose-100 text-rose-800' },
-            RECHAZADO: { label: 'Pedido rechazado por Admin', cls: 'bg-rose-100 text-rose-800' }
+            RECHAZADO: { label: 'Pedido rechazado', cls: 'bg-rose-100 text-rose-800' }
           };
           document.getElementById('client-tracker-list').innerHTML = tracked.map(o => {
             const st = statusMap[o.status] || { label: o.status, cls: 'bg-slate-100 text-slate-700' };
@@ -1610,35 +1680,57 @@
         `).join('');
 
         renderClientCart();
+        requestAnimationFrame(() => syncBookLayout());
       }
+
+      const escapeHtml = value => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 
       function renderClientCart() {
         const wrap = document.getElementById('client-cart-items');
         if (ui.clientCart.length === 0) {
-          wrap.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">Tu pedido está vacío. Selecciona platos de la carta.</div>`;
+          wrap.innerHTML = '<div class="checkout-empty"><p>Tu pedido está vacío.</p><span>Toca un plato de la carta para personalizarlo y añadirlo aquí.</span></div>';
         } else {
-          wrap.innerHTML = ui.clientCart.map((it, idx) => `
-            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-              <div class="flex items-start justify-between gap-2">
-                <div class="text-xs font-bold text-slate-900">${it.qty}x ${it.name}</div>
-                <div class="text-xs font-extrabold text-slate-900 shrink-0">${money(it.qty * it.unitPrice)}</div>
+          wrap.innerHTML = ui.clientCart.map((it, idx) => {
+            const safeName = escapeHtml(it.name);
+            return `
+            <div class="checkout-item">
+              <div class="checkout-item-heading">
+                <div class="checkout-item-title">
+                  <strong>${safeName}</strong>
+                  ${it.qty > 1 ? `<span class="checkout-item-unit">${money(it.unitPrice)} c/u</span>` : ''}
+                </div>
+                <span class="checkout-item-price">${money(it.qty * it.unitPrice)}</span>
               </div>
-              ${it.flavors.length ? `<div class="text-[11px] text-orange-700 font-semibold">Sabores: ${it.flavors.join(', ')}</div>` : ''}
-              ${it.extras.length ? `<div class="text-[11px] text-slate-600">+ ${it.extras.map(e => e.name).join(', ')}</div>` : ''}
-              ${it.note ? `<div class="text-[11px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded inline-block">${it.note.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</div>` : ''}
-              <div class="flex items-center justify-end gap-1.5 pt-1">
-                <button type="button" data-cc-dec="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">-</button>
-                <button type="button" data-cc-inc="${idx}" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold">+</button>
-                <button type="button" data-cc-del="${idx}" class="text-rose-500 text-xs font-bold px-1.5">Quitar</button>
+              ${it.flavors.length ? `<p class="checkout-item-meta checkout-item-flavors">Sabores: ${escapeHtml(it.flavors.join(', '))}</p>` : ''}
+              ${it.extras.length ? `<p class="checkout-item-meta">+ ${escapeHtml(it.extras.map(e => e.name).join(', '))}</p>` : ''}
+              ${it.note ? `<p class="checkout-item-note">${escapeHtml(it.note)}</p>` : ''}
+              <div class="checkout-item-actions">
+                <div class="checkout-stepper" role="group" aria-label="Cantidad de ${safeName}">
+                  <button type="button" data-cc-dec="${idx}" aria-label="Reducir cantidad de ${safeName}">−</button>
+                  <span class="checkout-qty-num">${it.qty}</span>
+                  <button type="button" data-cc-inc="${idx}" aria-label="Aumentar cantidad de ${safeName}">+</button>
+                </div>
+                <button type="button" data-cc-del="${idx}" class="checkout-item-del" aria-label="Quitar ${safeName}">Quitar</button>
               </div>
             </div>
-          `).join('');
+          `;
+          }).join('');
         }
         const delivery = ui.clientMode === 'DELIVERY';
         const packaging = clientPackaging();
         document.getElementById('client-takeaway-label').hidden = delivery;
         clientTapers.disabled = !delivery && !packaging.takeaway;
         document.getElementById('client-tapers-label').hidden = clientTapers.disabled;
+        const taperCountVal = Number(clientTapers.value) || 0;
+        const decTaperBtn = document.querySelector('[data-taper-step="-1"]');
+        const incTaperBtn = document.querySelector('[data-taper-step="1"]');
+        if (decTaperBtn) decTaperBtn.disabled = clientTapers.disabled || taperCountVal <= 0;
+        if (incTaperBtn) incTaperBtn.disabled = clientTapers.disabled || taperCountVal >= 99;
         const { total, fee } = priceOrder(ui.clientCart, { ...packaging, tapers: clientTapers.checkValidity() ? packaging.tapers : 0, channel: ui.clientMode, paymentMethod: ui.clientDelPay });
         const taperCharge = ui.clientCart.length && clientTapers.checkValidity() ? packaging.tapers : 0;
         document.getElementById('client-order-breakdown').hidden = !ui.clientCart.length;
@@ -1656,10 +1748,17 @@
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
         const showCart = units > 0 || staffMenu || ui.staffOrderEntry;
         document.getElementById('client-cart').hidden = !showCart;
+        document.getElementById('btn-client-clear').hidden = !units;
+        document.getElementById('client-checkout').hidden = !units;
         const cartLink = document.getElementById('carta-cart-link');
         cartLink.hidden = !showCart;
-        cartLink.textContent = 'Ver pedido (' + units + ')';
+        cartLink.textContent = units > 0 ? `Ver pedido (${units}) · ${money(total)}` : 'Ver pedido (0)';
         document.getElementById('client-cart-total').textContent = money(total);
+        const backCartLink = document.querySelector('.carta-back-cart-link');
+        if (backCartLink) {
+          backCartLink.hidden = !units;
+          backCartLink.textContent = `Ir a tu pedido (${units}) · ${money(total)}`;
+        }
       }
 
       // ==================== RENDER 2: ADMIN ====================
@@ -2065,41 +2164,94 @@
         }
       }
 
+      const cartaVisual = document.getElementById('carta-visual');
       const cartaPages = document.getElementById('carta-pages');
+      const cartaBookStage = document.getElementById('carta-book-stage');
       const cartaSheet = document.getElementById('carta-sheet');
+      const cartaBookFlip = document.getElementById('carta-book-flip');
       const pageSelect = document.getElementById('carta-page-select');
+      const cartaPrev = document.getElementById('carta-prev');
+      const cartaNext = document.getElementById('carta-next');
+      const cartaPageCounter = document.getElementById('carta-page-counter');
+      const cartaPageTitle = document.getElementById('carta-page-title');
+      const cartaBookDots = document.getElementById('carta-book-dots');
+      const cartaBookStatus = document.getElementById('carta-book-status');
+      const cartaLayoutGroup = document.getElementById('carta-layout-group');
+      const cartaLayoutButtons = document.querySelectorAll('[data-carta-layout]');
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const desktopSpreadQuery = window.matchMedia('(min-width: 1024px)');
       const menuById = new Map(MENU.map(item => [item.id, item]));
+      const preloadedPages = new Set();
+
+      let currentCartaPage = 0;
+      let cartaLayoutPref = 'auto'; // 'auto' | 'single' | 'spread'
+      let lastBookView = { spread: false, left: null, right: null };
+      let bookFlipTimer = null;
+      let suppressSpotClickUntil = 0;
 
       menuPages.forEach((page, index) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.textContent = page.title;
-        button.addEventListener('click', () => showCartaPage(index));
+        button.textContent = `${index + 1}. ${page.title}`;
+        button.addEventListener('click', () => showCartaPage(index, { animate: true, announce: true }));
         cartaPages.append(button);
-        pageSelect.add(new Option(page.title, index));
+        pageSelect.add(new Option(`${index + 1}. ${page.title}`, index));
       });
-      pageSelect.addEventListener('change', () => showCartaPage(Number(pageSelect.value)));
+      pageSelect.addEventListener('change', () => showCartaPage(Number(pageSelect.value), { animate: true, announce: true }));
 
-      function showCartaPage(index) {
-        const page = menuPages[index];
-        pageSelect.value = index;
-        Array.from(cartaPages.children).forEach((button, position) => {
-          button.setAttribute('aria-pressed', String(position === index));
+      function preloadPageImage(index) {
+        if (index < 0 || index >= menuPages.length || preloadedPages.has(index)) return;
+        preloadedPages.add(index);
+        const preload = new Image();
+        preload.src = `./carta/carta-${index + 1}-720.webp`;
+      }
+
+      function canFitSpread() {
+        return desktopSpreadQuery.matches && cartaBookStage.clientWidth >= 780;
+      }
+
+      function isSpreadActive() {
+        return canFitSpread() && cartaLayoutPref !== 'single';
+      }
+
+      function updateBookLayoutControls() {
+        const visualVisible = !cartaVisual.hidden;
+        const canSpread = canFitSpread();
+        cartaLayoutGroup.hidden = !visualVisible || !canSpread;
+        const spreadOn = isSpreadActive();
+        cartaLayoutButtons.forEach(btn => {
+          const pressed = (btn.dataset.cartaLayout === 'spread') === spreadOn;
+          btn.setAttribute('aria-pressed', String(pressed));
         });
-        document.getElementById('carta-drinks-note').hidden = index !== 2;
+      }
+
+      function createMenuPageLeaf(index, spread, side) {
+        const page = menuPages[index];
+        const leaf = document.createElement('article');
+        leaf.className = `carta-page-leaf carta-page-leaf--${side}`;
+        leaf.dataset.pageIndex = String(index);
+        leaf.setAttribute('aria-label', `Página ${index + 1} de ${menuPages.length}: ${page.title}`);
+
+        const heading = document.createElement('h3');
+        heading.className = 'sr-only';
+        heading.textContent = `Página ${index + 1}: ${page.title}`;
+
         const image = new Image(559, 790);
-        image.alt = `Carta original de The Burgers Brother, ${page.title}`;
+        image.alt = `Carta de The Burgers Brother, página ${index + 1} de ${menuPages.length}: ${page.title}`;
+        image.draggable = false;
         const path = `./carta/carta-${index + 1}`;
-        image.sizes = '(max-width: 600px) calc(100vw - 54px), 650px';
+        image.sizes = spread ? '(max-width: 1200px) 420px, 500px' : '(max-width: 600px) calc(100vw - 48px), 620px';
         image.srcset = `${path}-720.webp 720w, ${path}-1120.webp 1120w`;
         image.src = `${path}-720.webp`;
         image.addEventListener('error', () => showMenuFormat('list'), { once: true });
+
         const buttons = page.spots.map(({ id, left, right, top, bottom, showPrice }) => {
           const item = menuById.get(id);
           const button = document.createElement('button');
           button.type = 'button';
           button.className = 'carta-spot';
           button.dataset.openCust = id;
+          button.dataset.pageIndex = String(index);
           if (showPrice) {
             button.classList.add('carta-spot-priced');
             const price = document.createElement('span');
@@ -2107,28 +2259,277 @@
             price.setAttribute('aria-hidden', 'true');
             button.append(price);
           }
-          button.setAttribute('aria-label', `${item.name}, ${money(item.price)}. Personalizar`);
+          button.setAttribute('aria-label', `${item.name}, ${money(item.price)}. Personalizar y agregar`);
           button.style.left = `${left / 559 * 100}%`;
           button.style.top = `${top / 790 * 100}%`;
           button.style.width = `${(right - left) / 559 * 100}%`;
           button.style.height = `${(bottom - top) / 790 * 100}%`;
           return button;
         });
-        cartaSheet.replaceChildren(image, ...buttons);
+
+        const pageBadge = document.createElement('span');
+        pageBadge.className = 'carta-leaf-number';
+        pageBadge.setAttribute('aria-hidden', 'true');
+        pageBadge.textContent = `${index + 1}`;
+
+        leaf.append(heading, image, ...buttons, pageBadge);
+        return leaf;
       }
+
+      function createBackLeaf() {
+        const leaf = document.createElement('aside');
+        leaf.className = 'carta-page-leaf carta-page-leaf--right carta-back-leaf';
+        leaf.setAttribute('aria-label', 'Contraportada de la carta');
+        const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
+        const { total } = priceOrder(ui.clientCart, {
+          ...clientPackaging(),
+          tapers: clientTapers.checkValidity() ? clientPackaging().tapers : 0,
+          channel: ui.clientMode,
+          paymentMethod: ui.clientDelPay
+        });
+        leaf.innerHTML = `
+          <div class="carta-back-inner">
+            <img src="./logo-burgers-brother.webp" width="84" height="84" alt="" class="carta-back-logo">
+            <p class="carta-back-kicker">Fin de la carta</p>
+            <h3>THE BURGERS BROTHER</h3>
+            <p class="carta-back-copy">Toca cualquier plato en las páginas anteriores para elegir cremas, extras o sabores de alitas.</p>
+            <div class="carta-back-actions">
+              <button type="button" data-carta-go="0" class="carta-back-btn carta-back-btn-primary">Volver a la página 1</button>
+              <button type="button" data-carta-switch-list class="carta-back-btn">Ver lista y buscar</button>
+              <a href="#client-cart" class="carta-back-cart-link" ${units > 0 ? '' : 'hidden'}>Ir a tu pedido (${units}) · ${money(total)}</a>
+            </div>
+            <p class="carta-back-meta">Pedidos y Yape/Plin: <strong>958 656 930</strong><br>Arequipa · Perú</p>
+          </div>
+        `;
+        return leaf;
+      }
+
+      function createFlipFaceContent(pageIndex) {
+        if (pageIndex === null) {
+          const box = document.createElement('div');
+          box.className = 'carta-flip-backcover';
+          box.innerHTML = '<img src="./logo-burgers-brother.webp" alt=""><span>THE BURGERS BROTHER</span>';
+          return box;
+        }
+        const img = new Image();
+        img.src = `./carta/carta-${pageIndex + 1}-720.webp`;
+        img.alt = '';
+        img.draggable = false;
+        return img;
+      }
+
+      function triggerBookFlip(prev, next) {
+        clearTimeout(bookFlipTimer);
+        cartaBookFlip.replaceChildren();
+        if (reducedMotionQuery.matches || prev.left === null || prev.spread !== next.spread || prev.left === next.left) return;
+
+        const dir = next.left > prev.left ? 'next' : 'prev';
+        cartaBookFlip.dataset.bookMode = next.spread ? 'spread' : 'single';
+
+        if (!next.spread) {
+          const sheet = document.createElement('div');
+          sheet.className = `carta-flip-sheet carta-flip-sheet--${dir}`;
+          const front = document.createElement('div');
+          front.className = 'carta-flip-face carta-flip-face--front';
+          front.append(createFlipFaceContent(dir === 'next' ? prev.left : next.left));
+          const back = document.createElement('div');
+          back.className = 'carta-flip-face carta-flip-face--back carta-flip-cardstock';
+          sheet.append(front, back);
+          cartaBookFlip.append(sheet);
+          sheet.addEventListener('animationend', () => cartaBookFlip.replaceChildren(), { once: true });
+        } else {
+          const underlay = document.createElement('div');
+          underlay.className = `carta-flip-underlay carta-flip-underlay--${dir === 'next' ? 'left' : 'right'}`;
+          underlay.append(createFlipFaceContent(dir === 'next' ? prev.left : prev.right));
+
+          const leaf = document.createElement('div');
+          leaf.className = `carta-flip-spread-leaf carta-flip-spread-leaf--${dir}`;
+          const front = document.createElement('div');
+          front.className = 'carta-flip-face carta-flip-face--front';
+          front.append(createFlipFaceContent(dir === 'next' ? prev.right : prev.left));
+          const back = document.createElement('div');
+          back.className = 'carta-flip-face carta-flip-face--back';
+          back.append(createFlipFaceContent(dir === 'next' ? next.left : next.right));
+
+          leaf.append(front, back);
+          cartaBookFlip.append(underlay, leaf);
+          leaf.addEventListener('animationend', () => cartaBookFlip.replaceChildren(), { once: true });
+        }
+
+        bookFlipTimer = setTimeout(() => cartaBookFlip.replaceChildren(), 520);
+      }
+
+      function showCartaPage(index, { animate = false, announce = false } = {}) {
+        const clamped = Math.max(0, Math.min(menuPages.length - 1, index));
+        const spread = isSpreadActive();
+        const left = spread ? Math.floor(clamped / 2) * 2 : clamped;
+        const right = spread && left + 1 < menuPages.length ? left + 1 : null;
+        const prev = { ...lastBookView };
+
+        currentCartaPage = clamped;
+        lastBookView = { spread, left, right };
+        updateBookLayoutControls();
+
+        pageSelect.value = String(left);
+        Array.from(cartaPages.children).forEach((button, position) => {
+          const active = position === left || (spread && position === right);
+          button.setAttribute('aria-pressed', String(active));
+          button.setAttribute('aria-current', active ? 'page' : 'false');
+        });
+        document.getElementById('carta-drinks-note').hidden = !(left === 2 || right === 2);
+
+        const counterText = right !== null
+          ? `Páginas ${left + 1}–${right + 1} de ${menuPages.length}`
+          : `Página ${left + 1} de ${menuPages.length}`;
+        const titleText = right !== null
+          ? `${menuPages[left].title} · ${menuPages[right].title}`
+          : menuPages[left].title;
+
+        cartaPageCounter.textContent = counterText;
+        cartaPageTitle.textContent = titleText;
+
+        const atStart = left === 0;
+        const atEnd = spread ? left + 2 >= menuPages.length : left >= menuPages.length - 1;
+        cartaPrev.setAttribute('aria-disabled', String(atStart));
+        cartaNext.setAttribute('aria-disabled', String(atEnd));
+
+        const prevIndex = Math.max(0, left - (spread ? 2 : 1));
+        const nextIndex = Math.min(menuPages.length - 1, left + (spread ? 2 : 1));
+        cartaPrev.setAttribute('aria-label', atStart ? 'Página anterior (inicio de la carta)' : `Página anterior: ${menuPages[prevIndex].title}`);
+        cartaNext.setAttribute('aria-label', atEnd ? 'Siguiente página (fin de la carta)' : `Siguiente página: ${menuPages[nextIndex].title}`);
+
+        cartaBookDots.replaceChildren(...menuPages.map((_, pos) => {
+          const dot = document.createElement('span');
+          const active = pos === left || (spread && pos === right);
+          dot.className = `carta-book-dot${active ? ' is-active' : ''}`;
+          return dot;
+        }));
+
+        cartaSheet.dataset.bookMode = spread ? 'spread' : 'single';
+        cartaSheet.dataset.remaining = String(Math.max(0, menuPages.length - 1 - (right ?? left)));
+
+        if (spread) {
+          const spine = document.createElement('div');
+          spine.className = 'carta-book-spine';
+          spine.setAttribute('aria-hidden', 'true');
+          cartaSheet.replaceChildren(
+            createMenuPageLeaf(left, true, 'left'),
+            spine,
+            right !== null ? createMenuPageLeaf(right, true, 'right') : createBackLeaf()
+          );
+        } else {
+          cartaSheet.replaceChildren(createMenuPageLeaf(left, false, 'single'));
+        }
+
+        if (animate) triggerBookFlip(prev, lastBookView);
+        else {
+          clearTimeout(bookFlipTimer);
+          cartaBookFlip.replaceChildren();
+        }
+
+        if (announce) cartaBookStatus.textContent = `${counterText}: ${titleText}`;
+
+        preloadPageImage(left - 1);
+        preloadPageImage((right ?? left) + 1);
+        preloadPageImage((right ?? left) + 2);
+      }
+
+      function stepCartaBook(delta) {
+        const spread = isSpreadActive();
+        const step = spread ? delta * 2 : delta;
+        const base = spread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
+        const target = base + step;
+        if (target < 0 || target >= menuPages.length) return;
+        showCartaPage(target, { animate: true, announce: true });
+      }
+
+      function syncBookLayout() {
+        updateBookLayoutControls();
+        if (cartaVisual.hidden || cartaBookStage.clientWidth === 0) return;
+        const spread = isSpreadActive();
+        const expectedLeft = spread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
+        if (spread !== lastBookView.spread || expectedLeft !== lastBookView.left) {
+          showCartaPage(currentCartaPage, { animate: false, announce: false });
+        }
+      }
+
+      cartaPrev.addEventListener('click', () => {
+        if (cartaPrev.getAttribute('aria-disabled') !== 'true') stepCartaBook(-1);
+      });
+      cartaNext.addEventListener('click', () => {
+        if (cartaNext.getAttribute('aria-disabled') !== 'true') stepCartaBook(1);
+      });
+
+      cartaLayoutButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          cartaLayoutPref = button.dataset.cartaLayout;
+          showCartaPage(currentCartaPage, { animate: false, announce: true });
+        });
+      });
+
+      document.querySelector('.menu-browser').addEventListener('keydown', event => {
+        const tag = event.target.tagName;
+        if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+        if (cartaVisual.hidden) return;
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          stepCartaBook(-1);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          stepCartaBook(1);
+        } else if (event.key === 'Home' && event.target.closest('#carta-pages, .carta-book-nav')) {
+          event.preventDefault();
+          showCartaPage(0, { animate: true, announce: true });
+        } else if (event.key === 'End' && event.target.closest('#carta-pages, .carta-book-nav')) {
+          event.preventDefault();
+          showCartaPage(menuPages.length - 1, { animate: true, announce: true });
+        }
+      });
+
+      let touchSwipeStart = null;
+      cartaBookStage.addEventListener('pointerdown', event => {
+        if (event.pointerType !== 'touch') return;
+        touchSwipeStart = { id: event.pointerId, x: event.clientX, y: event.clientY, time: Date.now() };
+      });
+      cartaBookStage.addEventListener('pointerup', event => {
+        if (!touchSwipeStart || event.pointerId !== touchSwipeStart.id) return;
+        const dx = event.clientX - touchSwipeStart.x;
+        const dy = event.clientY - touchSwipeStart.y;
+        const dt = Date.now() - touchSwipeStart.time;
+        touchSwipeStart = null;
+        if (dt < 700 && Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+          suppressSpotClickUntil = Date.now() + 350;
+          stepCartaBook(dx < 0 ? 1 : -1);
+        }
+      });
+      cartaBookStage.addEventListener('pointercancel', () => { touchSwipeStart = null; });
+      cartaBookStage.addEventListener('click', event => {
+        if (Date.now() < suppressSpotClickUntil) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+
+      if ('ResizeObserver' in window) {
+        new ResizeObserver(() => syncBookLayout()).observe(cartaBookStage);
+      } else {
+        window.addEventListener('resize', syncBookLayout);
+      }
+      desktopSpreadQuery.addEventListener?.('change', syncBookLayout);
 
       const formatButtons = document.querySelectorAll('[data-menu-format]');
       function showMenuFormat(format) {
-        document.getElementById('carta-visual').hidden = format !== 'visual';
+        cartaVisual.hidden = format !== 'visual';
         document.getElementById('carta-list').hidden = format !== 'list';
         formatButtons.forEach(button => {
           button.setAttribute('aria-pressed', String(button.dataset.menuFormat === format));
         });
+        syncBookLayout();
       }
       formatButtons.forEach(button => {
         button.addEventListener('click', () => showMenuFormat(button.dataset.menuFormat));
       });
-      showCartaPage(0);
+      showCartaPage(0, { animate: false, announce: false });
 
       // ==================== CUSTOMIZE ITEM MODAL ====================
       const customizeDialog = document.getElementById('modal-customize');
@@ -2235,7 +2636,35 @@
         if (dp) { ui.clientDelPay = dp.dataset.delPay; renderCliente(); return; }
 
         const oc = e.target.closest('[data-open-cust]');
-        if (oc) { openCustomizeModal(oc.dataset.openCust); return; }
+        if (oc) {
+          if (oc.dataset.pageIndex !== undefined) currentCartaPage = Number(oc.dataset.pageIndex);
+          openCustomizeModal(oc.dataset.openCust);
+          return;
+        }
+
+        const goPage = e.target.closest('[data-carta-go]');
+        if (goPage) {
+          showCartaPage(Number(goPage.dataset.cartaGo), { animate: true, announce: true });
+          return;
+        }
+
+        const switchList = e.target.closest('[data-carta-switch-list]');
+        if (switchList) {
+          showMenuFormat('list');
+          document.getElementById('client-search')?.focus();
+          return;
+        }
+
+        const taperStepBtn = e.target.closest('[data-taper-step]');
+        if (taperStepBtn) {
+          if (clientTapers.disabled) return;
+          const step = Number(taperStepBtn.dataset.taperStep);
+          const next = Math.max(0, Math.min(99, (Number(clientTapers.value) || 0) + step));
+          clientTapers.value = String(next);
+          clearCheckoutError();
+          renderClientCart();
+          return;
+        }
 
         const tf = e.target.closest('[data-toggle-flavor]');
         if (tf) {
@@ -2396,6 +2825,7 @@
       clientTakeaway.onchange = () => {
         if (clientTakeaway.checked && !Number(clientTapers.value)) clientTapers.value = '1';
         renderClientCart();
+        requestAnimationFrame(() => syncBookLayout());
       };
       clientTapers.oninput = renderClientCart;
 
@@ -2570,11 +3000,11 @@
       };
 
       // Specific listeners
-      document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; renderCliente(); });
-      document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; renderCliente(); });
+      document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; clearCheckoutError(); renderCliente(); });
+      document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; clearCheckoutError(); renderCliente(); });
       document.getElementById('client-mesa-select').addEventListener('change', (e) => { ui.clientMesa = e.target.value; renderCliente(); });
       document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderCliente(); });
-      document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; renderClientCart(); });
+      document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; clearCheckoutError(); renderClientCart(); });
 
       function makeQrSvgString(text, cellSize = 4, margin = 2) {
         if (typeof window.qrcode !== 'function') {
@@ -2657,14 +3087,33 @@
         }
       });
 
-      function fallbackCopy(text) {
+      function fallbackCopy(text, message = 'Enlace / código QR copiado.') {
         const ta = document.createElement('textarea');
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand('copy'); showToast('Enlace / código QR copiado.'); } catch (e) {}
+        try { document.execCommand('copy'); showToast(message); } catch (e) {}
         ta.remove();
       }
+
+      document.getElementById('btn-copy-pay-phone')?.addEventListener('click', () => {
+        const phoneNum = '958656930';
+        const btn = document.getElementById('btn-copy-pay-phone');
+        const markCopied = () => {
+          btn.textContent = '¡Copiado!';
+          showToast('Número 958 656 930 copiado.');
+          setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(phoneNum).then(markCopied).catch(() => {
+            fallbackCopy(phoneNum, 'Número 958 656 930 copiado.');
+            markCopied();
+          });
+        } else {
+          fallbackCopy(phoneNum, 'Número 958 656 930 copiado.');
+          markCopied();
+        }
+      });
 
       document.getElementById('btn-qr-download-png').addEventListener('click', () => {
         if (typeof window.qrcode !== 'function') return;
@@ -2752,29 +3201,54 @@
           document.getElementById('carta-cart-link').textContent;
       });
 
-      document.getElementById('btn-submit-client-order').addEventListener('click', async (event) => {
-        if (ui.clientCart.length === 0) {
-          showToast('Agrega al menos un producto de la carta.', 'err');
+      const clientCheckout = document.getElementById('client-checkout');
+      const checkoutError = document.getElementById('client-checkout-error');
+
+      function showCheckoutError(message, field) {
+        checkoutError.textContent = message;
+        if (field) {
+          field.setAttribute('aria-invalid', 'true');
+          field.focus();
+        } else checkoutError.scrollIntoView({ block: 'nearest' });
+      }
+
+      function clearCheckoutError() {
+        checkoutError.textContent = '';
+        clientCheckout.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
+      }
+
+      clientCheckout.addEventListener('input', clearCheckoutError);
+      clientCheckout.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = document.getElementById('btn-submit-client-order');
+        if (button.disabled || !ui.clientCart.length) return;
+        clearCheckoutError();
+        const isDel = ui.clientMode === 'DELIVERY';
+        const name = document.getElementById('client-name');
+        const customer = name.value.trim() || (!isDel ? `Cliente ${ui.clientMesa}` : '');
+        const phoneField = document.getElementById('client-phone');
+        const addressField = document.getElementById('client-address');
+        const paymentField = document.getElementById('client-pay-ref');
+        const phone = isDel ? phoneField.value.trim() : '';
+        const address = isDel ? addressField.value.trim() : '';
+        const payRef = isDel ? paymentField.value.trim() : '';
+        if (isDel) {
+          const missing = [
+            [customer, name, 'Ingresa tu nombre.'],
+            [phone, phoneField, 'Ingresa tu teléfono o WhatsApp.'],
+            [address, addressField, 'Ingresa la dirección de entrega.'],
+            [payRef, paymentField, 'Ingresa el número de operación o código de pago.']
+          ].find(([value]) => !value);
+          if (missing) {
+            showCheckoutError(missing[2], missing[1]);
+            return;
+          }
+        }
+
+        if (!clientTapers.disabled && !clientTapers.checkValidity()) {
+          showCheckoutError('Ingresa una cantidad válida de táperes (0 a 99).', clientTapers);
           return;
         }
-        const customer = document.getElementById('client-name').value.trim() || (ui.clientMode === 'MESA' ? `Cliente ${ui.clientMesa}` : '');
-        const isDel = ui.clientMode === 'DELIVERY';
-        const phone = document.getElementById('client-phone').value.trim();
-        const address = document.getElementById('client-address').value.trim();
-        const payRef = document.getElementById('client-pay-ref').value.trim();
-
-        if (isDel) {
-          if (!customer || !phone || !address) {
-            showToast('Completa tu nombre, teléfono y dirección para Delivery.', 'err');
-            return;
-          }
-          if (!payRef) {
-            showToast('Para Delivery es obligatorio ingresar el N° de operación de pago primero.', 'err');
-            return;
-          }
-        }
-
-        if (!clientTapers.disabled && !clientTapers.reportValidity()) return;
         const draft = {
           ...clientPackaging(),
           channel: ui.clientMode,
@@ -2791,8 +3265,10 @@
         if (pendingOrder?.serialized !== serialized) {
           pendingOrder = { serialized, id: crypto.randomUUID() };
         }
-        const button = event.currentTarget;
         button.disabled = true;
+        const label = document.getElementById('btn-submit-client-label');
+        const originalLabel = label.textContent;
+        label.textContent = 'Enviando…';
         let newOrder;
         try {
           const response = await fetch('/api/orders', {
@@ -2806,10 +3282,11 @@
           if (!ui.staffOrderEntry) ui.receivedOrders.unshift(newOrder);
           pendingOrder = null;
         } catch (error) {
-          showToast(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.', 'err');
+          showCheckoutError(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.');
           return;
         } finally {
           button.disabled = false;
+          label.textContent = originalLabel;
         }
         ui.clientCart = [];
         clientTakeaway.checked = false;
@@ -2828,7 +3305,7 @@
           return;
         }
         renderActiveRole();
-        showToast(`Pedido ${newOrder.code} enviado. Esperando aprobación del Admin.`);
+        showToast(`Pedido ${newOrder.code} enviado. Esperando confirmación.`);
       });
 
       const chefInput = document.getElementById('chef-code-input');
@@ -3229,12 +3706,24 @@
         cartObserver.observe(cart);
       }
 
-      document.getElementById('carta-cart-link').addEventListener('click', event => {
-        event.preventDefault();
+      function focusClientCart() {
         const cart = document.getElementById('client-cart');
         cart.tabIndex = -1;
         cart.focus({ preventScroll: true });
-        cart.scrollIntoView({ block: 'start' });
+        cart.scrollIntoView({
+          block: 'start',
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
+      }
+
+      document.getElementById('carta-cart-link').addEventListener('click', event => {
+        event.preventDefault();
+        focusClientCart();
+      });
+      document.getElementById('carta-sheet').addEventListener('click', event => {
+        if (!event.target.closest('.carta-back-cart-link')) return;
+        event.preventDefault();
+        focusClientCart();
       });
       window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
 
