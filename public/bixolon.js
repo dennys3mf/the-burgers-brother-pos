@@ -6,12 +6,13 @@ async function request(url, data) {
   let response;
   try {
     response = await fetch(url, {
-      method: 'POST',
+      ethod: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: JSON.stringify(data),
       credentials: 'omit',
       redirect: 'error',
       cache: 'no-store',
+      targetAddressSpace: 'loopback',
       signal: AbortSignal.timeout(8000)
     });
   } catch {
