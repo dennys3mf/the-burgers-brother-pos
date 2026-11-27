@@ -87,7 +87,6 @@ body { background: var(--paper); color: var(--ink); }
   border-radius: 999px; border: 1px solid var(--dark-line); background: var(--surface-dark-hover);
   color: var(--on-dark-muted); font-size: .78rem; font-weight: 750;
 }
-.menu-order-context:hover { background: #654a38; border-color: var(--gold); color: var(--cream); }
 .menu-order-context[hidden] { display: none; }
 .menu-modes {
   display: flex; flex-wrap: wrap; align-items: center; gap: .45rem;

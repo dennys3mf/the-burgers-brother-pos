@@ -72,6 +72,7 @@ function mesaDraft() {
     id: crypto.randomUUID(),
     channel: 'MESA',
     table: 'Mesa 1',
+    customer: 'Cliente prueba',
     items: [{ menuId: 'm1', qty: 1 }],
   };
 }

@@ -412,7 +412,7 @@
             <div class="menu-browser-head">
               <div class="menu-browser-brand">
                 <h2 id="carta-title" class="menu-title">La carta</h2>
-                <button type="button" id="menu-order-context" class="menu-order-context" hidden aria-label="Cambiar mesa o tipo de pedido"></button>
+                <span id="menu-order-context" class="menu-order-context" hidden></span>
               </div>
               <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
                 <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
@@ -492,20 +492,14 @@
           </header>
           <div id="client-cart-items"></div>
 
-          <details id="public-order-settings" hidden>
-            <summary id="public-order-settings-label">Cambiar tipo de pedido</summary>
-            <div id="public-order-controls"></div>
-          </details>
-
           <form id="client-checkout" novalidate>
             <div class="checkout-fields">
               <div class="checkout-field">
                 <label for="client-name">
                   <span>Nombre</span>
-                  <span id="client-name-optional" class="checkout-badge-opt">Opcional</span>
-                  <span id="client-name-required" class="checkout-badge-req" hidden>Requerido</span>
+                  <span id="client-name-required" class="checkout-badge-req">Requerido</span>
                 </label>
-                <input id="client-name" type="text" autocomplete="name" enterkeyhint="next" maxlength="100" placeholder="Tu nombre">
+                <input id="client-name" type="text" required autocomplete="name" enterkeyhint="next" maxlength="100" placeholder="Tu nombre">
               </div>
               <label id="client-takeaway-label" class="checkout-option">
                 <input id="client-takeaway" type="checkbox">
@@ -1428,7 +1422,7 @@
 
       const ui = {
         role: 'cliente',
-        clientMode: 'MESA',
+        clientMode: 'DELIVERY',
         clientMesa: 'Mesa 4',
         clientCategory: 'Todos',
         clientSearch: '',
@@ -1958,6 +1952,7 @@
         }
         const role = trigger.dataset.launchRole;
         if (!role || !canOpenPosView(role)) return;
+        if (role === 'cliente') ui.clientMode = 'MESA';
         if (trigger.dataset.launchSubtab) ui.gestionSubtab = trigger.dataset.launchSubtab;
         if (trigger.dataset.launchAdminFilter) ui.adminFilter = trigger.dataset.launchAdminFilter;
         if (trigger.dataset.launchStation) {
@@ -1994,22 +1989,16 @@
         document.body.toggleAttribute('data-cart-open', active);
       }
 
-      function openCartDrawer(triggerEl = null, { openSettings = false } = {}) {
+      function openCartDrawer(triggerEl = null) {
         if (!document.body.hasAttribute('data-public-menu')) {
           focusClientCart();
           return;
         }
         lastCartTrigger = triggerEl || document.activeElement;
         cartDrawerOpen = true;
-        if (openSettings) {
-          document.getElementById('public-order-settings').open = true;
-        }
         renderClientCart();
         requestAnimationFrame(() => {
-          const target = openSettings
-            ? document.getElementById('public-order-settings-label')
-            : document.getElementById('btn-close-cart-drawer');
-          target?.focus();
+          document.getElementById('btn-close-cart-drawer')?.focus();
         });
       }
 
@@ -2030,10 +2019,6 @@
           cartDrawerOpen = false;
           syncPublicBackgroundInert(false);
         }
-        const controls = document.getElementById('menu-mode-controls');
-        const destination = document.getElementById(isPublic ? 'public-order-controls' : 'staff-menu-hero');
-        if (controls.parentElement !== destination) destination.append(controls);
-        document.getElementById('public-order-settings').hidden = !isPublic;
       }
 
       function canOpenPosView(role) {
@@ -2135,21 +2120,22 @@
 
       function renderCliente() {
         const isMesa = ui.clientMode === 'MESA';
+        const isStaffClient = staffMenu || ui.staffOrderEntry;
         document.getElementById('admin-order-entry').hidden = !ui.staffOrderEntry;
         document.getElementById('btn-mode-delivery').hidden = ui.staffOrderEntry;
         document.getElementById('btn-mode-mesa').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${isMesa ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`;
         document.getElementById('btn-mode-delivery').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${!isMesa ? 'bg-sky-500 text-white' : 'text-slate-300 hover:text-white'}`;
         document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
         document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
-        document.getElementById('client-mesa-select').classList.toggle('hidden', !isMesa);
+        const mesaSelect = document.getElementById('client-mesa-select');
+        mesaSelect.disabled = !isStaffClient || !isMesa;
+        mesaSelect.classList.toggle('hidden', !isStaffClient || !isMesa);
         document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu || staffArea !== 'admin');
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
         document.getElementById('client-cart-origin').textContent = isMesa
           ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '') : 'Delivery';
         renderBusinessClosedUI();
-        document.getElementById('client-name-optional').hidden = !isMesa;
-        document.getElementById('client-name-required').hidden = isMesa;
-        document.getElementById('client-name').required = !isMesa;
+        document.getElementById('client-name').required = true;
         for (const field of document.querySelectorAll('#client-delivery-fields input')) {
           field.disabled = isMesa;
           field.required = !isMesa;
@@ -2290,9 +2276,8 @@
         const context = document.getElementById('menu-order-context');
         context.hidden = !isPublic;
         const originLabel = delivery ? 'Delivery' : ui.clientMesa;
-        context.textContent = `${originLabel} · Cambiar`;
-        context.setAttribute('aria-label', `Estás pidiendo para ${originLabel}. Toca para cambiar mesa o tipo de pedido`);
-        document.getElementById('public-order-settings-label').textContent = delivery ? 'Cambiar tipo de pedido' : 'Cambiar mesa o tipo de pedido';
+        context.textContent = originLabel;
+        context.setAttribute('aria-label', delivery ? 'Pedido por Delivery' : `Mesa fija asignada: ${originLabel}`);
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
         const cartEl = document.getElementById('client-cart');
         const backdrop = document.getElementById('cart-drawer-backdrop');
@@ -3890,7 +3875,11 @@
       // Specific listeners
       document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; clearCheckoutError(); renderCliente(); });
       document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; clearCheckoutError(); renderCliente(); });
-      document.getElementById('client-mesa-select').addEventListener('change', (e) => { ui.clientMesa = e.target.value; renderCliente(); });
+      document.getElementById('client-mesa-select').addEventListener('change', (e) => {
+        if (!staffMenu && !ui.staffOrderEntry) return;
+        ui.clientMesa = e.target.value;
+        renderCliente();
+      });
       document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderCliente(); });
       document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; clearCheckoutError(); renderClientCart(); });
 
@@ -4148,7 +4137,11 @@
         clearCheckoutError();
         const isDel = ui.clientMode === 'DELIVERY';
         const name = document.getElementById('client-name');
-        const customer = name.value.trim() || (!isDel ? `Cliente ${ui.clientMesa}` : '');
+        const customer = name.value.trim();
+        if (!customer) {
+          showCheckoutError('Ingresa tu nombre.', name);
+          return;
+        }
         const phoneField = document.getElementById('client-phone');
         const addressField = document.getElementById('client-address');
         const paymentField = document.getElementById('client-pay-ref');
@@ -4157,7 +4150,6 @@
         const payRef = isDel ? paymentField.value.trim() : '';
         if (isDel) {
           const missing = [
-            [customer, name, 'Ingresa tu nombre.'],
             [phone, phoneField, 'Ingresa tu teléfono o WhatsApp.'],
             [address, addressField, 'Ingresa la dirección de entrega.'],
             [payRef, paymentField, 'Ingresa el número de operación o código de pago.']
@@ -4813,7 +4805,11 @@
         document.documentElement.removeAttribute('data-staff-loading');
         staffMenu = false;
         syncBusinessStatus();
-        if (!h) { switchRole('cliente', { updateHash: false }); return; }
+        if (!h) {
+          ui.clientMode = 'DELIVERY';
+          switchRole('cliente', { updateHash: false });
+          return;
+        }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
           ui.clientMode = 'MESA';
@@ -4826,8 +4822,10 @@
           switchRole('cliente', { updateHash: false });
         } else if (params.has('chef')) {
           showToast('El QR no contiene un código de pedido válido.', 'err');
+          ui.clientMode = 'DELIVERY';
           switchRole('cliente', { updateHash: false });
         } else {
+          ui.clientMode = 'DELIVERY';
           switchRole('cliente', { updateHash: false });
         }
       }
@@ -4858,9 +4856,6 @@
         } else {
           focusClientCart();
         }
-      });
-      document.getElementById('menu-order-context').addEventListener('click', event => {
-        openCartDrawer(event.currentTarget, { openSettings: true });
       });
       document.getElementById('btn-close-cart-drawer').addEventListener('click', () => closeCartDrawer());
       document.getElementById('cart-drawer-backdrop').addEventListener('click', () => closeCartDrawer());

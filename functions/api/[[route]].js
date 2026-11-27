@@ -148,7 +148,10 @@ function orderDraft(draft, clock) {
   }
   if (!delivery && !/^Mesa [1-6]$/.test(draft.table)) throw new RangeError('Selecciona una mesa válida.');
   const table = delivery ? '-' : draft.table;
-  const customer = clean(draft.customer, 100) || (!delivery ? `Cliente ${table}` : '');
+  const customer = clean(draft.customer, 100);
+  if (!customer) {
+    throw new RangeError('Ingresa tu nombre para realizar el pedido.');
+  }
   const phone = delivery ? clean(draft.phone, 40) : '';
   const address = delivery ? clean(draft.address, 240) : '';
   const paymentRef = delivery ? clean(draft.payRef, 80) : '';
@@ -212,8 +215,8 @@ async function createOrder(db, draft, now = new Date()) {
   if (!businessStatus.open) {
     return reject(businessStatus.message, 403, { closed: true, businessStatus });
   }
-  const shift = await ensureTodayOpenShift(db, clock.businessDate, clock.iso);
   const order = orderDraft(draft, clock);
+  const shift = await ensureTodayOpenShift(db, clock.businessDate, clock.iso);
   const nextRevision = crypto.randomUUID();
 
   await db.batch([

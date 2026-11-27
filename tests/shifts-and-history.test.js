@@ -84,7 +84,7 @@ test('Sundays and closed days block QR order submission without creating ghost s
 
   const blockedOrder = await call('/api/orders', {
     method: 'POST',
-    body: { id: crypto.randomUUID(), channel: 'MESA', table: 'Mesa 2', items: [{ menuId: 'm1', qty: 1 }] },
+    body: { id: crypto.randomUUID(), channel: 'MESA', table: 'Mesa 2', customer: 'Lucia', items: [{ menuId: 'm1', qty: 1 }] },
   });
   assert.equal(blockedOrder.status, 403);
   const blockedPayload = await blockedOrder.json();
@@ -97,6 +97,19 @@ test('Sundays and closed days block QR order submission without creating ghost s
   const admin = await signInAdmin();
   assert.equal((await (await call('/api/status')).json()).businessStatus.open, true);
 
+  // Customer name is mandatory on open days for both Mesa and Delivery
+  assert.equal((await call('/api/orders', {
+    method: 'POST',
+    body: { id: crypto.randomUUID(), channel: 'MESA', table: 'Mesa 1', customer: '   ', items: [{ menuId: 'm1', qty: 1 }] },
+  })).status, 400);
+  assert.equal((await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: crypto.randomUUID(), channel: 'DELIVERY', customer: '', phone: '999888777',
+      address: 'Av. Lima 10', payRef: 'OP-01', paymentMethod: 'Yape', items: [{ menuId: 'm1', qty: 1 }],
+    },
+  })).status, 400);
+
   const closeMon = await call('/api/business/day-status', {
     method: 'POST',
     cookie: admin,
@@ -105,7 +118,7 @@ test('Sundays and closed days block QR order submission without creating ghost s
   assert.equal(closeMon.status, 200);
   const monOrder = await call('/api/orders', {
     method: 'POST',
-    body: { id: crypto.randomUUID(), channel: 'MESA', table: 'Mesa 1', items: [{ menuId: 'm1', qty: 1 }] },
+    body: { id: crypto.randomUUID(), channel: 'MESA', table: 'Mesa 1', customer: 'Lucia', items: [{ menuId: 'm1', qty: 1 }] },
   });
   assert.equal(monOrder.status, 403);
   assert.equal(sqlite.prepare('SELECT COUNT(*) AS cnt FROM cash_shifts').get().cnt, 0);
@@ -130,7 +143,7 @@ test('midnight 00:00 Lima auto-closes active shift and preserves historical day/
   const delId = crypto.randomUUID();
   assert.equal((await call('/api/orders', {
     method: 'POST',
-    body: { id: mesaId, channel: 'MESA', table: 'Mesa 3', items: [{ menuId: 'm1', qty: 2 }] },
+    body: { id: mesaId, channel: 'MESA', table: 'Mesa 3', customer: 'Pedro', items: [{ menuId: 'm1', qty: 2 }] },
   })).status, 201);
   assert.equal((await call('/api/orders', {
     method: 'POST',
@@ -203,7 +216,7 @@ test('midnight 00:00 Lima auto-closes active shift and preserves historical day/
   const friId = crypto.randomUUID();
   assert.equal((await call('/api/orders', {
     method: 'POST',
-    body: { id: friId, channel: 'MESA', table: 'Mesa 4', items: [{ menuId: 'm24', qty: 2 }] },
+    body: { id: friId, channel: 'MESA', table: 'Mesa 4', customer: 'Elena', items: [{ menuId: 'm24', qty: 2 }] },
   })).status, 201);
   assert.equal((await call(`/api/orders/${friId}/approve`, { method: 'POST', cookie: admin, body: {} })).status, 200);
   assert.equal((await call('/api/kitchen/complete', {
