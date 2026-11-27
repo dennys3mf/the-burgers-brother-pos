@@ -1,0 +1,17 @@
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/personal/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/vendor/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/vendor/*.js
+  Cache-Control: public, max-age=0, must-revalidate

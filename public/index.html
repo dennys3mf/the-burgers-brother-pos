@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261126b">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -80,7 +80,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css">
+<link rel="stylesheet" href="./brand.css?v=20261126b">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -1361,13 +1361,13 @@
   </dialog>
 
   <script type="module">
-    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js';
+    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261126b';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
     import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
-    import { menuPages, drinkOptions } from './visual-menu.js';
+    import { menuPages, drinkOptions } from './visual-menu.js?v=20261126b';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
     import { createPosSounds } from './pos-sounds.js';
 
