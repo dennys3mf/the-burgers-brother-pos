@@ -13,16 +13,37 @@ const limaTimeZone = 'America/Lima';
 let completionFormat;
 let dateFormat;
 
-function parsePreparationTime(value) {
-  const legacy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/.exec(value || '');
-  if (!legacy) return Date.parse(value);
-  const [, day, month, year, hour, minute] = legacy;
-  const pad = part => part.padStart(2, '0');
-  return Date.parse(year + '-' + pad(month) + '-' + pad(day) + 'T' + pad(hour) + ':' + minute + ':00-05:00');
+/**
+ * Parses ISO timestamps as well as es-PE 24h ("DD/MM/YYYY HH:mm") and 12h ("DD/MM/YY, h:mm a. m. / p. m.") dates in America/Lima (-05:00).
+ */
+export function parseLimaDateTime(value) {
+  if (!value) return NaN;
+  const raw = String(value).trim();
+  const pe = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:[,\s]+(\d{1,2}):(\d{2}))?(?:\s*([ap])\.?\s*m\.?)?$/i.exec(raw);
+  if (!pe) return Date.parse(raw);
+  const [, day, month, yearRaw, hourRaw = '0', minuteRaw = '0', meridiem] = pe;
+  const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;
+  let hour = Number(hourRaw);
+  if (meridiem) {
+    const isPm = meridiem.toLowerCase() === 'p';
+    if (isPm && hour < 12) hour += 12;
+    else if (!isPm && hour === 12) hour = 0;
+  }
+  const pad = part => String(part).padStart(2, '0');
+  return Date.parse(`${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minuteRaw)}:00-05:00`);
+}
+
+export function formatElapsedMinutesLabel(startMs, nowMs = Date.now()) {
+  if (!Number.isFinite(startMs)) return '';
+  const minutes = Math.max(0, Math.floor((nowMs - startMs) / 60000));
+  if (minutes < 1) return '< 1 min';
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  return hours ? `${hours} h${remaining ? ` ${remaining} min` : ''}` : `${minutes} min`;
 }
 
 export function preparationStartedAt(order) {
-  return parsePreparationTime(order.preparationStartedAt || order.approvedAt);
+  return parseLimaDateTime(order.preparationStartedAt || order.approvedAt);
 }
 
 function prepHistoryDate(time) {
@@ -50,7 +71,7 @@ export function prepHistory(orders, station, { search = '', date = '' } = {}) {
       (['EN_COCINA', 'LISTO_CHEF'].includes(order.status) && stationReady(order, station))) &&
       orderStations(order).includes(station))
     .map(order => ({
-      order, time: parsePreparationTime(order.stationCompletedAt?.[station] || order.completedAt)
+      order, time: parseLimaDateTime(order.stationCompletedAt?.[station] || order.completedAt)
     }))
     .filter(({ order, time }) => (!query || [order.code, order.num, order.table].some(value =>
       normalizeSearch(value).includes(query))) && (!date || (Number.isFinite(time) && prepHistoryDate(time) === date)))

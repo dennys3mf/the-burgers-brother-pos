@@ -1420,7 +1420,7 @@
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261127c';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
-    import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
+    import { formatElapsedMinutesLabel, formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js?v=20261127f';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
@@ -1456,7 +1456,7 @@
       renderInventoryRowsAndCards,
       filterKardexMovements,
       renderKardexRowsAndCards
-    } from './pos/views.js?v=20261127d';
+    } from './pos/views.js?v=20261127f';
     import {
       renderSuppliersDirectoryHtml,
       renderPurchasesViewHtml,
@@ -1470,13 +1470,19 @@
     (function () {
       'use strict';
 
+      let serverClockOffsetMs = 0;
+      const serverNowMs = () => Date.now() + serverClockOffsetMs;
+      function syncServerClock(value) {
+        const ms = Date.parse(value || '');
+        if (Number.isFinite(ms)) serverClockOffsetMs = ms - Date.now();
+      }
       function nowStr() {
-        const d = new Date();
+        const d = new Date(serverNowMs());
         const p = n => String(n).padStart(2, '0');
         return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
       }
       function timeStr() {
-        const d = new Date();
+        const d = new Date(serverNowMs());
         const p = n => String(n).padStart(2, '0');
         return `${p(d.getHours())}:${p(d.getMinutes())}`;
       }
@@ -2295,7 +2301,8 @@
           const model = computeDashboardModel(state, {
             staffArea,
             activeShift: ui.activeShift,
-            businessStatus: ui.businessStatus
+            businessStatus: ui.businessStatus,
+            nowMs: serverNowMs()
           });
           dashRoot.innerHTML = renderDashboardHtml(model, { staffArea });
         }
@@ -3087,7 +3094,7 @@
 
         const listEl = document.getElementById('admin-orders-list');
         if (listEl) {
-          listEl.innerHTML = renderAdminOrderListHtml(filtered, selectedOrder?.id || '');
+          listEl.innerHTML = renderAdminOrderListHtml(filtered, selectedOrder?.id || '', serverNowMs());
         }
         const detailEl = document.getElementById('admin-order-detail');
         if (detailEl) {
@@ -3096,7 +3103,8 @@
             canCancel: selectedOrder ? canCancelOrder(selectedOrder) : false,
             stationLabelFn: stationName,
             stationReadyFn: stationReady,
-            orderStationsFn: orderStations
+            orderStationsFn: orderStations,
+            nowMs: serverNowMs()
           });
         }
       }
@@ -3224,7 +3232,7 @@
 
       function checkPrepReminders() {
         if (ui.role !== 'chef' || document.hidden || !prepPreferences.reminders) return;
-        const now = Date.now();
+        const now = serverNowMs();
         const overdue = state.orders.filter(order =>
           order.status === 'EN_COCINA' && orderStations(order).includes(prepStation) && !stationReady(order, prepStation)
           && !prepReminderKeys.has(prepStation + order.id)
@@ -3238,21 +3246,25 @@
       }
 
       function updatePrepTimers() {
+        const currentNow = serverNowMs();
         document.querySelectorAll('[data-prep-start]').forEach(timer => {
-          const minutes = Math.max(0, Math.floor((Date.now() - Number(timer.dataset.prepStart)) / 60000));
-          const hours = Math.floor(minutes / 60);
-          const remaining = minutes % 60;
-          timer.querySelector('span').textContent = hours
-            ? hours + ' h' + (remaining ? ' ' + remaining + ' min' : '')
-            : minutes ? minutes + ' min' : '< 1 min';
+          const startMs = Number(timer.dataset.prepStart);
+          const minutes = Math.max(0, Math.floor((currentNow - startMs) / 60000));
+          timer.querySelector('span').textContent = formatElapsedMinutesLabel(startMs, currentNow) || '< 1 min';
           timer.classList.toggle('prep-late', minutes >= Number(timer.dataset.prepTarget));
+        });
+        document.querySelectorAll('[data-order-elapsed-ref]').forEach(el => {
+          const refMs = Number(el.dataset.orderElapsedRef);
+          if (!Number.isFinite(refMs)) return;
+          const label = formatElapsedMinutesLabel(refMs, currentNow);
+          if (label && el.textContent !== label) el.textContent = label;
         });
       }
       setInterval(() => {
         updatePrepTimers();
         renderPrepPreferences();
         checkPrepReminders();
-      }, 15000);
+      }, 10000);
 
       function renderPrepCard(order, station, completionTime) {
         const done = completionTime !== undefined;
@@ -5877,6 +5889,7 @@
           const response = await fetch('/api/status');
           if (!response.ok) return false;
           const data = await response.json();
+          syncServerClock(data?.serverTimeIso || response.headers.get('Date'));
           if (data?.businessStatus) {
             ui.businessStatus = data.businessStatus;
             if (!ui.reportDate && data.businessStatus.businessDate) {
@@ -5907,9 +5920,13 @@
           }
           return false;
         }
-        if (response.status === 304) return staffReady;
+        if (response.status === 304) {
+          syncServerClock(response.headers.get('Date'));
+          return staffReady;
+        }
         if (!response.ok) return false;
         const data = await response.json();
+        syncServerClock(data?.serverTimeIso || response.headers.get('Date'));
         if (superseded()) return false;
         staffArea = data.role || 'admin';
         state = staffArea === 'chef' ? { orders: data.orders } : data.state;

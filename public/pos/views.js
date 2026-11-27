@@ -3,7 +3,13 @@
  * Zero direct mutations to business state, API contracts, or public menu state.
  */
 
-import { orderStations, stationReady, preparationStartedAt } from '../preparation.js';
+import {
+  orderStations,
+  stationReady,
+  preparationStartedAt,
+  parseLimaDateTime,
+  formatElapsedMinutesLabel
+} from '../preparation.js';
 
 export const escapeHtml = value => String(value ?? '')
   .replaceAll('&', '&amp;')
@@ -42,25 +48,21 @@ export function stripMapsUrl(address) {
 }
 
 /**
+ * Resolves exact epoch ms reference for an order timer (preparation start when cooking/ready, otherwise creation).
+ */
+export function orderElapsedRefMs(order) {
+  const prepMs = preparationStartedAt(order);
+  if (Number.isFinite(prepMs)) return prepMs;
+  const isoMs = Date.parse(order?.createdIso || '');
+  if (Number.isFinite(isoMs)) return isoMs;
+  return parseLimaDateTime(order?.createdAt);
+}
+
+/**
  * Formats elapsed time since approval/creation without modifying persisted timestamps.
  */
 export function formatElapsedFromOrder(order, nowMs = Date.now()) {
-  const prepMs = preparationStartedAt(order);
-  let refMs = Number.isFinite(prepMs) ? prepMs : Date.parse(order?.createdIso || '');
-  if (!Number.isFinite(refMs) && order?.createdAt) {
-    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})[,\s]+(\d{1,2}):(\d{2})/.exec(String(order.createdAt));
-    if (match) {
-      const [, d, m, y, hh, mm] = match;
-      const year = y.length === 2 ? `20${y}` : y;
-      refMs = Date.parse(`${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:00-05:00`);
-    }
-  }
-  if (!Number.isFinite(refMs)) return '';
-  const minutes = Math.max(0, Math.floor((nowMs - refMs) / 60000));
-  if (minutes < 1) return '< 1 min';
-  const hours = Math.floor(minutes / 60);
-  const rem = minutes % 60;
-  return hours ? `${hours} h${rem ? ` ${rem} min` : ''}` : `${minutes} min`;
+  return formatElapsedMinutesLabel(orderElapsedRefMs(order), nowMs);
 }
 
 /**
@@ -165,7 +167,8 @@ export function renderDashboardHtml(model, { staffArea }) {
           <tbody>
             ${visibleOrders.map(order => {
               const st = ORDER_STATUS_META[order.status] || ORDER_STATUS_META.POR_APROBAR;
-              const elapsed = formatElapsedFromOrder(order, model.nowMs) || '—';
+              const refMs = orderElapsedRefMs(order);
+              const elapsed = formatElapsedMinutesLabel(refMs, model.nowMs) || '—';
               const quickLabel = isAdmin
                 ? (order.status === 'POR_APROBAR' ? 'Revisar' : order.status === 'LISTO_CHEF' ? (order.paymentStatus === 'PAGADO' ? 'Despachar' : 'Cobrar') : 'Ver')
                 : 'Preparar';
@@ -179,7 +182,7 @@ export function renderDashboardHtml(model, { staffArea }) {
                   <td><span class="pos-cell-meta">${escapeHtml(orderOriginText(order))}</span></td>
                   <td><span class="pos-badge" data-tone="${st.tone}"><i data-lucide="${st.icon}" aria-hidden="true"></i>${st.label}</span></td>
                   <td class="text-right pos-num-cell">${money(order.total)}</td>
-                  <td class="pos-num-cell pos-muted-cell">${escapeHtml(elapsed)}</td>
+                  <td class="pos-num-cell pos-muted-cell"><span ${Number.isFinite(refMs) ? `data-order-elapsed-ref="${refMs}"` : ''}>${escapeHtml(elapsed)}</span></td>
                   <td class="text-right">
                     <button type="button" class="pos-btn pos-btn-subtle pos-btn-sm" data-dash-action="${quickAction}">${quickLabel}</button>
                   </td>
@@ -192,14 +195,15 @@ export function renderDashboardHtml(model, { staffArea }) {
       <div class="pos-dash-list-mobile">
         ${visibleOrders.map(order => {
           const st = ORDER_STATUS_META[order.status] || ORDER_STATUS_META.POR_APROBAR;
-          const elapsed = formatElapsedFromOrder(order, model.nowMs);
+          const refMs = orderElapsedRefMs(order);
+          const elapsed = formatElapsedMinutesLabel(refMs, model.nowMs);
           const quickAction = isAdmin ? `open-order:${escapeHtml(order.id)}` : `open-station:${orderStations(order)[0] || 'COCINA'}`;
           return `
             <button type="button" class="pos-mobile-row-btn" data-dash-action="${quickAction}">
               <div class="pos-mobile-row-top">
                 <div>
                   <span class="pos-cell-title">${escapeHtml(orderOriginText(order))} · ${escapeHtml(order.customer || 'Cliente')}</span>
-                  <span class="pos-cell-code font-mono-ticket">${escapeHtml(order.code)}${elapsed ? ` · ${escapeHtml(elapsed)}` : ''}</span>
+                  <span class="pos-cell-code font-mono-ticket">${escapeHtml(order.code)}${elapsed ? ` · <span ${Number.isFinite(refMs) ? `data-order-elapsed-ref="${refMs}"` : ''}>${escapeHtml(elapsed)}</span>` : ''}</span>
                 </div>
                 <strong class="pos-num-cell">${money(order.total)}</strong>
               </div>
@@ -316,7 +320,8 @@ export function renderAdminOrderListHtml(filtered, selectedId, nowMs = Date.now(
     const isRecojo = order.channel === 'RECOJO';
     const icon = isDel ? 'bike' : isRecojo || order.takeaway ? 'shopping-bag' : 'utensils';
     const st = ORDER_STATUS_META[order.status] || ORDER_STATUS_META.POR_APROBAR;
-    const elapsed = formatElapsedFromOrder(order, nowMs) || order.createdAt || '';
+    const refMs = orderElapsedRefMs(order);
+    const elapsed = formatElapsedMinutesLabel(refMs, nowMs) || order.createdAt || '';
     const selected = order.id === selectedId;
     return `
       <button type="button" class="pos-master-item ${selected ? 'is-selected' : ''}" data-select-order="${escapeHtml(order.id)}" aria-current="${selected ? 'true' : 'false'}">
@@ -326,7 +331,7 @@ export function renderAdminOrderListHtml(filtered, selectedId, nowMs = Date.now(
         </div>
         <div class="pos-master-row-mid">
           <span class="pos-master-customer">${escapeHtml(order.customer)}</span>
-          <span class="pos-master-time">${escapeHtml(elapsed)}</span>
+          <span class="pos-master-time" ${Number.isFinite(refMs) ? `data-order-elapsed-ref="${refMs}"` : ''}>${escapeHtml(elapsed)}</span>
         </div>
         <div class="pos-master-row-bot">
           <span class="pos-badge pos-badge-sm" data-tone="${st.tone}">${st.label}</span>
@@ -356,7 +361,8 @@ export function renderAdminOrderDetailHtml(order, { canEdit, canCancel, stationL
   const payHint = order.paymentStatus === 'PAGADO'
     ? `${order.paymentMethod} pagado`
     : (isDel ? 'Pago por verificar' : isRecojo ? 'Pago al recoger' : 'Pago en mesa');
-  const elapsed = formatElapsedFromOrder(order, nowMs);
+  const refMs = orderElapsedRefMs(order);
+  const elapsed = formatElapsedMinutesLabel(refMs, nowMs);
 
   const itemsHtml = (order.items || []).map(it => `
     <li class="pos-detail-item">
@@ -399,7 +405,7 @@ export function renderAdminOrderDetailHtml(order, { canEdit, canCancel, stationL
         <div>
           <div class="pos-detail-badges">
             <span class="pos-badge" data-tone="${st.tone}"><i data-lucide="${st.icon}" aria-hidden="true"></i>${st.label}</span>
-            ${elapsed ? `<span class="pos-time-pill">${escapeHtml(elapsed)}</span>` : ''}
+            ${elapsed ? `<span class="pos-time-pill" ${Number.isFinite(refMs) ? `data-order-elapsed-ref="${refMs}"` : ''}>${escapeHtml(elapsed)}</span>` : ''}
           </div>
           <h2 class="pos-detail-title">${escapeHtml(order.customer)}</h2>
           <p class="pos-detail-subtitle">

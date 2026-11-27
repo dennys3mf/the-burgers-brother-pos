@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
+  preparationStartedAt,
+  parseLimaDateTime,
+  formatElapsedMinutesLabel
+} from '../public/preparation.js';
+
+import {
   resolveActiveNavId,
   getRailItems,
   getMobileBottomItems,
@@ -173,4 +179,33 @@ test('public QR Carta defaults and strict App Shell isolation remain preserved i
   assert.match(html, /id="client-tracker-modal"/);
   assert.match(html, /id="carta-mobile-nav"/);
   assert.match(html, /id="modal-confirm"/);
+});
+
+test('order elapsed timers parse es-PE 12h/24h Lima timestamps accurately and emit live timer attributes', () => {
+  assert.equal(parseLimaDateTime('27/11/26, 1:30 p. m.'), Date.parse('2026-11-27T13:30:00-05:00'));
+  assert.equal(parseLimaDateTime('27/11/26, 12:15 p. m.'), Date.parse('2026-11-27T12:15:00-05:00'));
+  assert.equal(parseLimaDateTime('27/11/26, 12:15 a. m.'), Date.parse('2026-11-27T00:15:00-05:00'));
+  assert.equal(parseLimaDateTime('24/11/2026 18:56'), Date.parse('2026-11-24T18:56:00-05:00'));
+
+  const nowMs = Date.parse('2026-11-27T17:05:00-05:00');
+  assert.equal(preparationStartedAt({ approvedAt: '27/11/26, 4:45 p. m.' }), Date.parse('2026-11-27T16:45:00-05:00'));
+  assert.equal(formatElapsedFromOrder({ createdAt: '27/11/26, 4:50 p. m.' }, nowMs), '15 min');
+  assert.equal(formatElapsedMinutesLabel(Date.parse('2026-11-27T17:04:30-05:00'), nowMs), '< 1 min');
+
+  const dashHtml = renderDashboardHtml({
+    pendingCount: 1,
+    cocinaPending: 0,
+    barraPending: 0,
+    readyCount: 0,
+    lowStockCount: 0,
+    expectedCash: 0,
+    shiftOpen: true,
+    activeOrders: [{ id: 'o1', code: 'BB-1', channel: 'MESA', table: 'Mesa 1', customer: 'Ana', status: 'POR_APROBAR', total: 14, createdIso: '2026-11-27T21:55:00.000Z' }],
+    nowMs
+  }, { staffArea: 'admin' });
+  assert.match(dashHtml, /data-order-elapsed-ref="\d+"/);
+  assert.match(dashHtml, /10 min/);
+
+  const routeSrc = readFileSync(new URL('../functions/api/[[route]].js', import.meta.url), 'utf8');
+  assert.match(routeSrc, /serverTimeIso:\s*clock\.iso/);
 });

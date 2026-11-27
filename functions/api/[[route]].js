@@ -390,7 +390,7 @@ export async function onRequest({ request, env }) {
 
     if (path === '/api/status' && method === 'GET') {
       const businessStatus = await getBusinessStatus(db, now);
-      return json({ ok: true, businessStatus });
+      return json({ ok: true, businessStatus, serverTimeIso: clock.iso });
     }
 
     if (path === '/api/orders' && method === 'POST') {
@@ -412,7 +412,7 @@ export async function onRequest({ request, env }) {
       const { rawRev, headers, notModified } = await readStaffETag(db, request, 'kitchen-v1-' + role);
       if (notModified) return new Response(null, { status: 304, headers });
       const orders = await loadKitchenOrders(db, now);
-      return json({ ok: true, role, revision: rawRev, orders }, 200, headers);
+      return json({ ok: true, role, revision: rawRev, serverTimeIso: clock.iso, orders }, 200, headers);
     }
 
     if (path === '/api/kitchen/complete' && method === 'POST') {
@@ -481,6 +481,7 @@ export async function onRequest({ request, env }) {
         role,
         revision: rawRev,
         updatedAt,
+        serverTimeIso: clock.iso,
         businessStatus: snapshot.businessStatus,
         activeShift: snapshot.activeShift,
         lastClosedShift: snapshot.lastClosedShift,
