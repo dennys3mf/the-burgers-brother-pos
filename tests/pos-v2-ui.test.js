@@ -7,6 +7,7 @@ import {
   parseLimaDateTime,
   formatElapsedMinutesLabel
 } from '../public/preparation.js';
+import { createPosSounds } from '../public/pos-sounds.js';
 
 import {
   resolveActiveNavId,
@@ -218,4 +219,32 @@ test('order elapsed timers parse es-PE 12h/24h Lima timestamps accurately and em
   assert.ok(htmlPrepTag && htmlViewsTag);
   assert.equal(/from '\.\.\/preparation\.js\?v=([^']+)'/.exec(viewsSrc)?.[1], htmlPrepTag);
   assert.equal(/from '\.\/views\.js\?v=([^']+)'/.exec(adminViewsSrc)?.[1], htmlViewsTag);
+});
+
+test('system sound defaults to enabled, persists mute override cleanly, and handles AudioContext states safely', async () => {
+  const htmlSrc = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(htmlSrc, /SOUND_PREF_KEY\s*=\s*'pos-sound-enabled'/);
+  assert.match(htmlSrc, /localStorage\.getItem\(SOUND_PREF_KEY\)\s*!==\s*'0'/);
+  assert.match(htmlSrc, /from '\.\/pos-sounds\.js\?v=/);
+
+  class MockAudioContext {
+    constructor() {
+      this.state = 'suspended';
+      this.currentTime = 0;
+      this.destination = {};
+    }
+    async resume() { this.state = 'running'; }
+    createGain() { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {} }, connect() { return {}; } }; }
+    createOscillator() { return { type: '', frequency: { value: 0 }, connect() { return this; }, start() {}, stop() {} }; }
+  }
+  const sounds = createPosSounds({
+    Audio: MockAudioContext,
+    fetchAudio: async () => ({ ok: false })
+  });
+  assert.equal(sounds.isRunning(), false);
+  assert.equal(await sounds.enable(), true);
+  assert.equal(sounds.isRunning(), true);
+  assert.equal(sounds.play('action-success', 1), true);
+  sounds.mute();
+  assert.equal(sounds.isRunning(), false);
 });

@@ -28,13 +28,20 @@ export function createPosSounds({
     return loading;
   }
 
-  async function enable() {
+  async function enable({ wait = true } = {}) {
     if (!Audio) return false;
     context ||= new Audio();
-    await context.resume();
+    if (context.state !== 'running') {
+      const resuming = Promise.resolve(context.resume()).catch(() => {});
+      if (wait) await Promise.race([resuming, new Promise(resolve => setTimeout(resolve, 150))]);
+    }
     enabled = context.state === 'running';
     if (enabled) preload();
     return enabled;
+  }
+
+  function isRunning() {
+    return Boolean(enabled && context?.state === 'running');
   }
 
   function stop() {
@@ -88,5 +95,5 @@ export function createPosSounds({
     return true;
   }
 
-  return { enable, mute, stop, play, ready: () => loading };
+  return { enable, mute, stop, play, isRunning, ready: () => loading };
 }

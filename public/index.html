@@ -1426,7 +1426,7 @@
     import { receiptPdf } from './receipt-pdf.js';
     import { menuPages, drinkOptions } from './visual-menu.js?v=20261127c';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
-    import { createPosSounds } from './pos-sounds.js';
+    import { createPosSounds } from './pos-sounds.js?v=20261127h';
     import {
       CARTA_CATEGORIES,
       burgerIconSvg,
@@ -1621,13 +1621,51 @@
       const alertMessage = document.getElementById('staff-alert-message');
       const prepAlertMessage = document.getElementById('prep-alert-message');
       const soundButton = document.getElementById('staff-sound');
+      const SOUND_PREF_KEY = 'pos-sound-enabled';
       const posSounds = createPosSounds();
-      let soundEnabled = false;
+      let soundEnabled = (() => {
+        try { return localStorage.getItem(SOUND_PREF_KEY) !== '0'; }
+        catch { return true; }
+      })();
+      let audioGestureHooked = false;
       const prepSoundButton = document.getElementById('prep-sound');
       const configSoundButton = document.getElementById('config-sound-toggle');
 
+      async function armDefaultPosAudio({ fromGesture = false } = {}) {
+        if (!soundEnabled || !staffMenu || posSounds.isRunning()) return false;
+        let running = false;
+        try {
+          running = await posSounds.enable({ wait: fromGesture });
+        } catch {
+          running = false;
+        }
+        if (!running && !audioGestureHooked) {
+          audioGestureHooked = true;
+          const onFirstInteraction = async event => {
+            if (event.target?.closest?.('#header-sound-toggle, #config-sound-toggle, #prep-sound, #staff-sound')) {
+              return;
+            }
+            for (const type of ['pointerdown', 'touchstart', 'keydown']) {
+              window.removeEventListener(type, onFirstInteraction, true);
+            }
+            audioGestureHooked = false;
+            if (soundEnabled && staffMenu) {
+              await armDefaultPosAudio({ fromGesture: true });
+            }
+          };
+          for (const type of ['pointerdown', 'touchstart', 'keydown']) {
+            window.addEventListener(type, onFirstInteraction, { capture: true, passive: true });
+          }
+        }
+        return running;
+      }
+
       function playPosSound(cue) {
         if (!soundEnabled || !staffMenu) return false;
+        if (!posSounds.isRunning()) {
+          armDefaultPosAudio();
+          return false;
+        }
         const inPrep = ui.role === 'chef';
         if (inPrep && prepPreferences.snoozeUntil > Date.now()) return false;
         return posSounds.play(cue, inPrep ? prepPreferences.volume / 100 : 1);
@@ -1665,11 +1703,15 @@
         if (status && (!inPrep || prepPreferences.snoozeUntil <= Date.now())) status.textContent = '';
         if (soundEnabled) {
           soundEnabled = false;
+          try { localStorage.setItem(SOUND_PREF_KEY, '0'); } catch {}
           posSounds.mute();
         } else {
           if (trigger) trigger.disabled = true;
           try {
             soundEnabled = await posSounds.enable();
+            if (soundEnabled) {
+              try { localStorage.setItem(SOUND_PREF_KEY, '1'); } catch {}
+            }
           } catch {
             soundEnabled = false;
           } finally {
@@ -1689,6 +1731,7 @@
       if (soundButton) soundButton.onclick = toggleSound;
       if (prepSoundButton) prepSoundButton.onclick = toggleSound;
       if (configSoundButton) configSoundButton.onclick = toggleSound;
+      renderSoundButtons();
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function recipeIngredients(product) {
@@ -5990,7 +6033,10 @@
         const isAdmin = staffReady && staffArea === 'admin';
         document.getElementById('chef-access-settings').hidden = !isAdmin;
         renderPosShellChrome();
-        if (staffReady) renderModuleStats();
+        if (staffReady) {
+          renderModuleStats();
+          armDefaultPosAudio();
+        }
       }
       updateStaffNavigation();
 
