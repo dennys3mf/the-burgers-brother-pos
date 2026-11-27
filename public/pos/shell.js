@@ -30,7 +30,8 @@ function hasScope(item, staffArea) {
 export function resolveActiveNavId({ role, staffOrderEntry, gestionSubtab, prepStation, prepFilter }) {
   if (role === 'modulos') return 'inicio';
   if (role === 'admin') return 'pedidos';
-  if (role === 'cliente') return staffOrderEntry ? 'nuevo-pedido' : 'carta';
+  if (role === 'nuevo-pedido' || (role === 'cliente' && staffOrderEntry)) return 'nuevo-pedido';
+  if (role === 'cliente') return 'carta';
   if (role === 'chef') {
     if (prepFilter === 'ready') return prepStation === 'BARRA' ? 'barra' : 'cocina';
     return prepStation === 'BARRA' ? 'barra' : 'cocina';

@@ -9,7 +9,7 @@ import {
   preparationStartedAt,
   parseLimaDateTime,
   formatElapsedMinutesLabel
-} from '../preparation.js?v=20261127g';
+} from '../preparation.js?v=20261127i';
 
 export const escapeHtml = value => String(value ?? '')
   .replaceAll('&', '&amp;')

@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127e">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127i">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -64,7 +64,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css?v=20261127e">
+<link rel="stylesheet" href="./brand.css?v=20261127i">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -160,6 +160,8 @@
           <h1 id="modules-title" class="sr-only" tabindex="-1">Panel de control</h1>
           <div id="pos-dashboard-root"></div>
         </section>
+
+        <section id="view-nuevo-pedido" class="role-view hidden" aria-labelledby="pos-header-title"></section>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
@@ -1420,7 +1422,7 @@
   <script type="module">
     import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261127c';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
-    import { formatElapsedMinutesLabel, formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js?v=20261127g';
+    import { formatElapsedMinutesLabel, formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js?v=20261127i';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
@@ -1445,7 +1447,7 @@
       getMoreDrawerGroups,
       getHeaderMeta,
       renderNavBadgeText
-    } from './pos/shell.js?v=20261127g';
+    } from './pos/shell.js?v=20261127i';
     import {
       computeDashboardModel,
       renderDashboardHtml,
@@ -1456,7 +1458,7 @@
       renderInventoryRowsAndCards,
       filterKardexMovements,
       renderKardexRowsAndCards
-    } from './pos/views.js?v=20261127g';
+    } from './pos/views.js?v=20261127i';
     import {
       renderSuppliersDirectoryHtml,
       renderPurchasesViewHtml,
@@ -1465,7 +1467,15 @@
       renderReportsMobileHtml,
       renderQrTablesGridHtml,
       renderRolesCardsHtml
-    } from './pos/admin-views.js?v=20261127g';
+    } from './pos/admin-views.js?v=20261127i';
+    import {
+      NP_CATEGORIES,
+      filterPosProducts,
+      renderNuevoPedidoShellHtml,
+      renderNuevoPedidoCategoryTabsHtml,
+      renderNuevoPedidoProductsHtml,
+      renderNuevoPedidoCartItemsHtml
+    } from './pos/order-entry.js?v=20261127i';
 
     (function () {
       'use strict';
@@ -1536,6 +1546,10 @@
         clientCart: [],
         receivedOrders: readTrackedOrders(),
         staffOrderEntry: false,
+        npCategory: 'Todos',
+        npSearch: '',
+        npDrawerOpen: false,
+        npPreviewingPdf: false,
         adminFilter: 'POR_APROBAR',
         selectedAdminOrderId: '',
         adminMobileDetailOpen: false,
@@ -2065,6 +2079,7 @@
           return;
         }
         if (routeId === 'carta') {
+          ui.npPreviewingPdf = ui.role === 'nuevo-pedido' || ui.npPreviewingPdf;
           ui.staffOrderEntry = false;
           ui.clientMode = 'MESA';
           ui.kdsFullscreen = false;
@@ -2546,7 +2561,11 @@
       function updateMenuLayout(role) {
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
         document.body.toggleAttribute('data-public-menu', isPublic);
-        document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry));
+        document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry || role === 'nuevo-pedido'));
+        if (role !== 'nuevo-pedido') {
+          ui.npDrawerOpen = false;
+          document.body.removeAttribute('data-np-drawer');
+        }
         if (role !== 'cliente') {
           staffCartDrawerOpen = false;
           document.body.removeAttribute('data-staff-cart-drawer');
@@ -2572,13 +2591,14 @@
         if (role === 'cliente') return true;
         if (!staffReady) return false;
         if (['modulos', 'chef', 'configuracion'].includes(role)) return true;
-        return staffArea === 'admin' && ['admin', 'gestion', 'qr', 'roles'].includes(role);
+        return staffArea === 'admin' && ['admin', 'nuevo-pedido', 'gestion', 'qr', 'roles'].includes(role);
       }
 
       function syncStaffHash(role, { pushHistory = false } = {}) {
-        if (!staffMenu && !ui.staffOrderEntry) return;
+        if (!staffMenu && !ui.staffOrderEntry && role !== 'nuevo-pedido') return;
         const targetHash = role === 'admin' ? '#admin'
-          : role === 'cliente' ? (ui.staffOrderEntry ? '#nuevo-pedido' : '#carta-admin')
+          : role === 'nuevo-pedido' ? '#nuevo-pedido'
+          : role === 'cliente' ? '#carta-admin'
           : role === 'gestion' ? '#gestion=' + ui.gestionSubtab
           : role === 'chef' ? (scannedPrepCode ? '#chef=' + scannedPrepCode : '#estacion=' + (prepStation === 'BARRA' ? 'barra' : 'cocina'))
           : role === 'qr' ? '#qr'
@@ -2620,6 +2640,7 @@
       function renderActiveRole() {
         updateBadges();
         if (ui.role === 'cliente') renderCliente();
+        else if (ui.role === 'nuevo-pedido') renderNuevoPedido();
         else if (ui.role === 'admin') renderAdmin();
         else if (ui.role === 'chef') renderChef();
         else if (ui.role === 'gestion') renderGestion();
@@ -2865,6 +2886,360 @@
             gpsPreview.hidden = true;
           }
         }
+        syncNpDeliveryLocationUI();
+      }
+
+      let npMounted = false;
+
+      function syncNpDeliveryLocationUI() {
+        const root = document.getElementById('view-nuevo-pedido');
+        if (!npMounted || !root) return;
+        const isDel = ui.clientMode === 'DELIVERY';
+        const isRecojo = ui.clientMode === 'RECOJO';
+        const recojoBox = document.getElementById('np-recojo-box');
+        const delBox = document.getElementById('np-delivery-box');
+        if (recojoBox) recojoBox.hidden = !isRecojo;
+        if (delBox) delBox.hidden = !isDel;
+
+        const pickupPhone = document.getElementById('np-pickup-phone');
+        const phoneInput = document.getElementById('np-phone');
+        const payRefInput = document.getElementById('np-pay-ref');
+        const addrInput = document.getElementById('np-address');
+        const addrRefInput = document.getElementById('np-address-ref');
+        if (pickupPhone) { pickupPhone.disabled = !isRecojo; pickupPhone.required = false; }
+        if (phoneInput) { phoneInput.disabled = !isDel; phoneInput.required = isDel; }
+        if (payRefInput) { payRefInput.disabled = !isDel; payRefInput.required = isDel; }
+
+        root.querySelectorAll('[data-np-loc-mode]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(isDel && btn.dataset.npLocMode === ui.deliveryLocMode));
+        });
+        const gpsPanel = document.getElementById('np-loc-gps-panel');
+        const manualPanel = document.getElementById('np-loc-manual-panel');
+        if (gpsPanel) gpsPanel.hidden = !isDel || ui.deliveryLocMode !== 'gps';
+        if (manualPanel) manualPanel.hidden = !isDel || ui.deliveryLocMode !== 'manual';
+        if (addrInput) {
+          addrInput.disabled = !isDel || ui.deliveryLocMode !== 'manual';
+          addrInput.required = isDel && ui.deliveryLocMode === 'manual';
+        }
+        if (addrRefInput) {
+          addrRefInput.disabled = !isDel || ui.deliveryLocMode !== 'gps';
+          addrRefInput.required = false;
+        }
+        root.querySelectorAll('[data-np-del-pay]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.npDelPay === ui.clientDelPay));
+        });
+
+        const gpsStatus = document.getElementById('np-gps-status');
+        const gpsText = document.getElementById('np-gps-text');
+        const gpsRetry = document.getElementById('np-btn-gps-retry');
+        const gpsPreview = document.getElementById('np-gps-preview');
+        if (gpsStatus && gpsText && gpsRetry && gpsPreview) {
+          if (ui.deliveryGpsBusy) {
+            gpsStatus.dataset.state = 'loading';
+            gpsText.textContent = 'Obteniendo ubicación exacta…';
+            gpsRetry.disabled = true;
+            gpsRetry.textContent = 'Buscando…';
+            gpsPreview.hidden = true;
+          } else if (ui.deliveryGps) {
+            const acc = Math.round(ui.deliveryGps.accuracy || 0);
+            gpsStatus.dataset.state = 'ready';
+            gpsText.textContent = acc ? `Ubicación exacta lista (±${acc} m)` : 'Ubicación exacta lista';
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Actualizar';
+            gpsPreview.href = `https://maps.google.com/?q=${ui.deliveryGps.lat.toFixed(6)},${ui.deliveryGps.lng.toFixed(6)}`;
+            gpsPreview.hidden = false;
+          } else if (ui.deliveryGpsError) {
+            gpsStatus.dataset.state = 'error';
+            gpsText.textContent = ui.deliveryGpsError;
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Reintentar GPS';
+            gpsPreview.hidden = true;
+          } else {
+            gpsStatus.dataset.state = 'idle';
+            gpsText.textContent = 'Comparte tu ubicación GPS o ingrésala manualmente.';
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Obtener GPS';
+            gpsPreview.hidden = true;
+          }
+        }
+      }
+
+      function npPackaging() {
+        const takeawayEl = document.getElementById('np-takeaway');
+        const tapersEl = document.getElementById('np-tapers');
+        const takeaway = ui.clientMode === 'RECOJO' || (ui.clientMode === 'MESA' && Boolean(takeawayEl?.checked));
+        const tapersCount = ui.clientMode === 'DELIVERY' || takeaway ? Number(tapersEl?.value || 0) : 0;
+        return { takeaway, tapers: Number.isFinite(tapersCount) ? tapersCount : 0 };
+      }
+
+      function renderNuevoPedidoCatalog() {
+        if (!npMounted) return;
+        const validCategory = NP_CATEGORIES.some(c => c.id === ui.npCategory) ? ui.npCategory : 'Todos';
+        if (validCategory !== ui.npCategory) ui.npCategory = 'Todos';
+
+        const tabsEl = document.getElementById('np-cat-tabs');
+        if (tabsEl) tabsEl.innerHTML = renderNuevoPedidoCategoryTabsHtml(ui.npCategory);
+        const catSelect = document.getElementById('np-category-select');
+        if (catSelect && catSelect.value !== ui.npCategory) catSelect.value = ui.npCategory;
+
+        const gridEl = document.getElementById('np-product-grid');
+        if (gridEl) {
+          const items = filterPosProducts(MENU, { category: ui.npCategory, search: ui.npSearch });
+          gridEl.innerHTML = renderNuevoPedidoProductsHtml(items);
+        }
+      }
+
+      function renderNuevoPedidoCart() {
+        if (!npMounted) return;
+        const isMesa = ui.clientMode === 'MESA';
+        const isRecojo = ui.clientMode === 'RECOJO';
+        const isDel = ui.clientMode === 'DELIVERY';
+        const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
+        const isCompact = window.innerWidth < 1024;
+        if (!isCompact) ui.npDrawerOpen = false;
+        document.body.toggleAttribute('data-np-drawer', ui.role === 'nuevo-pedido' && isCompact && ui.npDrawerOpen);
+
+        const backdrop = document.getElementById('np-cart-backdrop');
+        if (backdrop) backdrop.hidden = !(isCompact && ui.npDrawerOpen);
+
+        const origin = isMesa ? ui.clientMesa : isRecojo ? 'Para llevar' : 'Delivery';
+        const subEl = document.getElementById('np-cart-subtitle');
+        if (subEl) subEl.textContent = `${origin} · ${units === 1 ? '1 producto' : `${units} productos`}`;
+
+        const clearBtn = document.getElementById('np-cart-clear');
+        if (clearBtn) clearBtn.hidden = units === 0;
+
+        const itemsEl = document.getElementById('np-cart-items');
+        if (itemsEl) itemsEl.innerHTML = renderNuevoPedidoCartItemsHtml(ui.clientCart);
+
+        const fieldsWrap = document.getElementById('np-checkout-fields');
+        if (fieldsWrap) fieldsWrap.hidden = units === 0;
+
+        const takeawayWrap = document.getElementById('np-takeaway-wrap');
+        const takeawayEl = document.getElementById('np-takeaway');
+        const tapersWrap = document.getElementById('np-tapers-wrap');
+        const tapersEl = document.getElementById('np-tapers');
+        if (takeawayWrap) takeawayWrap.hidden = !isMesa;
+        const packaging = npPackaging();
+        const tapersDisabled = isMesa && !packaging.takeaway;
+        if (tapersEl) tapersEl.disabled = tapersDisabled;
+        if (tapersWrap) tapersWrap.hidden = tapersDisabled || units === 0;
+
+        const taperVal = Number(tapersEl?.value || 0);
+        const decBtn = document.querySelector('[data-np-taper-step="-1"]');
+        const incBtn = document.querySelector('[data-np-taper-step="1"]');
+        if (decBtn) decBtn.disabled = tapersDisabled || taperVal <= 0;
+        if (incBtn) incBtn.disabled = tapersDisabled || taperVal >= 99;
+
+        syncNpDeliveryLocationUI();
+
+        const validTapers = tapersEl ? tapersEl.checkValidity() : true;
+        const { total, fee } = priceOrder(ui.clientCart, {
+          ...packaging,
+          tapers: validTapers ? packaging.tapers : 0,
+          channel: ui.clientMode,
+          paymentMethod: ui.clientDelPay
+        });
+        const taperCharge = units && validTapers ? packaging.tapers : 0;
+        const bdEl = document.getElementById('np-order-breakdown');
+        if (bdEl) bdEl.hidden = units === 0;
+        const subTotalEl = document.getElementById('np-subtotal');
+        if (subTotalEl) subTotalEl.textContent = money(total - taperCharge - fee);
+        const taperRow = document.getElementById('np-taper-charge');
+        if (taperRow) {
+          taperRow.hidden = !taperCharge;
+          taperRow.querySelector('dd').textContent = money(taperCharge);
+        }
+        const cardRow = document.getElementById('np-card-charge');
+        if (cardRow) {
+          cardRow.hidden = !fee;
+          cardRow.querySelector('dd').textContent = money(fee);
+        }
+
+        const totalEl = document.getElementById('np-cart-total');
+        if (totalEl) totalEl.textContent = money(total);
+        const submitBtn = document.getElementById('np-submit-order');
+        if (submitBtn && !ui.submittingOrder) {
+          submitBtn.disabled = units === 0;
+        }
+
+        const mobBar = document.getElementById('np-mobile-bar');
+        const mobCount = document.getElementById('np-mobile-count');
+        const mobTotal = document.getElementById('np-mobile-total');
+        if (mobBar) mobBar.hidden = !(isCompact && !ui.npDrawerOpen);
+        if (mobCount) mobCount.textContent = units === 1 ? '1 producto' : `${units} productos`;
+        if (mobTotal) mobTotal.textContent = money(total);
+      }
+
+      function ensureNuevoPedidoMounted() {
+        const root = document.getElementById('view-nuevo-pedido');
+        if (!root || npMounted) return;
+        root.innerHTML = renderNuevoPedidoShellHtml({
+          mode: ui.clientMode,
+          mesa: ui.clientMesa,
+          category: ui.npCategory,
+          search: ui.npSearch
+        });
+        npMounted = true;
+
+        root.addEventListener('click', event => {
+          const modeBtn = event.target.closest('[data-np-mode]');
+          if (modeBtn) {
+            ui.clientMode = modeBtn.dataset.npMode;
+            document.getElementById('np-checkout-error').textContent = '';
+            renderNuevoPedido();
+            return;
+          }
+          if (event.target.closest('#np-open-pdf-btn')) {
+            navigatePosRoute('carta');
+            return;
+          }
+          const catBtn = event.target.closest('[data-np-cat]');
+          if (catBtn) {
+            ui.npCategory = catBtn.dataset.npCat;
+            renderNuevoPedidoCatalog();
+            if (window.lucide?.createIcons) lucide.createIcons();
+            return;
+          }
+          if (event.target.closest('#np-cart-clear')) {
+            ui.clientCart = [];
+            document.getElementById('np-checkout-error').textContent = '';
+            renderNuevoPedidoCart();
+            if (window.lucide?.createIcons) lucide.createIcons();
+            return;
+          }
+          if (event.target.closest('#np-open-cart-drawer')) {
+            ui.npDrawerOpen = true;
+            renderNuevoPedidoCart();
+            requestAnimationFrame(() => document.getElementById('np-cart-close')?.focus());
+            return;
+          }
+          if (event.target.closest('#np-cart-close') || event.target.id === 'np-cart-backdrop') {
+            ui.npDrawerOpen = false;
+            renderNuevoPedidoCart();
+            return;
+          }
+          const editBtn = event.target.closest('[data-np-edit-item]');
+          if (editBtn) {
+            const idx = Number(editBtn.dataset.npEditItem);
+            const entry = ui.clientCart[idx];
+            if (entry) openCustomizeModal(entry.menuId, false, idx);
+            return;
+          }
+          const taperBtn = event.target.closest('[data-np-taper-step]');
+          if (taperBtn) {
+            const tapersEl = document.getElementById('np-tapers');
+            if (!tapersEl || tapersEl.disabled) return;
+            const step = Number(taperBtn.dataset.npTaperStep);
+            tapersEl.value = String(Math.max(0, Math.min(99, (Number(tapersEl.value) || 0) + step)));
+            renderNuevoPedidoCart();
+            return;
+          }
+          const locBtn = event.target.closest('[data-np-loc-mode]');
+          if (locBtn) {
+            const mode = locBtn.dataset.npLocMode;
+            if (!['gps', 'manual'].includes(mode)) return;
+            ui.deliveryLocMode = mode;
+            document.getElementById('np-checkout-error').textContent = '';
+            syncNpDeliveryLocationUI();
+            if (mode === 'gps' && !ui.deliveryGps && !ui.deliveryGpsBusy) requestDeliveryGps();
+            else if (mode === 'manual') requestAnimationFrame(() => document.getElementById('np-address')?.focus({ preventScroll: true }));
+            return;
+          }
+          if (event.target.closest('#np-btn-gps-retry')) {
+            ui.deliveryLocMode = 'gps';
+            document.getElementById('np-checkout-error').textContent = '';
+            requestDeliveryGps();
+            return;
+          }
+          const payBtn = event.target.closest('[data-np-del-pay]');
+          if (payBtn) {
+            ui.clientDelPay = payBtn.dataset.npDelPay;
+            renderNuevoPedidoCart();
+          }
+        });
+
+        document.getElementById('np-mesa-select')?.addEventListener('change', event => {
+          ui.clientMesa = event.target.value;
+          renderNuevoPedidoCart();
+        });
+        document.getElementById('np-search')?.addEventListener('input', event => {
+          ui.npSearch = event.target.value;
+          renderNuevoPedidoCatalog();
+          if (window.lucide?.createIcons) lucide.createIcons();
+        });
+        document.getElementById('np-category-select')?.addEventListener('change', event => {
+          ui.npCategory = event.target.value;
+          renderNuevoPedidoCatalog();
+          if (window.lucide?.createIcons) lucide.createIcons();
+        });
+        document.getElementById('np-takeaway')?.addEventListener('change', event => {
+          const tapersEl = document.getElementById('np-tapers');
+          if (event.target.checked && tapersEl && !Number(tapersEl.value)) tapersEl.value = '1';
+          renderNuevoPedidoCart();
+        });
+        document.getElementById('np-tapers')?.addEventListener('input', renderNuevoPedidoCart);
+
+        const npForm = document.getElementById('np-checkout');
+        npForm?.addEventListener('input', () => {
+          document.getElementById('np-checkout-error').textContent = '';
+          npForm.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
+        });
+        npForm?.addEventListener('submit', async event => {
+          event.preventDefault();
+          await submitCheckoutOrder({
+            formEl: npForm,
+            errorEl: document.getElementById('np-checkout-error'),
+            submitBtn: document.getElementById('np-submit-order'),
+            labelEl: document.getElementById('np-submit-label'),
+            nameField: document.getElementById('np-name'),
+            phoneField: document.getElementById('np-phone'),
+            pickupPhoneField: document.getElementById('np-pickup-phone'),
+            addressField: document.getElementById('np-address'),
+            addressRefField: document.getElementById('np-address-ref'),
+            paymentField: document.getElementById('np-pay-ref'),
+            noteField: document.getElementById('np-order-note'),
+            tapersEl: document.getElementById('np-tapers'),
+            gpsLocBtn: document.getElementById('np-btn-loc-gps'),
+            gpsRetryBtn: document.getElementById('np-btn-gps-retry'),
+            packagingFn: npPackaging,
+            isStaffCounter: true,
+            onSuccess: async newOrder => {
+              resetOrderEntry();
+              ui.staffOrderEntry = false;
+              ui.npDrawerOpen = false;
+              document.body.removeAttribute('data-np-drawer');
+              ui.adminFilter = 'POR_APROBAR';
+              document.getElementById('admin-order-search').value = '';
+              switchRole('admin');
+              try { await syncStaff(); } catch {}
+              showToast('Pedido ' + newOrder.code + ' creado.');
+            }
+          });
+        });
+      }
+
+      function renderNuevoPedido() {
+        ensureNuevoPedidoMounted();
+        const root = document.getElementById('view-nuevo-pedido');
+        if (!root) return;
+        const isMesa = ui.clientMode === 'MESA';
+        root.querySelectorAll('[data-np-mode]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.npMode === ui.clientMode));
+        });
+        const mesaSelect = document.getElementById('np-mesa-select');
+        if (mesaSelect) {
+          mesaSelect.hidden = !isMesa;
+          mesaSelect.disabled = !isMesa;
+          mesaSelect.value = ui.clientMesa;
+        }
+        const searchInput = document.getElementById('np-search');
+        if (searchInput && document.activeElement !== searchInput && searchInput.value !== ui.npSearch) {
+          searchInput.value = ui.npSearch;
+        }
+        renderNuevoPedidoCatalog();
+        renderNuevoPedidoCart();
+        if (window.lucide?.createIcons) lucide.createIcons();
       }
 
       function renderCliente() {
@@ -4111,18 +4486,27 @@
       let custSelectedExtras = [];
 
       let customizeForEdit = false;
-      function openCustomizeModal(menuId, forEdit = false) {
+      let customizeCartEditIdx = null;
+      function openCustomizeModal(menuId, forEdit = false, editCartIdx = null) {
         const m = MENU.find(x => x.id === menuId);
         if (!m) return;
         customizeForEdit = forEdit;
-        document.getElementById('customize-submit-label').textContent = forEdit ? 'Agregar a la comanda' : 'Agregar al pedido';
-        custSelectedFlavors = m.flavorsRequired === 6 ? [...WING_FLAVORS] : [];
-        custSelectedExtras = [];
+        customizeCartEditIdx = Number.isInteger(editCartIdx) && editCartIdx >= 0 ? editCartIdx : null;
+        const existingEntry = customizeCartEditIdx !== null ? ui.clientCart[customizeCartEditIdx] : null;
+        document.getElementById('customize-submit-label').textContent = customizeCartEditIdx !== null
+          ? 'Guardar cambios'
+          : (forEdit ? 'Agregar a la comanda' : 'Agregar al pedido');
+        custSelectedFlavors = existingEntry
+          ? [...(existingEntry.flavors || [])]
+          : (m.flavorsRequired === 6 ? [...WING_FLAVORS] : []);
+        custSelectedExtras = existingEntry
+          ? (existingEntry.extras || []).map(ex => EXTRAS.find(e => e.id === ex.id) || ex)
+          : [];
 
         document.getElementById('cust-prod-id').value = m.id;
         document.getElementById('cust-title').textContent = m.name;
         document.getElementById('cust-desc').textContent = m.desc;
-        document.getElementById('cust-note').value = '';
+
         const hasFries = m.recipe?.some(({ id }) => id === 'ing_papas');
         creamPicker.hidden = !hasFries;
         creamPicker.disabled = !hasFries;
@@ -4135,6 +4519,24 @@
         drinkSelect.replaceChildren(new Option('Selecciona una opción', ''));
         options?.forEach(option => drinkSelect.add(new Option(option, option)));
         drinkSelect.value = '';
+
+        let initialFreeNote = '';
+        if (existingEntry?.note) {
+          const parts = String(existingEntry.note).split(' · ').filter(Boolean);
+          const leftover = [];
+          for (const part of parts) {
+            if (hasFries && part.startsWith('Cremas: ')) {
+              const creamList = part.slice('Cremas: '.length).split(',').map(s => s.trim());
+              creamBoxes.forEach(box => { box.checked = creamList.includes(box.value); });
+            } else if (options && options.includes(part) && !drinkSelect.value) {
+              drinkSelect.value = part;
+            } else {
+              leftover.push(part);
+            }
+          }
+          initialFreeNote = leftover.join(' · ');
+        }
+        document.getElementById('cust-note').value = initialFreeNote;
 
         const fWrap = document.getElementById('cust-flavors-wrap');
         if (m.flavorsRequired) {
@@ -4163,15 +4565,18 @@
       }
 
       function renderExtraButtons() {
-        document.getElementById('cust-extras-list').innerHTML = EXTRAS.map(ex => `
-          <button type="button" data-toggle-extra="${ex.id}" aria-pressed="false" class="customize-option customize-extra">
+        document.getElementById('cust-extras-list').innerHTML = EXTRAS.map(ex => {
+          const on = custSelectedExtras.some(x => x.id === ex.id);
+          return `
+          <button type="button" data-toggle-extra="${ex.id}" aria-pressed="${on}" class="customize-option customize-extra">
             <span>${ex.name}</span>
             <span class="customize-extra-meta">
               <span>+ ${money(ex.price)}</span>
               <i data-lucide="plus" aria-hidden="true" class="customize-extra-add"></i>
               <i data-lucide="check" aria-hidden="true" class="customize-extra-check"></i>
             </span>
-          </button>`).join('');
+          </button>`;
+        }).join('');
       }
 
       function updateCustPrice(basePrice) {
@@ -4283,17 +4688,28 @@
         }
 
         const inc = e.target.closest('[data-cc-inc]');
-        if (inc) { ui.clientCart[Number(inc.dataset.ccInc)].qty += 1; renderClientCart(); return; }
+        if (inc) {
+          ui.clientCart[Number(inc.dataset.ccInc)].qty += 1;
+          renderClientCart();
+          if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
+          return;
+        }
         const dec = e.target.closest('[data-cc-dec]');
         if (dec) {
           const idx = Number(dec.dataset.ccDec);
           ui.clientCart[idx].qty -= 1;
           if (ui.clientCart[idx].qty <= 0) ui.clientCart.splice(idx, 1);
           renderClientCart();
+          if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
           return;
         }
         const del = e.target.closest('[data-cc-del]');
-        if (del) { ui.clientCart.splice(Number(del.dataset.ccDel), 1); renderClientCart(); return; }
+        if (del) {
+          ui.clientCart.splice(Number(del.dataset.ccDel), 1);
+          renderClientCart();
+          if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
+          return;
+        }
 
         // Admin filters & actions
         const selOrder = e.target.closest('[data-select-order]');
@@ -4607,16 +5023,29 @@
       function resetOrderEntry() {
         ui.clientCart = [];
         ui.clientMode = 'MESA';
+        ui.npCategory = 'Todos';
+        ui.npSearch = '';
+        ui.npDrawerOpen = false;
+        ui.npPreviewingPdf = false;
+        document.body.removeAttribute('data-np-drawer');
         clientTakeaway.checked = false;
         clientTapers.value = '0';
-        for (const id of ['client-name', 'client-order-note', 'client-pay-ref']) {
-          document.getElementById(id).value = '';
+        const npTakeaway = document.getElementById('np-takeaway');
+        const npTapers = document.getElementById('np-tapers');
+        if (npTakeaway) npTakeaway.checked = false;
+        if (npTapers) npTapers.value = '0';
+        for (const id of [
+          'client-name', 'client-order-note', 'client-pay-ref',
+          'np-name', 'np-pickup-phone', 'np-phone', 'np-address', 'np-address-ref', 'np-pay-ref', 'np-order-note', 'np-search'
+        ]) {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
         }
       }
 
       async function startCounterOrder() {
         if (!staffReady || staffArea !== 'admin') return;
-        if (!ui.staffOrderEntry && ui.clientCart.length) {
+        if (!ui.staffOrderEntry && !ui.npPreviewingPdf && ui.clientCart.length) {
           const ok = await confirmPosAction({
             title: 'Iniciar nuevo pedido de mostrador',
             message: 'Tienes productos en el carrito de Carta. ¿Deseas limpiarlos para empezar un nuevo pedido?',
@@ -4625,10 +5054,13 @@
           });
           if (!ok) return;
         }
-        if (!ui.staffOrderEntry) resetOrderEntry();
+        if (!ui.staffOrderEntry && !ui.npPreviewingPdf) resetOrderEntry();
+        if (ui.npPreviewingPdf && ui.clientMode !== 'MESA' && ui.clientMode !== 'RECOJO' && ui.clientMode !== 'DELIVERY') {
+          ui.clientMode = 'MESA';
+        }
+        ui.npPreviewingPdf = false;
         ui.staffOrderEntry = true;
-        showMenuFormat('list', { focusSearch: true });
-        switchRole('cliente', { pushHistory: true });
+        switchRole('nuevo-pedido', { pushHistory: true });
         window.scrollTo(0, 0);
       }
 
@@ -5039,9 +5471,18 @@
           productPicker.focus();
           return;
         }
-        ui.clientCart.push(item);
+        const editIdx = customizeCartEditIdx;
+        customizeCartEditIdx = null;
+        if (editIdx !== null && ui.clientCart[editIdx]) {
+          item.qty = ui.clientCart[editIdx].qty || 1;
+          ui.clientCart[editIdx] = item;
+        } else {
+          ui.clientCart.push(item);
+        }
         customizeDialog.close();
         renderClientCart();
+        if (ui.role === 'nuevo-pedido') renderNuevoPedido();
+        else lucide.createIcons();
         for (const el of [document.getElementById('carta-cart-link'), document.getElementById('btn-mobile-cart')]) {
           if (!el) continue;
           el.classList.remove('is-updated');
@@ -5052,59 +5493,40 @@
           (document.getElementById('carta-cart-label')?.textContent || 'Pedido');
       });
 
-      const clientCheckout = document.getElementById('client-checkout');
-      const checkoutError = document.getElementById('client-checkout-error');
+      async function submitCheckoutOrder({
+        formEl, errorEl, submitBtn, labelEl, nameField, phoneField, pickupPhoneField,
+        addressField, addressRefField, paymentField, noteField, tapersEl,
+        gpsLocBtn, gpsRetryBtn, packagingFn, isStaffCounter, onSuccess
+      }) {
+        if (submitBtn.disabled || !ui.clientCart.length) return;
+        errorEl.textContent = '';
+        formEl.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
+        const fail = (message, field) => {
+          errorEl.textContent = message;
+          playPosSound('error');
+          if (field) {
+            field.setAttribute('aria-invalid', 'true');
+            field.focus();
+          } else errorEl.scrollIntoView({ block: 'nearest' });
+        };
 
-      function showCheckoutError(message, field) {
-        checkoutError.textContent = message;
-        playPosSound('error');
-        if (field) {
-          field.setAttribute('aria-invalid', 'true');
-          field.focus();
-        } else checkoutError.scrollIntoView({ block: 'nearest' });
-      }
-
-      function clearCheckoutError() {
-        checkoutError.textContent = '';
-        clientCheckout.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
-      }
-
-      clientCheckout.addEventListener('input', clearCheckoutError);
-      clientCheckout.addEventListener('submit', async event => {
-        event.preventDefault();
-        const button = document.getElementById('btn-submit-client-order');
-        if (button.disabled || !ui.clientCart.length) return;
-        clearCheckoutError();
         const isDel = ui.clientMode === 'DELIVERY';
         const isRecojo = ui.clientMode === 'RECOJO';
-        const name = document.getElementById('client-name');
-        const customer = name.value.trim();
-        if (!customer) {
-          showCheckoutError('Ingresa tu nombre.', name);
-          return;
-        }
-        const phoneField = document.getElementById('client-phone');
-        const pickupPhoneField = document.getElementById('client-pickup-phone');
-        const addressField = document.getElementById('client-address');
-        const addressRefField = document.getElementById('client-address-ref');
-        const paymentField = document.getElementById('client-pay-ref');
+        const customer = nameField.value.trim();
+        if (!customer) return fail('Ingresa tu nombre.', nameField);
+
         const phone = isDel ? phoneField.value.trim() : isRecojo ? (pickupPhoneField?.value.trim() || '') : '';
         let address = '';
         let locationPayload;
         const payRef = isDel ? paymentField.value.trim() : '';
         if (isDel) {
-          if (!phone) {
-            showCheckoutError('Ingresa tu teléfono o WhatsApp.', phoneField);
-            return;
-          }
+          if (!phone) return fail('Ingresa tu teléfono o WhatsApp.', phoneField);
           if (!ui.deliveryLocMode) {
-            showCheckoutError('Elige compartir tu ubicación exacta o ingresar tu dirección manualmente.', document.getElementById('btn-loc-gps'));
-            return;
+            return fail('Elige compartir tu ubicación exacta o ingresar tu dirección manualmente.', gpsLocBtn);
           }
           if (ui.deliveryLocMode === 'gps') {
             if (!ui.deliveryGps) {
-              showCheckoutError('Obtén tu ubicación exacta por GPS o cambia a "Ingresar manualmente".', document.getElementById('btn-gps-retry'));
-              return;
+              return fail('Obtén tu ubicación exacta por GPS o cambia a "Ingresar manualmente".', gpsRetryBtn);
             }
             const ref = addressRefField?.value.trim() || '';
             const { lat, lng } = ui.deliveryGps;
@@ -5114,30 +5536,24 @@
             locationPayload = { mode: 'gps', lat, lng, reference: ref };
           } else {
             address = addressField.value.trim();
-            if (!address) {
-              showCheckoutError('Ingresa la dirección de entrega.', addressField);
-              return;
-            }
+            if (!address) return fail('Ingresa la dirección de entrega.', addressField);
             locationPayload = { mode: 'manual' };
           }
-          if (!payRef) {
-            showCheckoutError('Ingresa el número de operación o código de pago.', paymentField);
-            return;
-          }
+          if (!payRef) return fail('Ingresa el número de operación o código de pago.', paymentField);
         }
 
-        if (!clientTapers.disabled && !clientTapers.checkValidity()) {
-          showCheckoutError('Ingresa una cantidad válida de táperes (0 a 99).', clientTapers);
-          return;
+        if (tapersEl && !tapersEl.disabled && !tapersEl.checkValidity()) {
+          return fail('Ingresa una cantidad válida de táperes (0 a 99).', tapersEl);
         }
+
         const draft = {
-          ...clientPackaging(),
+          ...packagingFn(),
           channel: ui.clientMode,
           table: ui.clientMesa,
           customer, phone, address, payRef,
           ...(locationPayload ? { location: locationPayload } : {}),
           paymentMethod: ui.clientDelPay,
-          note: document.getElementById('client-order-note').value.trim(),
+          note: noteField.value.trim(),
           items: ui.clientCart.map(item => ({
             menuId: item.menuId, qty: item.qty, note: item.note,
             extras: item.extras.map(extra => extra.id), flavors: item.flavors
@@ -5148,10 +5564,9 @@
           pendingOrder = { serialized, id: crypto.randomUUID() };
         }
         ui.submittingOrder = true;
-        button.disabled = true;
-        const label = document.getElementById('btn-submit-client-label');
-        const originalLabel = label.textContent;
-        label.textContent = 'Enviando…';
+        submitBtn.disabled = true;
+        const originalLabel = labelEl.textContent;
+        labelEl.textContent = 'Enviando…';
         let newOrder;
         try {
           const response = await fetch('/api/orders', {
@@ -5165,40 +5580,63 @@
           }
           if (!response.ok) throw new Error(result.error);
           newOrder = result.order;
-          if (!ui.staffOrderEntry) {
+          if (!isStaffCounter) {
             ui.receivedOrders = [trackedOrder(newOrder), ...ui.receivedOrders.filter(order => order.id !== newOrder.id)].slice(0, 3);
             saveTrackedOrders();
           }
           pendingOrder = null;
         } catch (error) {
-          showCheckoutError(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.');
+          fail(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.');
           return;
         } finally {
           ui.submittingOrder = false;
-          button.disabled = false;
-          label.textContent = originalLabel;
+          submitBtn.disabled = !ui.clientCart.length;
+          labelEl.textContent = originalLabel;
           renderBusinessClosedUI();
         }
-        ui.clientCart = [];
-        clientTakeaway.checked = false;
-        clientTapers.value = '0';
-        document.getElementById('client-order-note').value = '';
-        document.getElementById('client-pay-ref').value = '';
+        await onSuccess(newOrder);
+      }
 
-        if (ui.staffOrderEntry) {
-          resetOrderEntry();
-          ui.staffOrderEntry = false;
-          ui.adminFilter = 'POR_APROBAR';
-          document.getElementById('admin-order-search').value = '';
-          switchRole('admin');
-          try { await syncStaff(); } catch {}
-          showToast('Pedido ' + newOrder.code + ' creado.');
-          return;
-        }
-        closeCartDrawer({ restoreFocus: false });
-        renderActiveRole();
-        showToast(`Pedido ${newOrder.code} enviado. Esperando confirmación.`);
-        openClientTrackerModal(document.getElementById('btn-open-tracker'));
+      const clientCheckout = document.getElementById('client-checkout');
+      const checkoutError = document.getElementById('client-checkout-error');
+
+      function clearCheckoutError() {
+        checkoutError.textContent = '';
+        clientCheckout.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
+      }
+
+      clientCheckout.addEventListener('input', clearCheckoutError);
+      clientCheckout.addEventListener('submit', async event => {
+        event.preventDefault();
+        await submitCheckoutOrder({
+          formEl: clientCheckout,
+          errorEl: checkoutError,
+          submitBtn: document.getElementById('btn-submit-client-order'),
+          labelEl: document.getElementById('btn-submit-client-label'),
+          nameField: document.getElementById('client-name'),
+          phoneField: document.getElementById('client-phone'),
+          pickupPhoneField: document.getElementById('client-pickup-phone'),
+          addressField: document.getElementById('client-address'),
+          addressRefField: document.getElementById('client-address-ref'),
+          paymentField: document.getElementById('client-pay-ref'),
+          noteField: document.getElementById('client-order-note'),
+          tapersEl: clientTapers,
+          gpsLocBtn: document.getElementById('btn-loc-gps'),
+          gpsRetryBtn: document.getElementById('btn-gps-retry'),
+          packagingFn: clientPackaging,
+          isStaffCounter: ui.staffOrderEntry,
+          onSuccess: async newOrder => {
+            ui.clientCart = [];
+            clientTakeaway.checked = false;
+            clientTapers.value = '0';
+            document.getElementById('client-order-note').value = '';
+            document.getElementById('client-pay-ref').value = '';
+            closeCartDrawer({ restoreFocus: false });
+            renderActiveRole();
+            showToast(`Pedido ${newOrder.code} enviado. Esperando confirmación.`);
+            openClientTrackerModal(document.getElementById('btn-open-tracker'));
+          }
+        });
       });
 
       const chefInput = document.getElementById('chef-code-input');
@@ -5776,10 +6214,10 @@
               scannedPrepCode = preparation.get('chef') || '';
               switchRole('chef');
             } else if (params.has('nuevo-pedido') && canOpenPosView('admin')) {
-              if (!ui.staffOrderEntry) resetOrderEntry();
+              if (!ui.staffOrderEntry && !ui.npPreviewingPdf) resetOrderEntry();
+              ui.npPreviewingPdf = false;
               ui.staffOrderEntry = true;
-              showMenuFormat('list');
-              switchRole('cliente');
+              switchRole('nuevo-pedido');
             } else if (params.has('carta-admin') && canOpenPosView('modulos')) {
               ui.staffOrderEntry = false;
               ui.clientMode = 'MESA';
@@ -5872,6 +6310,7 @@
       document.getElementById('cart-drawer-backdrop').addEventListener('click', () => closeCartDrawer());
       window.addEventListener('resize', () => {
         if (ui.role === 'cliente' && (staffMenu || ui.staffOrderEntry)) renderClientCart();
+        else if (ui.role === 'nuevo-pedido') renderNuevoPedidoCart();
       });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
@@ -5891,6 +6330,12 @@
         if (categorySheetOpen) {
           event.preventDefault();
           closeCategorySheet({ restoreFocus: true });
+          return;
+        }
+        if (ui.npDrawerOpen) {
+          event.preventDefault();
+          ui.npDrawerOpen = false;
+          renderNuevoPedidoCart();
           return;
         }
         if (cartDrawerOpen || staffCartDrawerOpen) {

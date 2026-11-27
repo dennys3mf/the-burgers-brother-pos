@@ -4,6 +4,17 @@ Fecha: `2026-11-27`
 
 ---
 
+## [2.1.0] — Separación Operativa POS Split View en Módulo Nuevo pedido
+
+### Cambiado
+- **Vista dedicada `#view-nuevo-pedido` ([public/pos/order-entry.js](file:///d:/the-burgers-brother-cloudflare/the-burgers-brother-pos/public/pos/order-entry.js)):** se separó por completo la interfaz de **Nuevo pedido** respecto a la Carta pública (`#view-cliente`), eliminando el fondo oscuro heredado, el sidebar interno duplicado, el encabezado secundario `"La carta"`, `"Volver a Pedidos"` y `"Ver QR de mesas"`.
+- **Layout Split View `~62% / 38%` a ancho completo:** sin límites artificiales de `max-width` y con altura ajustada al viewport (`calc(100dvh - 86px)` en `>= 1024px`) para scroll independiente entre catálogo y carrito persistente.
+- **Categorización única sincronizada (`NP_CATEGORIES`):** única fuente de verdad entre pestañas en tablet/escritorio, selector `<select>` en móvil (`< 768px`) y búsqueda en vivo, sin barras de desplazamiento horizontal.
+- **Tarjetas claras y carrito operativo completo:** tarjetas claras `POS V2.0` con acordeón accesible `Ver ingredientes`, personalización en `#modal-customize` y opción `Editar personalización` sobre líneas existentes del carrito, subtotal/total/botón `Confirmar pedido` fijos al pie (deshabilitado si el carrito está vacío), y soporte responsivo completo en `390×844` hasta `1920×1080`.
+- **Sincronización horaria y sonido por defecto:** `serverTimeIso` en endpoints de estado, `parseLimaDateTime` para formato 12 h/24 h en `America/Lima`, actualización en vivo cada `10 s` en Dashboard/Pedidos/KDS y sonido habilitado por defecto con persistencia en navegador.
+
+---
+
 ## [2.0.0] — Rediseño Integral POS Tablet First, Touch First y Responsive
 
 ### Añadido

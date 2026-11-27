@@ -8,6 +8,14 @@ import {
   formatElapsedMinutesLabel
 } from '../public/preparation.js';
 import { createPosSounds } from '../public/pos-sounds.js';
+import {
+  NP_CATEGORIES,
+  filterPosProducts,
+  renderNuevoPedidoShellHtml,
+  renderNuevoPedidoProductsHtml,
+  renderNuevoPedidoCartItemsHtml
+} from '../public/pos/order-entry.js';
+import { MENU } from '../public/catalog.js';
 
 import {
   resolveActiveNavId,
@@ -59,6 +67,7 @@ test('navigation shell strictly enforces Admin vs Cocina role permissions withou
   assert.ok(adminMoreIds.includes('inventario') && adminMoreIds.includes('qr') && adminMoreIds.includes('roles'));
 
   assert.equal(resolveActiveNavId({ role: 'admin' }), 'pedidos');
+  assert.equal(resolveActiveNavId({ role: 'nuevo-pedido' }), 'nuevo-pedido');
   assert.equal(resolveActiveNavId({ role: 'cliente', staffOrderEntry: true }), 'nuevo-pedido');
   assert.equal(resolveActiveNavId({ role: 'cliente', staffOrderEntry: false }), 'carta');
   assert.equal(resolveActiveNavId({ role: 'chef', prepStation: 'BARRA', prepFilter: 'pending' }), 'barra');
@@ -216,9 +225,44 @@ test('order elapsed timers parse es-PE 12h/24h Lima timestamps accurately and em
   const htmlSrc = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const htmlPrepTag = /from '\.\/preparation\.js\?v=([^']+)'/.exec(htmlSrc)?.[1];
   const htmlViewsTag = /from '\.\/pos\/views\.js\?v=([^']+)'/.exec(htmlSrc)?.[1];
+  const orderEntrySrc = readFileSync(new URL('../public/pos/order-entry.js', import.meta.url), 'utf8');
   assert.ok(htmlPrepTag && htmlViewsTag);
   assert.equal(/from '\.\.\/preparation\.js\?v=([^']+)'/.exec(viewsSrc)?.[1], htmlPrepTag);
   assert.equal(/from '\.\/views\.js\?v=([^']+)'/.exec(adminViewsSrc)?.[1], htmlViewsTag);
+  assert.equal(/from '\.\/views\.js\?v=([^']+)'/.exec(orderEntrySrc)?.[1], htmlViewsTag);
+});
+
+test('Nuevo pedido dedicated Split View isolates light POS presentation, single category source, and cart states', () => {
+  const activeMenuCats = new Set(MENU.filter(m => !m.retired).map(m => m.cat));
+  for (const cat of activeMenuCats) {
+    assert.ok(NP_CATEGORIES.some(c => c.id === cat), `missing NP_CATEGORIES entry for ${cat}`);
+  }
+  const burgers = filterPosProducts(MENU, { category: 'Hamburguesas', search: 'royal' });
+  assert.equal(burgers.length, 1);
+  assert.equal(burgers[0].name, 'Burger Royal');
+
+  const shellHtml = renderNuevoPedidoShellHtml({ mode: 'MESA', mesa: 'Mesa 4', category: 'Hamburguesas' });
+  assert.match(shellHtml, /pos-np-split/);
+  assert.match(shellHtml, /np-open-pdf-btn/);
+  assert.match(shellHtml, /id="np-category-select"/);
+  assert.match(shellHtml, /id="np-submit-order"[^>]*disabled/);
+  assert.ok(!shellHtml.includes('Ver QR de mesas'));
+  assert.ok(!shellHtml.includes('Volver a Pedidos'));
+  assert.ok(!shellHtml.includes('carta-sidebar'));
+
+  const cardsHtml = renderNuevoPedidoProductsHtml(burgers);
+  assert.match(cardsHtml, /Burger Royal/);
+  assert.match(cardsHtml, /Ver ingredientes/);
+  assert.match(cardsHtml, /data-open-cust="m4"/);
+
+  const emptyCartHtml = renderNuevoPedidoCartItemsHtml([]);
+  assert.match(emptyCartHtml, /Pedido vacío/);
+
+  const filledCartHtml = renderNuevoPedidoCartItemsHtml([
+    { menuId: 'm1', name: 'Burger Classic', qty: 2, unitPrice: 18, flavors: [], extras: [{ name: 'Huevo' }], note: 'Cremas: Mayonesa' }
+  ]);
+  assert.match(filledCartHtml, /Editar personalización/);
+  assert.match(filledCartHtml, /S\/ 36\.00/);
 });
 
 test('system sound defaults to enabled, persists mute override cleanly, and handles AudioContext states safely', async () => {
