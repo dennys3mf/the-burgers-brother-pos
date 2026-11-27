@@ -881,7 +881,7 @@ export async function repriceEditedOrder({ order, items, takeaway, tapers, note 
       channel: order.channel,
       paymentMethod: order.paymentMethod
     }),
-    takeaway: order.channel === 'MESA' ? Boolean(takeaway) : false,
+    takeaway: order.channel === 'RECOJO' ? true : (order.channel === 'MESA' ? Boolean(takeaway) : false),
     note: cleanNote
   };
 }

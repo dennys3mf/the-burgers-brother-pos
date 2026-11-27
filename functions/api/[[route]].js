@@ -135,29 +135,54 @@ function validateOrderItems(rawItems, { allowEmpty = false } = {}) {
   });
 }
 
+function formatDeliveryAddress(draft) {
+  if (draft.location && draft.location.mode === 'gps') {
+    const lat = Number(draft.location.lat);
+    const lng = Number(draft.location.lng);
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+      throw new RangeError('Comparte una ubicación GPS válida o ingresa tu dirección manualmente.');
+    }
+    const coords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    const mapUrl = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+    const ref = clean(draft.location.reference ?? draft.reference ?? '', 120);
+    const suffix = ` (${coords}) · ${mapUrl}`;
+    const maxRef = Math.max(0, 240 - suffix.length - 6);
+    return ref && maxRef > 0 ? `GPS: ${ref.slice(0, maxRef)}${suffix}` : `GPS${suffix}`;
+  }
+  return clean(draft.address, 240);
+}
+
 function orderDraft(draft, clock) {
   if (!draft || typeof draft.id !== 'string' || !uuid.test(draft.id) ||
-      !['MESA', 'DELIVERY'].includes(draft.channel)) {
+      !['MESA', 'DELIVERY', 'RECOJO'].includes(draft.channel)) {
     throw new RangeError('Revisa los datos y los productos del pedido.');
   }
   const delivery = draft.channel === 'DELIVERY';
-  const takeaway = !delivery && draft.takeaway === true;
+  const recojo = draft.channel === 'RECOJO';
+  const takeaway = recojo || (draft.channel === 'MESA' && draft.takeaway === true);
   const tapers = draft.tapers ?? 0;
   if (!Number.isInteger(tapers) || tapers < 0 || tapers > 99 || (tapers && !delivery && !takeaway)) {
     throw new RangeError('Revisa la cantidad de táperes.');
   }
-  if (!delivery && !/^Mesa [1-6]$/.test(draft.table)) throw new RangeError('Selecciona una mesa válida.');
-  const table = delivery ? '-' : draft.table;
+  if (draft.channel === 'MESA' && !/^Mesa [1-6]$/.test(draft.table)) {
+    throw new RangeError('Selecciona una mesa válida.');
+  }
+  const table = draft.channel === 'MESA' ? draft.table : (recojo ? 'Para llevar' : '-');
   const customer = clean(draft.customer, 100);
   if (!customer) {
     throw new RangeError('Ingresa tu nombre para realizar el pedido.');
   }
-  const phone = delivery ? clean(draft.phone, 40) : '';
-  const address = delivery ? clean(draft.address, 240) : '';
+  const phone = (delivery || recojo) ? clean(draft.phone, 40) : '';
+  const address = delivery ? formatDeliveryAddress(draft) : '';
   const paymentRef = delivery ? clean(draft.payRef, 80) : '';
-  if (delivery && (!customer || !phone || !address || !paymentRef ||
-      !['Yape', 'Plin', 'Tarjeta'].includes(draft.paymentMethod))) {
-    throw new RangeError('Completa los datos de entrega y la referencia del pago.');
+  if (delivery && !phone) {
+    throw new RangeError('Ingresa tu teléfono o WhatsApp para el delivery.');
+  }
+  if (delivery && !address) {
+    throw new RangeError('Ingresa tu ubicación o dirección de entrega.');
+  }
+  if (delivery && (!paymentRef || !['Yape', 'Plin', 'Tarjeta'].includes(draft.paymentMethod))) {
+    throw new RangeError('Completa los datos de pago previo para delivery.');
   }
 
   const items = validateOrderItems(draft.items);
@@ -736,7 +761,7 @@ export async function onRequest({ request, env }) {
           return reject('Este pedido ya fue finalizado.', 409);
         }
         const paid = order.paymentStatus === 'PAGADO' || Boolean(order.boletaNum);
-        const takeaway = order.channel === 'MESA' && Boolean(body.takeaway);
+        const takeaway = order.channel === 'RECOJO' || (order.channel === 'MESA' && Boolean(body.takeaway));
         const showTapers = order.channel === 'DELIVERY' || takeaway;
         const tapers = showTapers ? Number(body.tapers) : 0;
         if (!Number.isInteger(tapers) || tapers < 0 || tapers > 99) {

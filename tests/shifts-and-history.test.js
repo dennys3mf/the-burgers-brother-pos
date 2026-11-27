@@ -448,3 +448,81 @@ test('incremental edits, cancel, ml/MERMA/CONTEO/recipes/suppliers, and post-clo
     body: { paymentMethod: 'Efectivo' },
   })).status, 409);
 });
+
+test('delivery requires name and location (GPS or manual), while pickup (RECOJO) requires name only', async t => {
+  const { call, signInAdmin } = createSqliteFixture(t);
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-11-26T20:00:00.000Z') });
+  const admin = await signInAdmin();
+
+  // Delivery without location or invalid GPS fails with 400
+  assert.equal((await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: crypto.randomUUID(), channel: 'DELIVERY', customer: 'Carlos', phone: '958111222',
+      address: '', payRef: 'OP-1', paymentMethod: 'Yape', items: [{ menuId: 'm1', qty: 1 }],
+    },
+  })).status, 400);
+  assert.equal((await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: crypto.randomUUID(), channel: 'DELIVERY', customer: 'Carlos', phone: '958111222',
+      location: { mode: 'gps', lat: 999, lng: -71.53 }, payRef: 'OP-1', paymentMethod: 'Yape',
+      items: [{ menuId: 'm1', qty: 1 }],
+    },
+  })).status, 400);
+
+  // Delivery with valid GPS coordinates + optional reference succeeds and preserves Maps pin
+  const gpsId = crypto.randomUUID();
+  const gpsRes = await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: gpsId, channel: 'DELIVERY', customer: 'Carlos GPS', phone: '958111222',
+      location: { mode: 'gps', lat: -16.409047, lng: -71.537451, reference: 'Portón negro' },
+      payRef: 'OP-777', paymentMethod: 'Yape', items: [{ menuId: 'm1', qty: 1 }],
+    },
+  });
+  assert.equal(gpsRes.status, 201);
+
+  // Takeout/Pickup (RECOJO) without customer name fails with 400
+  assert.equal((await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: crypto.randomUUID(), channel: 'RECOJO', customer: '   ', items: [{ menuId: 'm1', qty: 1 }],
+    },
+  })).status, 400);
+
+  // Takeout/Pickup (RECOJO) with name only (no address, no location, no prepay) succeeds & completes
+  const recojoId = crypto.randomUUID();
+  const recojoRes = await call('/api/orders', {
+    method: 'POST',
+    body: {
+      id: recojoId, channel: 'RECOJO', customer: 'Valeria', phone: '', tapers: 1,
+      items: [{ menuId: 'm1', qty: 1 }],
+    },
+  });
+  assert.equal(recojoRes.status, 201);
+  const recojoPublic = (await recojoRes.json()).order;
+  assert.equal(recojoPublic.channel, 'RECOJO');
+  assert.equal(recojoPublic.table, 'Para llevar');
+  assert.equal(recojoPublic.total, 15);
+
+  // Approve, complete kitchen, and pay at pickup cleanly
+  assert.equal((await call(`/api/orders/${recojoId}/approve`, { method: 'POST', cookie: admin, body: {} })).status, 200);
+  assert.equal((await call('/api/kitchen/complete', {
+    method: 'POST', cookie: admin, body: { id: recojoId, station: 'COCINA' },
+  })).status, 200);
+  const payRecojo = await call(`/api/orders/${recojoId}/pay`, {
+    method: 'POST', cookie: admin, body: { paymentMethod: 'Yape' },
+  });
+  assert.equal(payRecojo.status, 200);
+
+  const statePayload = await (await call('/api/state', { cookie: admin })).json();
+  const gpsSaved = statePayload.state.orders.find(o => o.id === gpsId);
+  assert.ok(gpsSaved.address.includes('Portón negro'));
+  assert.ok(gpsSaved.address.includes('https://maps.google.com/?q=-16.409047,-71.537451'));
+  const recojoSaved = statePayload.state.orders.find(o => o.id === recojoId);
+  assert.equal(recojoSaved.takeaway, true);
+  assert.equal(recojoSaved.address, '');
+  assert.equal(recojoSaved.status, 'ENTREGADO');
+  assert.equal(recojoSaved.paymentStatus, 'PAGADO');
+});

@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261126d">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127b">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -64,7 +64,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css?v=20261126d">
+<link rel="stylesheet" href="./brand.css?v=20261127b">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -379,9 +379,6 @@
         </div>
       </div>
 
-      <!-- Closed Business Day Notice (Sundays / Closed Dates) -->
-      <div id="business-closed-banner" class="business-closed-banner" role="status" hidden></div>
-
       <!-- Active Client Order Tracker (if client just placed orders) -->
       <div id="client-tracker-wrap" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">
         <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado de tus pedidos en vivo</div>
@@ -522,6 +519,16 @@
 
           <form id="client-checkout" novalidate>
             <div class="checkout-fields">
+              <div id="client-remote-mode" class="checkout-remote-modes" hidden role="group" aria-label="Tipo de pedido web">
+                <button type="button" id="btn-remote-delivery" data-remote-mode="DELIVERY" class="checkout-remote-btn" aria-pressed="true">
+                  <i data-lucide="bike" aria-hidden="true"></i>
+                  <span>Delivery</span>
+                </button>
+                <button type="button" id="btn-remote-recojo" data-remote-mode="RECOJO" class="checkout-remote-btn" aria-pressed="false">
+                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <span>Para llevar (Recoger)</span>
+                </button>
+              </div>
               <div class="checkout-field">
                 <label for="client-name">
                   <span>Nombre</span>
@@ -545,6 +552,20 @@
                 </div>
               </div>
 
+              <div id="client-recojo-fields" class="checkout-recojo-card" hidden>
+                <div class="checkout-recojo-head">
+                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <div>
+                    <p class="checkout-recojo-title">Recoges tu pedido en el local</p>
+                    <p class="checkout-recojo-sub">No necesitas ingresar ubicación. Pagas al recoger.</p>
+                  </div>
+                </div>
+                <div class="checkout-field">
+                  <label for="client-pickup-phone"><span>Teléfono o WhatsApp</span><span class="checkout-badge-opt">Opcional</span></label>
+                  <input id="client-pickup-phone" type="tel" autocomplete="tel" inputmode="tel" enterkeyhint="next" maxlength="40" placeholder="Para avisarte cuando esté listo">
+                </div>
+              </div>
+
               <div id="client-delivery-fields" class="hidden">
                 <div class="checkout-delivery-head">
                   <i data-lucide="bike" class="w-4 h-4" aria-hidden="true"></i>
@@ -554,9 +575,42 @@
                   <label for="client-phone"><span>Teléfono o WhatsApp</span><span class="checkout-badge-req">Requerido</span></label>
                   <input id="client-phone" type="tel" autocomplete="tel" inputmode="tel" enterkeyhint="next" maxlength="40" placeholder="Ej. 958 123 456">
                 </div>
-                <div class="checkout-field">
-                  <label for="client-address"><span>Dirección de entrega</span><span class="checkout-badge-req">Requerido</span></label>
-                  <input id="client-address" type="text" autocomplete="street-address" enterkeyhint="next" maxlength="240" placeholder="Calle, número y referencia">
+                <div class="checkout-field checkout-location-field">
+                  <div class="checkout-location-head">
+                    <span>Ubicación de entrega</span>
+                    <span class="checkout-badge-req">Requerido</span>
+                  </div>
+                  <p class="checkout-location-prompt">¿Cómo quieres indicar tu ubicación?</p>
+                  <div class="checkout-location-modes" role="group" aria-label="Método para indicar tu ubicación">
+                    <button type="button" id="btn-loc-gps" data-del-loc-mode="gps" class="checkout-loc-btn" aria-pressed="false">
+                      <i data-lucide="locate-fixed" aria-hidden="true"></i>
+                      <span>Compartir ubicación exacta</span>
+                    </button>
+                    <button type="button" id="btn-loc-manual" data-del-loc-mode="manual" class="checkout-loc-btn" aria-pressed="false">
+                      <i data-lucide="map-pin" aria-hidden="true"></i>
+                      <span>Ingresar manualmente</span>
+                    </button>
+                  </div>
+                  <div id="client-loc-gps-panel" class="checkout-loc-panel" hidden>
+                    <div id="client-gps-status" class="checkout-gps-status" role="status" aria-live="polite">
+                      <span id="client-gps-text">Comparte tu ubicación GPS para ubicarte más rápido.</span>
+                      <button type="button" id="btn-gps-retry" class="checkout-gps-action">Obtener GPS</button>
+                    </div>
+                    <a id="client-gps-preview" href="#" target="_blank" rel="noopener noreferrer" class="checkout-gps-link" hidden>
+                      <i data-lucide="external-link" aria-hidden="true"></i>
+                      <span>Ver ubicación en Google Maps</span>
+                    </a>
+                    <div class="checkout-field">
+                      <label for="client-address-ref"><span>Referencia adicional</span><span class="checkout-badge-opt">Opcional</span></label>
+                      <input id="client-address-ref" type="text" maxlength="120" enterkeyhint="next" placeholder="Ej. Portón negro, piso 2, timbre">
+                    </div>
+                  </div>
+                  <div id="client-loc-manual-panel" class="checkout-loc-panel" hidden>
+                    <div class="checkout-field">
+                      <label for="client-address"><span>Dirección exacta</span><span class="checkout-badge-req">Requerido</span></label>
+                      <input id="client-address" type="text" autocomplete="street-address" enterkeyhint="next" maxlength="240" placeholder="Calle, número, distrito y referencia">
+                    </div>
+                  </div>
                 </div>
                 <fieldset class="checkout-payment">
                   <legend>Pago previo para delivery</legend>
@@ -1205,6 +1259,27 @@
     </div>
   </div>
 
+  <!-- MODAL: LOCAL CERRADO HOY -->
+  <dialog id="business-closed-modal" class="business-closed-modal" aria-labelledby="closed-modal-title" aria-describedby="closed-modal-message">
+    <div class="business-closed-modal-card">
+      <div class="business-closed-modal-top">
+        <span id="closed-modal-badge" class="business-closed-pill">Local cerrado hoy</span>
+        <button type="button" id="btn-close-closed-modal" class="business-closed-x" aria-label="Cerrar aviso">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="business-closed-modal-body">
+        <div class="business-closed-modal-icon" aria-hidden="true">
+          <i data-lucide="clock"></i>
+        </div>
+        <h2 id="closed-modal-title">Hoy el local está cerrado</h2>
+        <p id="closed-modal-message">No se atiende hoy.</p>
+        <p class="business-closed-sub">Puedes explorar toda la carta, pero el envío de pedidos está deshabilitado por hoy.</p>
+      </div>
+      <button type="button" id="btn-accept-closed-modal" class="business-closed-modal-cta">Entendido, ver la carta</button>
+    </div>
+  </dialog>
+
   <!-- MODAL: STOCK ADJUST / PURCHASE / EXPENSE -->
   <dialog id="inventory-recipes" class="prep-dialog inventory-dialog" aria-labelledby="inventory-recipes-title">
     <header>
@@ -1389,13 +1464,13 @@
   </dialog>
 
   <script type="module">
-    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261126d';
+    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261127b';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
     import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
-    import { menuPages, drinkOptions } from './visual-menu.js?v=20261126d';
+    import { menuPages, drinkOptions } from './visual-menu.js?v=20261127b';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
     import { createPosSounds } from './pos-sounds.js';
     import {
@@ -1406,7 +1481,7 @@
       canFitBookSpread,
       buildMenuPageLeaf,
       bindBottomSheetSwipe
-    } from './carta-components.js?v=20261126d';
+    } from './carta-components.js?v=20261127b';
 
     (function () {
       'use strict';
@@ -1442,8 +1517,8 @@
           const orders = JSON.parse(sessionStorage.getItem(trackingKey));
           return Array.isArray(orders) ? orders.filter(order => order && typeof order.id === 'string'
             && /^BB-[A-Z0-9]{1,12}$/.test(order.code) && /^[A-Z_]+$/.test(order.status)
-            && ['MESA', 'DELIVERY'].includes(order.channel)
-            && (order.channel === 'DELIVERY' || /^Mesa [1-6]$/.test(order.table))).slice(0, 3).map(trackedOrder) : [];
+            && ['MESA', 'DELIVERY', 'RECOJO'].includes(order.channel)
+            && (order.channel !== 'MESA' || /^Mesa [1-6]$/.test(order.table))).slice(0, 3).map(trackedOrder) : [];
         } catch {
           return [];
         }
@@ -1464,6 +1539,10 @@
         clientCategory: 'Todos',
         clientSearch: '',
         clientDelPay: 'Yape',
+        deliveryLocMode: '',
+        deliveryGps: null,
+        deliveryGpsBusy: false,
+        deliveryGpsError: '',
         clientCart: [],
         receivedOrders: readTrackedOrders(),
         staffOrderEntry: false,
@@ -1598,6 +1677,22 @@
         return url.href;
       }
 
+      function orderOriginLabel(order, { uppercase = false, qrTag = false } = {}) {
+        if (order.channel === 'DELIVERY') return uppercase ? 'DELIVERY' : 'Delivery';
+        if (order.channel === 'RECOJO') return uppercase ? 'PARA LLEVAR (RECOGER)' : 'Para llevar (Recoger)';
+        if (uppercase) return String(order.table || '').toUpperCase() + (qrTag ? ' (QR)' : '');
+        return order.table + (order.takeaway ? ' · Para llevar' : '');
+      }
+
+      const mapsUrlPattern = /https:\/\/maps\.google\.com\/\?q=-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?/;
+      function extractMapsUrl(address) {
+        const match = String(address || '').match(mapsUrlPattern);
+        return match ? match[0] : '';
+      }
+      function stripMapsUrl(address) {
+        return String(address || '').replace(/\s*·?\s*https:\/\/maps\.google\.com\/\?q=-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?/g, '').trim();
+      }
+
       // ==================== BIXOLON SPP-R310BK 80MM TICKETS ====================
       function buildComandaHTML(order) {
         const cocinaItems = order.items.filter(i => i.station === 'COCINA');
@@ -1620,13 +1715,15 @@
             </div>
             <div style="display:flex;justify-content:space-between;font-weight:700;">
               <span>ORIGEN:</span>
-              <span>${order.channel === 'MESA' ? order.table.toUpperCase() + ' (QR)' : 'DELIVERY'}</span>
+              <span>${orderOriginLabel(order, { uppercase: true, qrTag: true })}</span>
             </div>
             <div style="display:flex;justify-content:space-between;"><span>CLIENTE:</span><span>${order.customer}</span></div>
             <div style="display:flex;justify-content:space-between;"><span>APROBADO:</span><span>${order.approvedAt || nowStr()}</span></div>
             ${order.channel === 'DELIVERY' ? `<div style="font-weight:700;margin-top:2px;">PAGO: ${order.paymentMethod.toUpperCase()} OK (${order.paymentRef})</div>` : ''}
+            ${order.channel === 'DELIVERY' && order.address ? `<div style="margin-top:2px;word-break:break-word;">DIR: ${escapeHtml(stripMapsUrl(order.address) || order.address)}</div>` : ''}
+            ${order.phone ? `<div>TEL: ${escapeHtml(order.phone)}</div>` : ''}
             <div class="thermal-line-bold"></div>
-            ${order.takeaway ? '<div style="font-weight:800;">PARA LLEVAR</div>' : ''}
+            ${order.takeaway && order.channel === 'MESA' ? '<div style="font-weight:800;">PARA LLEVAR</div>' : ''}
             ${renderLines(order.items.filter(item => item.menuId === 'taper'))}
             ${cocinaItems.length ? `<div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN COCINA ]</div>${renderLines(cocinaItems)}` : ''}
             ${barraItems.length ? `<div class="thermal-line"></div><div style="font-weight:800;margin-bottom:4px;">[ ESTACIÓN BARRA ]</div>${renderLines(barraItems)}` : ''}
@@ -1667,9 +1764,9 @@
             <div style="text-align:center;font-weight:700;">BOLETA INTERNA DE VENTA</div>
             <div style="text-align:center;font-weight:800;">${boletaNum}</div>
             <div class="thermal-line"></div>
-            <div>Pedido: ${order.code} (${order.channel === 'MESA' ? order.table + (order.takeaway ? ' · Para llevar' : '') : 'Delivery'})</div>
+            <div>Pedido: ${order.code} (${orderOriginLabel(order)})</div>
             <div>Cliente: ${order.customer}</div>
-            ${order.channel === 'DELIVERY' && order.address ? `<div>Dir: ${order.address}</div>` : ''}
+            ${order.channel === 'DELIVERY' && order.address ? `<div>Dir: ${escapeHtml(stripMapsUrl(order.address) || order.address)}</div>` : ''}
             <div>Fecha: ${receiptDate(order) || "—"}</div>
             <div class="thermal-line"></div>
             <table style="width:100%;border-collapse:collapse;font-size:inherit;">
@@ -1702,10 +1799,12 @@
         const sep = '------------------------------------------------\n';
         let out = `COMANDA DE SERVICIO\n`;
         out += `CODIGO CHEF: ${order.code}\n`;
-        out += `ORIGEN: ${order.channel === 'MESA' ? order.table : 'DELIVERY'}\n`;
+        out += `ORIGEN: ${orderOriginLabel(order, { uppercase: true })}\n`;
         out += `CLIENTE: ${order.customer}\n`;
+        if (order.channel === 'DELIVERY' && order.address) out += `DIR: ${stripMapsUrl(order.address) || order.address}\n`;
+        if (order.phone) out += `TEL: ${order.phone}\n`;
         out += sep;
-        if (order.takeaway) out += 'PARA LLEVAR\n';
+        if (order.takeaway && order.channel === 'MESA') out += 'PARA LLEVAR\n';
         order.items.filter(item => item.menuId !== 'delivery-card-fee').forEach(it => {
           out += `${it.qty}x ${it.name} [${it.station}]\n`;
           if (it.flavors && it.flavors.length) out += `   SABORES: ${it.flavors.join(', ')}\n`;
@@ -2025,13 +2124,11 @@
         const catalogCol = document.querySelector('.menu-catalog-col');
         const trackerWrap = document.getElementById('client-tracker-wrap');
         const mobileNav = document.getElementById('carta-mobile-nav');
-        const closedBanner = document.getElementById('business-closed-banner');
         const staffHero = document.getElementById('staff-menu-hero');
         const hasOverlay = cartActive || sheetActive;
         if (catalogCol) catalogCol.inert = hasOverlay;
         if (trackerWrap) trackerWrap.inert = hasOverlay;
         if (mobileNav) mobileNav.inert = hasOverlay;
-        if (closedBanner) closedBanner.inert = hasOverlay;
         if (staffHero) staffHero.inert = hasOverlay;
         document.body.toggleAttribute('data-cart-open', cartActive);
         document.body.toggleAttribute('data-category-sheet-open', sheetActive);
@@ -2091,6 +2188,14 @@
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
         document.body.toggleAttribute('data-public-menu', isPublic);
         document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry));
+        if (role !== 'cliente') {
+          const closedModal = document.getElementById('business-closed-modal');
+          if (closedModal?.open) {
+            autoClosingClosedModal = true;
+            closedModal.close();
+            autoClosingClosedModal = false;
+          }
+        }
         if (!isPublic) {
           cartDrawerOpen = false;
           categorySheetOpen = false;
@@ -2163,23 +2268,65 @@
       }
 
       // ==================== RENDER 1: CLIENTE (QR / DELIVERY) ====================
+      let closedModalDismissedKey = '';
+      let autoClosingClosedModal = false;
+      let lastClosedModalTrigger = null;
+      const closedStatusKey = bs => (bs ? `${bs.businessDate || ''}:${bs.reason || ''}:${bs.message || ''}` : '');
+
+      const closedModalEl = document.getElementById('business-closed-modal');
+      const closeClosedModal = () => {
+        if (closedModalEl?.open) closedModalEl.close();
+      };
+      document.getElementById('btn-close-closed-modal')?.addEventListener('click', closeClosedModal);
+      document.getElementById('btn-accept-closed-modal')?.addEventListener('click', closeClosedModal);
+      closedModalEl?.addEventListener('click', event => {
+        if (event.target === closedModalEl) closeClosedModal();
+      });
+      closedModalEl?.addEventListener('close', () => {
+        if (!autoClosingClosedModal && ui.businessStatus && !ui.businessStatus.open) {
+          closedModalDismissedKey = closedStatusKey(ui.businessStatus);
+        }
+        if (lastClosedModalTrigger instanceof HTMLElement && lastClosedModalTrigger.isConnected) {
+          lastClosedModalTrigger.focus({ preventScroll: true });
+        }
+      });
+
       function renderBusinessClosedUI() {
         const bs = ui.businessStatus;
         const closed = Boolean(bs && !bs.open);
-        const banner = document.getElementById('business-closed-banner');
         const notice = document.getElementById('client-closed-notice');
         const submitBtn = document.getElementById('btn-submit-client-order');
         const labelEl = document.getElementById('btn-submit-client-label');
-        if (banner) {
-          banner.hidden = !closed;
-          if (closed) {
-            const badge = bs.isSunday ? 'Domingo · Local cerrado' : 'Local cerrado hoy';
-            const detail = bs.message || 'Hoy no estamos atendiendo pedidos por la carta digital.';
-            banner.innerHTML = `<span class="business-closed-pill">${escapeHtml(badge)}</span><p>${escapeHtml(detail)}</p>`;
-          } else {
-            banner.innerHTML = '';
+
+        if (!closed) {
+          closedModalDismissedKey = '';
+          if (closedModalEl?.open) {
+            autoClosingClosedModal = true;
+            closedModalEl.close();
+            autoClosingClosedModal = false;
+          }
+        } else if (closedModalEl) {
+          const badge = bs.isSunday ? 'Domingo · Cerrado' : 'Local cerrado';
+          const title = bs.isSunday ? 'Cerrado los domingos' : 'Hoy el local está cerrado';
+          const detail = bs.message || (bs.isSunday
+            ? 'Los domingos no abrimos el local.'
+            : 'No se atiende hoy.');
+          document.getElementById('closed-modal-badge').textContent = badge;
+          document.getElementById('closed-modal-title').textContent = title;
+          document.getElementById('closed-modal-message').textContent = detail;
+          const statusKey = closedStatusKey(bs);
+          const shouldOpen = ui.role === 'cliente'
+            && !ui.staffOrderEntry
+            && !document.documentElement.hasAttribute('data-staff-loading')
+            && !document.querySelector('dialog[open]')
+            && closedModalDismissedKey !== statusKey;
+          if (shouldOpen && !closedModalEl.open) {
+            lastClosedModalTrigger = document.activeElement;
+            if (window.lucide?.createIcons) window.lucide.createIcons();
+            closedModalEl.showModal();
           }
         }
+
         const blockSubmit = closed && !ui.staffOrderEntry;
         if (notice) {
           notice.hidden = !blockSubmit;
@@ -2197,8 +2344,85 @@
         }
       }
 
+      function syncDeliveryLocationUI() {
+        const isDel = ui.clientMode === 'DELIVERY';
+        const isRecojo = ui.clientMode === 'RECOJO';
+        const isMesa = ui.clientMode === 'MESA';
+        const remoteWrap = document.getElementById('client-remote-mode');
+        if (remoteWrap) {
+          remoteWrap.hidden = isMesa;
+          remoteWrap.querySelectorAll('[data-remote-mode]').forEach(btn => {
+            btn.setAttribute('aria-pressed', String(btn.dataset.remoteMode === ui.clientMode));
+          });
+        }
+        const recojoWrap = document.getElementById('client-recojo-fields');
+        if (recojoWrap) recojoWrap.hidden = !isRecojo;
+        const pickupPhone = document.getElementById('client-pickup-phone');
+        if (pickupPhone) {
+          pickupPhone.disabled = !isRecojo;
+          pickupPhone.required = false;
+        }
+        document.getElementById('client-delivery-fields').classList.toggle('hidden', !isDel);
+        document.getElementById('client-name').required = true;
+        const phoneInput = document.getElementById('client-phone');
+        const payRefInput = document.getElementById('client-pay-ref');
+        const addressInput = document.getElementById('client-address');
+        const addressRefInput = document.getElementById('client-address-ref');
+        if (phoneInput) { phoneInput.disabled = !isDel; phoneInput.required = isDel; }
+        if (payRefInput) { payRefInput.disabled = !isDel; payRefInput.required = isDel; }
+        document.querySelectorAll('[data-del-loc-mode]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(isDel && btn.dataset.delLocMode === ui.deliveryLocMode));
+        });
+        const gpsPanel = document.getElementById('client-loc-gps-panel');
+        const manualPanel = document.getElementById('client-loc-manual-panel');
+        if (gpsPanel) gpsPanel.hidden = !isDel || ui.deliveryLocMode !== 'gps';
+        if (manualPanel) manualPanel.hidden = !isDel || ui.deliveryLocMode !== 'manual';
+        if (addressInput) {
+          addressInput.disabled = !isDel || ui.deliveryLocMode !== 'manual';
+          addressInput.required = isDel && ui.deliveryLocMode === 'manual';
+        }
+        if (addressRefInput) {
+          addressRefInput.disabled = !isDel || ui.deliveryLocMode !== 'gps';
+          addressRefInput.required = false;
+        }
+        const gpsStatus = document.getElementById('client-gps-status');
+        const gpsText = document.getElementById('client-gps-text');
+        const gpsRetry = document.getElementById('btn-gps-retry');
+        const gpsPreview = document.getElementById('client-gps-preview');
+        if (gpsStatus && gpsText && gpsRetry && gpsPreview) {
+          if (ui.deliveryGpsBusy) {
+            gpsStatus.dataset.state = 'loading';
+            gpsText.textContent = 'Obteniendo tu ubicación exacta…';
+            gpsRetry.disabled = true;
+            gpsRetry.textContent = 'Buscando…';
+            gpsPreview.hidden = true;
+          } else if (ui.deliveryGps) {
+            const acc = Math.round(ui.deliveryGps.accuracy || 0);
+            gpsStatus.dataset.state = 'ready';
+            gpsText.textContent = acc ? `Ubicación exacta lista (±${acc} m)` : 'Ubicación exacta lista';
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Actualizar';
+            gpsPreview.href = `https://maps.google.com/?q=${ui.deliveryGps.lat.toFixed(6)},${ui.deliveryGps.lng.toFixed(6)}`;
+            gpsPreview.hidden = false;
+          } else if (ui.deliveryGpsError) {
+            gpsStatus.dataset.state = 'error';
+            gpsText.textContent = ui.deliveryGpsError;
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Reintentar GPS';
+            gpsPreview.hidden = true;
+          } else {
+            gpsStatus.dataset.state = 'idle';
+            gpsText.textContent = 'Presiona para compartir tu ubicación GPS.';
+            gpsRetry.disabled = false;
+            gpsRetry.textContent = 'Obtener GPS';
+            gpsPreview.hidden = true;
+          }
+        }
+      }
+
       function renderCliente() {
         const isMesa = ui.clientMode === 'MESA';
+        const isRecojo = ui.clientMode === 'RECOJO';
         const isStaffClient = staffMenu || ui.staffOrderEntry;
         document.getElementById('admin-order-entry').hidden = !ui.staffOrderEntry;
         document.getElementById('btn-mode-delivery').hidden = ui.staffOrderEntry;
@@ -2210,15 +2434,11 @@
         mesaSelect.disabled = !isStaffClient || !isMesa;
         mesaSelect.classList.toggle('hidden', !isStaffClient || !isMesa);
         document.getElementById('btn-show-qr').classList.toggle('hidden', !isMesa || ui.staffOrderEntry || !staffMenu || staffArea !== 'admin');
-        document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
         document.getElementById('client-cart-origin').textContent = isMesa
-          ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '') : 'Delivery';
+          ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '')
+          : isRecojo ? 'Para llevar · Recoger en local' : 'Delivery';
         renderBusinessClosedUI();
-        document.getElementById('client-name').required = true;
-        for (const field of document.querySelectorAll('#client-delivery-fields input')) {
-          field.disabled = isMesa;
-          field.required = !isMesa;
-        }
+        syncDeliveryLocationUI();
         const cardPayment = ui.clientDelPay === 'Tarjeta';
         document.getElementById('client-mobile-payment').hidden = cardPayment;
         document.getElementById('client-card-payment').hidden = !cardPayment;
@@ -2244,7 +2464,7 @@
             return `
               <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
                 <div>
-                  <div class="font-mono-ticket text-xs font-extrabold text-slate-900">${o.code} • ${o.channel === 'MESA' ? o.table : 'Delivery'}</div>
+                  <div class="font-mono-ticket text-xs font-extrabold text-slate-900">${o.code} • ${escapeHtml(orderOriginLabel(o))}</div>
                   <div class="text-[11px] text-slate-500">${money(o.total)}</div>
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${st.cls}">${st.label}</span>
@@ -2331,9 +2551,11 @@
           }).join('');
         }
         const delivery = ui.clientMode === 'DELIVERY';
+        const recojo = ui.clientMode === 'RECOJO';
+        const mesa = ui.clientMode === 'MESA';
         const packaging = clientPackaging();
-        document.getElementById('client-takeaway-label').hidden = delivery;
-        clientTapers.disabled = !delivery && !packaging.takeaway;
+        document.getElementById('client-takeaway-label').hidden = !mesa;
+        clientTapers.disabled = mesa && !packaging.takeaway;
         document.getElementById('client-tapers-label').hidden = clientTapers.disabled;
         const taperCountVal = Number(clientTapers.value) || 0;
         const decTaperBtn = document.querySelector('[data-taper-step="-1"]');
@@ -2352,9 +2574,9 @@
         }
         const context = document.getElementById('menu-order-context');
         context.hidden = !isPublic;
-        const originLabel = delivery ? 'Delivery' : ui.clientMesa;
+        const originLabel = delivery ? 'Delivery' : recojo ? 'Para llevar' : ui.clientMesa;
         context.textContent = originLabel;
-        context.setAttribute('aria-label', delivery ? 'Pedido por Delivery' : `Mesa fija asignada: ${originLabel}`);
+        context.setAttribute('aria-label', delivery ? 'Pedido por Delivery' : recojo ? 'Pedido para recoger en el local' : `Mesa fija asignada: ${originLabel}`);
         const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
         const cartEl = document.getElementById('client-cart');
         const backdrop = document.getElementById('cart-drawer-backdrop');
@@ -2442,28 +2664,33 @@
 
         grid.innerHTML = filtered.map(o => {
           const isDel = o.channel === 'DELIVERY';
+          const isRecojo = o.channel === 'RECOJO';
+          const mapsUrl = isDel ? extractMapsUrl(o.address) : '';
+          const displayAddr = isDel ? (stripMapsUrl(o.address) || o.address) : '';
+          const payHint = o.paymentStatus === 'PAGADO'
+            ? o.paymentMethod + ' pagado'
+            : (isDel ? 'Pago por verificar' : isRecojo ? 'Pago al recoger' : 'Pago en mesa');
           return `
             <div class="admin-order-card">
               <div class="admin-card-content">
                 <div class="admin-card-summary">
-                  <span class="admin-order-channel"><i data-lucide="${isDel ? 'bike' : o.takeaway ? 'shopping-bag' : 'utensils'}" aria-hidden="true"></i>
-                    ${isDel ? 'Delivery' : o.table + (o.takeaway ? ' · Para llevar' : '')}
+                  <span class="admin-order-channel"><i data-lucide="${isDel ? 'bike' : isRecojo || o.takeaway ? 'shopping-bag' : 'utensils'}" aria-hidden="true"></i>
+                    ${escapeHtml(orderOriginLabel(o))}
                   </span>
                   <span class="admin-order-status" data-status="${o.status}">${adminStatus[o.status] || 'Estado desconocido'}</span>
                   <div class="admin-order-identity">
-                    <p class="admin-order-customer">${o.customer}</p>
-                    <p class="admin-order-code font-mono-ticket">${o.code}</p>
+                    <p class="admin-order-customer">${escapeHtml(o.customer)}</p>
+                    <p class="admin-order-code font-mono-ticket">${escapeHtml(o.code)}</p>
                     ${o.status === 'EN_COCINA' ? `<p class="admin-order-code">${orderStations(o).map(area =>
                       stationName(area) + (stationReady(o, area) ? ': lista' : ': pendiente')).join(' · ')}</p>` : ''}
                   </div>
                   <div class="admin-order-payment">
                     <p class="admin-order-total">${money(o.total)}</p>
-                    <span data-paid="${o.paymentStatus === 'PAGADO'}">
-                      ${o.paymentStatus === 'PAGADO' ? o.paymentMethod + ' pagado' : (isDel ? 'Pago por verificar' : 'Pago en mesa')}
-                    </span>
+                    <span data-paid="${o.paymentStatus === 'PAGADO'}">${payHint}</span>
                   </div>
                 </div>
-                ${isDel ? `<p class="admin-order-address">${o.address} · ${o.phone}</p>` : ''}
+                ${isDel ? `<p class="admin-order-address">${escapeHtml(displayAddr)}${mapsUrl ? ` <a class="admin-maps-link" href="${mapsUrl}" target="_blank" rel="noopener noreferrer">Ver en Maps ↗</a>` : ''} · ${escapeHtml(o.phone)}</p>` : ''}
+                ${isRecojo && o.phone ? `<p class="admin-order-address">Tel: ${escapeHtml(o.phone)}</p>` : ''}
 
                 ${isDel && o.paymentRef ? `
                   <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-semibold">
@@ -2678,7 +2905,7 @@
         return `
           <article class="prep-card"${done ? ' data-ready' : ''}${order.channel === 'DELIVERY' ? ' data-delivery' : ''}>
             <header>
-              <div><h3>${order.channel === 'MESA' ? escapeHtml(order.table) : 'Delivery'}</h3>
+              <div><h3>${order.channel === 'MESA' ? escapeHtml(order.table) : order.channel === 'RECOJO' ? 'Para llevar' : 'Delivery'}</h3>
                 <p class="font-mono-ticket">${escapeHtml(order.code)}</p>
                 ${done ? `<p class="prep-history-time">${Number.isFinite(completionTime)
                   ? `<time datetime="${new Date(completionTime).toISOString()}">${timeLabel}</time>` : timeLabel}</p>` : ''}</div>
@@ -2687,7 +2914,7 @@
                   <i data-lucide="clock" aria-hidden="true"></i><span></span>
                 </div>` : ''}
             </header>
-            ${order.takeaway ? '<div class="prep-channel">Para llevar</div>' : ''}
+            ${order.channel === 'RECOJO' ? '<div class="prep-channel">Recoger en local</div>' : order.takeaway ? '<div class="prep-channel">Para llevar</div>' : ''}
             ${done ? `<details class="prep-history-detail" data-history-key="${key}">
               <summary>Ver comanda</summary>
               ${contents}
@@ -3166,14 +3393,12 @@
         const staffHeroH = isPublic
           ? 0
           : (document.getElementById('staff-menu-hero')?.getBoundingClientRect().height || 0);
-        const closedEl = document.getElementById('business-closed-banner');
-        const closedH = closedEl && !closedEl.hidden ? closedEl.getBoundingClientRect().height : 0;
         const trackerEl = document.getElementById('client-tracker-wrap');
         const trackerH = !isPublic && trackerEl && !trackerEl.classList.contains('hidden')
           ? trackerEl.getBoundingClientRect().height + 14
           : 0;
         const mobileNavH = window.innerWidth < 1024 ? 72 : 0;
-        return Math.max(280, window.innerHeight - headerH - staffHeroH - closedH - trackerH - mobileNavH - 84);
+        return Math.max(280, window.innerHeight - headerH - staffHeroH - trackerH - mobileNavH - 84);
       }
 
       function canSpreadLayout() {
@@ -3718,7 +3943,7 @@
           const order = state.orders.find(o => o.id === payMesaBtn.dataset.adminPayMesa);
           if (!order) return;
           document.getElementById('pay-mesa-order-id').value = order.id;
-          document.getElementById('pay-mesa-title').textContent = `Cobrar ${order.code} (${order.table})`;
+          document.getElementById('pay-mesa-title').textContent = `Cobrar ${order.code} (${order.channel === 'RECOJO' ? 'Para llevar' : order.table})`;
           document.getElementById('pay-mesa-amount').textContent = money(order.total);
           openModal('modal-pay-mesa');
           return;
@@ -3751,7 +3976,7 @@
       const clientTakeaway = document.getElementById('client-takeaway');
       const clientTapers = document.getElementById('client-tapers');
       function clientPackaging() {
-        const takeaway = ui.clientMode === 'MESA' && clientTakeaway.checked;
+        const takeaway = ui.clientMode === 'RECOJO' || (ui.clientMode === 'MESA' && clientTakeaway.checked);
         return { takeaway, tapers: ui.clientMode === 'DELIVERY' || takeaway ? Number(clientTapers.value) : 0 };
       }
       clientTakeaway.onchange = () => {
@@ -3837,7 +4062,7 @@
 
       function updateOrderEdit() {
         const order = editingOrder;
-        const takeaway = order.channel === 'MESA' && editTakeaway.checked;
+        const takeaway = order.channel === 'RECOJO' || (order.channel === 'MESA' && editTakeaway.checked);
         const showTapers = order.channel === 'DELIVERY' || takeaway;
         editTapers.disabled = !showTapers || order.paymentStatus === 'PAGADO';
         document.getElementById('edit-tapers-label').hidden = !showTapers;
@@ -3942,6 +4167,71 @@
       // Specific listeners
       document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; clearCheckoutError(); renderCliente(); });
       document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; clearCheckoutError(); renderCliente(); });
+      document.getElementById('client-remote-mode')?.addEventListener('click', event => {
+        const modeBtn = event.target.closest('[data-remote-mode]');
+        if (!modeBtn || ui.clientMode === 'MESA') return;
+        const nextMode = modeBtn.dataset.remoteMode;
+        if (!['DELIVERY', 'RECOJO'].includes(nextMode) || ui.clientMode === nextMode) return;
+        ui.clientMode = nextMode;
+        clearCheckoutError();
+        renderCliente();
+      });
+
+      function requestDeliveryGps() {
+        if (!('geolocation' in navigator)) {
+          ui.deliveryGpsBusy = false;
+          ui.deliveryGps = null;
+          ui.deliveryGpsError = 'Este navegador no soporta geolocalización. Ingresa tu dirección manualmente.';
+          syncDeliveryLocationUI();
+          return;
+        }
+        ui.deliveryGpsBusy = true;
+        ui.deliveryGpsError = '';
+        syncDeliveryLocationUI();
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            ui.deliveryGpsBusy = false;
+            ui.deliveryGps = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            };
+            ui.deliveryGpsError = '';
+            clearCheckoutError();
+            syncDeliveryLocationUI();
+          },
+          err => {
+            ui.deliveryGpsBusy = false;
+            ui.deliveryGps = null;
+            ui.deliveryGpsError = err?.code === 1
+              ? 'Permiso de ubicación denegado. Reintenta o ingresa tu dirección manualmente.'
+              : 'No pudimos obtener tu ubicación GPS. Reintenta o ingrésala manualmente.';
+            syncDeliveryLocationUI();
+          },
+          { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+        );
+      }
+
+      document.querySelector('.checkout-location-modes')?.addEventListener('click', event => {
+        const locBtn = event.target.closest('[data-del-loc-mode]');
+        if (!locBtn) return;
+        const mode = locBtn.dataset.delLocMode;
+        if (!['gps', 'manual'].includes(mode)) return;
+        ui.deliveryLocMode = mode;
+        clearCheckoutError();
+        syncDeliveryLocationUI();
+        if (mode === 'gps') {
+          if (!ui.deliveryGps && !ui.deliveryGpsBusy) requestDeliveryGps();
+        } else {
+          requestAnimationFrame(() => document.getElementById('client-address')?.focus({ preventScroll: true }));
+        }
+      });
+
+      document.getElementById('btn-gps-retry')?.addEventListener('click', () => {
+        ui.deliveryLocMode = 'gps';
+        clearCheckoutError();
+        requestDeliveryGps();
+      });
       document.getElementById('client-mesa-select').addEventListener('change', (e) => {
         if (!staffMenu && !ui.staffOrderEntry) return;
         ui.clientMesa = e.target.value;
@@ -4205,6 +4495,7 @@
         if (button.disabled || !ui.clientCart.length) return;
         clearCheckoutError();
         const isDel = ui.clientMode === 'DELIVERY';
+        const isRecojo = ui.clientMode === 'RECOJO';
         const name = document.getElementById('client-name');
         const customer = name.value.trim();
         if (!customer) {
@@ -4212,19 +4503,44 @@
           return;
         }
         const phoneField = document.getElementById('client-phone');
+        const pickupPhoneField = document.getElementById('client-pickup-phone');
         const addressField = document.getElementById('client-address');
+        const addressRefField = document.getElementById('client-address-ref');
         const paymentField = document.getElementById('client-pay-ref');
-        const phone = isDel ? phoneField.value.trim() : '';
-        const address = isDel ? addressField.value.trim() : '';
+        const phone = isDel ? phoneField.value.trim() : isRecojo ? (pickupPhoneField?.value.trim() || '') : '';
+        let address = '';
+        let locationPayload;
         const payRef = isDel ? paymentField.value.trim() : '';
         if (isDel) {
-          const missing = [
-            [phone, phoneField, 'Ingresa tu teléfono o WhatsApp.'],
-            [address, addressField, 'Ingresa la dirección de entrega.'],
-            [payRef, paymentField, 'Ingresa el número de operación o código de pago.']
-          ].find(([value]) => !value);
-          if (missing) {
-            showCheckoutError(missing[2], missing[1]);
+          if (!phone) {
+            showCheckoutError('Ingresa tu teléfono o WhatsApp.', phoneField);
+            return;
+          }
+          if (!ui.deliveryLocMode) {
+            showCheckoutError('Elige compartir tu ubicación exacta o ingresar tu dirección manualmente.', document.getElementById('btn-loc-gps'));
+            return;
+          }
+          if (ui.deliveryLocMode === 'gps') {
+            if (!ui.deliveryGps) {
+              showCheckoutError('Obtén tu ubicación exacta por GPS o cambia a "Ingresar manualmente".', document.getElementById('btn-gps-retry'));
+              return;
+            }
+            const ref = addressRefField?.value.trim() || '';
+            const { lat, lng } = ui.deliveryGps;
+            const coords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            const mapUrl = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+            address = ref ? `GPS: ${ref} (${coords}) · ${mapUrl}` : `GPS (${coords}) · ${mapUrl}`;
+            locationPayload = { mode: 'gps', lat, lng, reference: ref };
+          } else {
+            address = addressField.value.trim();
+            if (!address) {
+              showCheckoutError('Ingresa la dirección de entrega.', addressField);
+              return;
+            }
+            locationPayload = { mode: 'manual' };
+          }
+          if (!payRef) {
+            showCheckoutError('Ingresa el número de operación o código de pago.', paymentField);
             return;
           }
         }
@@ -4238,6 +4554,7 @@
           channel: ui.clientMode,
           table: ui.clientMesa,
           customer, phone, address, payRef,
+          ...(locationPayload ? { location: locationPayload } : {}),
           paymentMethod: ui.clientDelPay,
           note: document.getElementById('client-order-note').value.trim(),
           items: ui.clientCart.map(item => ({
@@ -4881,6 +5198,9 @@
           ui.clientMesa = m;
           const sel = document.getElementById('client-mesa-select');
           if (sel && Array.from(sel.options).some(o => o.value === m)) sel.value = m;
+          switchRole('cliente', { updateHash: false });
+        } else if (routeParams.has('recojo') || routeParams.has('recoger') || routeParams.has('pickup')) {
+          ui.clientMode = 'RECOJO';
           switchRole('cliente', { updateHash: false });
         } else if (routeParams.has('delivery')) {
           ui.clientMode = 'DELIVERY';
