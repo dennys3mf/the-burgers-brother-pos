@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127b">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127d">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -64,7 +64,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css?v=20261127b">
+<link rel="stylesheet" href="./brand.css?v=20261127d">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -133,239 +133,48 @@
     </div>
   </dialog>
 
-  <!-- MAIN WORKSPACE -->
-  <main id="pos-content" tabindex="-1" class="max-w-7xl mx-auto p-3 sm:p-6">
-    <div id="staff-alerts" hidden class="staff-alerts">
-      <p id="staff-alert-message" role="status"></p>
-    </div>
+  <!-- GLOBAL POS APP SHELL (Active exclusively in staff views) -->
+  <div id="pos-app-shell" class="pos-app-shell">
+    <aside id="pos-nav-aside" class="pos-shell-chrome pos-nav-aside" aria-label="Navegación principal del POS" hidden></aside>
 
-    <div id="staff-sync-notice" class="staff-alerts" hidden>
-      <p id="staff-sync-message" role="status"></p>
-      <button id="staff-sync-retry" type="button" class="admin-tool">Actualizar</button>
-    </div>
+    <div class="pos-shell-main-col">
+      <header id="pos-header" class="pos-shell-chrome pos-header" hidden></header>
 
-    <div id="staff-loading">
-      <p id="staff-loading-status" role="status">Abriendo el POS…</p>
-      <button type="button" id="staff-loading-retry" hidden>Reintentar</button>
-    </div>
-
-    <section id="view-modulos" class="role-view modules-page hidden" aria-labelledby="modules-title">
-      <header class="modules-header">
-        <div class="modules-heading">
-          <p id="modules-shift-date" class="modules-eyebrow"></p>
-          <h1 id="modules-title" tabindex="-1">Módulos del POS</h1>
-          <p id="modules-subtitle" class="modules-subtitle"></p>
+      <!-- MAIN WORKSPACE -->
+      <main id="pos-content" tabindex="-1" class="max-w-7xl mx-auto p-3 sm:p-6">
+        <div id="staff-alerts" hidden class="staff-alerts">
+          <p id="staff-alert-message" role="status"></p>
         </div>
-        <div class="modules-account">
-          <p class="modules-profile-pill"><i data-lucide="badge-check" aria-hidden="true"></i><span id="modules-profile"></span></p>
-          <button id="modules-sound-toggle" type="button" class="modules-header-btn" aria-pressed="false">
-            <i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span>
-          </button>
-          <button id="modules-logout" type="button" class="modules-header-btn modules-header-logout">
-            <i data-lucide="log-out" aria-hidden="true"></i><span>Cerrar sesión</span>
-          </button>
+
+        <div id="staff-sync-notice" class="staff-alerts" hidden>
+          <p id="staff-sync-message" role="status"></p>
+          <button id="staff-sync-retry" type="button" class="admin-tool">Actualizar</button>
         </div>
-      </header>
 
-      <div id="modules-kpi-strip" class="modules-kpi-strip" aria-label="Resumen operativo en vivo">
-        <button type="button" id="kpi-pending" class="modules-kpi-chip" data-staff-scope="admin" data-launch-role="admin" data-alert="false" hidden>
-          <i data-lucide="bell-ring" aria-hidden="true"></i>
-          <span><strong id="kpi-pending-num">0</strong> por aprobar</span>
-        </button>
-        <button type="button" id="kpi-cocina" class="modules-kpi-chip" data-launch-role="chef" data-launch-station="COCINA" data-launch-filter="pending" data-alert="false">
-          <i data-lucide="cooking-pot" aria-hidden="true"></i>
-          <span><strong id="kpi-cocina-num">0</strong> en Cocina</span>
-        </button>
-        <button type="button" id="kpi-barra" class="modules-kpi-chip" data-launch-role="chef" data-launch-station="BARRA" data-launch-filter="pending" data-alert="false">
-          <i data-lucide="cup-soda" aria-hidden="true"></i>
-          <span><strong id="kpi-barra-num">0</strong> en Barra</span>
-        </button>
-        <button type="button" id="kpi-ready" class="modules-kpi-chip" data-staff-scope="admin" data-launch-role="admin" data-launch-admin-filter="LISTO_CHEF" data-alert="false" hidden>
-          <i data-lucide="check-circle-2" aria-hidden="true"></i>
-          <span><strong id="kpi-ready-num">0</strong> listos</span>
-        </button>
-      </div>
-
-      <section aria-labelledby="modules-operation-title">
-        <h2 id="modules-operation-title" class="modules-section-title">Operación en vivo</h2>
-        <div class="modules-grid">
-          <button type="button" data-staff-scope="admin" data-launch-role="admin" class="module-tile" data-tone="rust" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="clipboard-list" aria-hidden="true"></i></span>
-              <span id="mod-badge-admin" class="module-badge" data-alert="false">Al día</span>
-            </span>
-            <span class="module-title">Pedidos</span>
-            <span id="mod-desc-admin" class="module-description">Aprobar, cobrar y boletas</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-launch-role="chef" data-launch-station="COCINA" data-launch-filter="pending" class="module-tile" data-tone="orange">
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="cooking-pot" aria-hidden="true"></i></span>
-              <span id="mod-badge-cocina" class="module-badge" data-alert="false">Sin cola</span>
-            </span>
-            <span class="module-title">Cocina</span>
-            <span class="module-description">Plancha, burgers y combos</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-launch-role="chef" data-launch-station="BARRA" data-launch-filter="pending" class="module-tile" data-tone="teal">
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="cup-soda" aria-hidden="true"></i></span>
-              <span id="mod-badge-barra" class="module-badge" data-alert="false">Sin cola</span>
-            </span>
-            <span class="module-title">Barra</span>
-            <span class="module-description">Bebidas, jugos y cócteles</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-staff-scope="chef" data-launch-role="chef" data-launch-filter="ready" class="module-tile" data-tone="green" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="check-circle-2" aria-hidden="true"></i></span>
-              <span id="mod-badge-ready" class="module-badge">0 listas</span>
-            </span>
-            <span class="module-title">Terminados</span>
-            <span class="module-description">Historial de comandas listas</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-staff-scope="chef" data-launch-action="prep-code" class="module-tile" data-tone="indigo" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="scan-line" aria-hidden="true"></i></span>
-              <span class="module-badge">BB-…</span>
-            </span>
-            <span class="module-title">Código de comanda</span>
-            <span class="module-description">Marcar listo por código</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-staff-scope="admin" data-launch-action="new-order" class="module-tile" data-tone="green" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="plus-circle" aria-hidden="true"></i></span>
-              <span class="module-badge">Mostrador</span>
-            </span>
-            <span class="module-title">Nuevo pedido</span>
-            <span class="module-description">Tomar pedido rápido en local</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
-
-          <button type="button" data-launch-role="cliente" class="module-tile" data-tone="gold">
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="book-open" aria-hidden="true"></i></span>
-              <span id="mod-badge-carta" class="module-badge">QR y menú</span>
-            </span>
-            <span class="module-title">Carta</span>
-            <span id="mod-desc-carta" class="module-description">Menú visual, precios y QR</span>
-            <span class="module-go" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-          </button>
+        <div id="staff-loading">
+          <p id="staff-loading-status" role="status">Abriendo el POS…</p>
+          <button type="button" id="staff-loading-retry" hidden>Reintentar</button>
         </div>
-      </section>
 
-      <section aria-labelledby="modules-shortcuts-title">
-        <h2 id="modules-shortcuts-title" class="modules-section-title">Gestión y sistema</h2>
-        <div class="modules-grid modules-grid-compact">
-          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="inventario" class="module-tile module-tile-compact" data-tone="green" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="package" aria-hidden="true"></i></span>
-              <span id="mod-badge-inv" class="module-badge" data-alert="false">Óptimo</span>
-            </span>
-            <span class="module-title">Inventario</span>
-            <span class="module-description">Insumos y recetas</span>
-          </button>
-
-          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="kardex" class="module-tile module-tile-compact" data-tone="blue" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="list-restart" aria-hidden="true"></i></span>
-              <span id="mod-badge-kardex" class="module-badge">0 movs.</span>
-            </span>
-            <span class="module-title">Kardex</span>
-            <span class="module-description">Entradas, mermas y CSV</span>
-          </button>
-
-          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="proveedores" class="module-tile module-tile-compact" data-tone="indigo" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="truck" aria-hidden="true"></i></span>
-              <span id="mod-badge-purchases" class="module-badge">0 compras</span>
-            </span>
-            <span class="module-title">Proveedores</span>
-            <span class="module-description">Compras y directorio</span>
-          </button>
-
-          <button type="button" data-staff-scope="admin" data-launch-role="gestion" data-launch-subtab="caja" class="module-tile module-tile-compact" data-tone="gold" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="wallet" aria-hidden="true"></i></span>
-              <span id="mod-badge-caja" class="module-badge">S/ 0.00</span>
-            </span>
-            <span class="module-title">Caja y Boletas</span>
-            <span class="module-description">Efectivo, Yape y egresos</span>
-          </button>
-
-          <button type="button" data-staff-scope="admin" data-launch-action="open-qr" class="module-tile module-tile-compact" data-tone="charcoal" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="qr-code" aria-hidden="true"></i></span>
-              <span class="module-badge">Mesas 1–6</span>
-            </span>
-            <span class="module-title">Códigos QR</span>
-            <span class="module-description">Descargar y probar QR</span>
-          </button>
-
-          <button type="button" data-staff-scope="chef" data-launch-action="prep-settings" class="module-tile module-tile-compact" data-tone="blue" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></span>
-              <span class="module-badge">Pantalla</span>
-            </span>
-            <span class="module-title">Tiempos y pantalla</span>
-            <span class="module-description">Volumen, alertas y texto</span>
-          </button>
-
-          <button type="button" id="launch-settings" class="module-tile module-tile-compact" data-tone="stone" aria-haspopup="dialog">
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="settings" aria-hidden="true"></i></span>
-              <span id="mod-badge-sound" class="module-badge" data-alert="false">Silenciado</span>
-            </span>
-            <span class="module-title">Configuración</span>
-            <span id="mod-desc-settings" class="module-description">Sonido, avisos y claves</span>
-          </button>
-
-          <button type="button" id="launch-roles" data-staff-scope="admin" class="module-tile module-tile-compact" data-tone="plum" aria-haspopup="dialog" hidden>
-            <span class="module-tile-top">
-              <span class="module-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
-              <span class="module-badge">3 perfiles</span>
-            </span>
-            <span class="module-title">Roles y accesos</span>
-            <span class="module-description">Nicol, Cocina y QR</span>
-          </button>
-        </div>
-      </section>
-    </section>
+        <section id="view-modulos" class="role-view modules-page hidden" aria-labelledby="pos-header-title">
+          <h1 id="modules-title" class="sr-only" tabindex="-1">Panel de control</h1>
+          <div id="pos-dashboard-root"></div>
+        </section>
 
     <!-- ==================== VIEW 1: CARTA DIGITAL CLIENTE (QR MESA / DELIVERY) ==================== -->
     <section id="view-cliente" class="role-view space-y-5">
-      <div id="admin-order-entry" hidden class="rounded-xl border border-slate-200 bg-white p-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <p class="font-bold">Nuevo pedido de mostrador</p>
-          <button id="btn-admin-exit-entry" type="button" class="min-h-11 rounded-lg border px-3 text-sm font-bold">Volver a Admin</button>
-        </div>
-      </div>
-      <!-- Mode Banner -->
-      <div class="customer-hero" id="staff-menu-hero">
-        <div class="prep-heading">
-          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos">
-            <i data-lucide="arrow-left" aria-hidden="true"></i>
-          </button>
-          <div>
-            <p class="modules-eyebrow">Módulo · Carta</p>
-            <h1>The Burgers Brother</h1>
-            <p>Carta y pedidos</p>
-          </div>
-        </div>
+      <div id="admin-order-entry" hidden></div>
+      <div class="customer-hero" id="staff-menu-hero" hidden></div>
 
-        <div id="menu-mode-controls" class="customer-hero-controls">
-          <div class="order-modes" aria-label="Tipo de pedido">
-            <button type="button" id="btn-mode-mesa" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">En mesa</button>
-            <button type="button" id="btn-mode-delivery" class="px-3.5 py-2 rounded-lg text-xs font-bold transition-colors">Delivery</button>
+      <!-- Compact POS Staff Context Toolbar (hidden on public QR Carta) -->
+      <div id="staff-entry-toolbar" class="pos-shell-chrome pos-entry-bar" hidden>
+        <div id="menu-mode-controls" class="pos-entry-bar-group">
+          <div class="pos-mode-pills" role="group" aria-label="Modalidad del pedido">
+            <button type="button" id="btn-mode-mesa" class="pos-mode-pill">En mesa</button>
+            <button type="button" id="btn-mode-recojo" class="pos-mode-pill">Para llevar</button>
+            <button type="button" id="btn-mode-delivery" class="pos-mode-pill">Delivery</button>
           </div>
-          <select id="client-mesa-select" aria-label="Número de mesa" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-400 focus:outline-none">
+          <select id="client-mesa-select" aria-label="Número de mesa" class="pos-mesa-select">
             <option value="Mesa 1">Mesa 1</option>
             <option value="Mesa 2">Mesa 2</option>
             <option value="Mesa 3">Mesa 3</option>
@@ -373,16 +182,15 @@
             <option value="Mesa 5">Mesa 5</option>
             <option value="Mesa 6">Mesa 6</option>
           </select>
-          <button type="button" id="btn-show-qr" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 transition-colors">
-            <i data-lucide="qr-code" class="w-4 h-4"></i> Ver QR
+        </div>
+        <div class="pos-entry-bar-group">
+          <button type="button" id="btn-show-qr" class="pos-btn pos-btn-secondary pos-btn-sm">
+            <i data-lucide="qr-code" aria-hidden="true"></i><span>Ver QR de mesas</span>
+          </button>
+          <button id="btn-admin-exit-entry" type="button" class="pos-btn pos-btn-subtle pos-btn-sm">
+            <i data-lucide="arrow-left" aria-hidden="true"></i><span>Volver a Pedidos</span>
           </button>
         </div>
-      </div>
-
-      <!-- Active Client Order Tracker (if client just placed orders) -->
-      <div id="client-tracker-wrap" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">
-        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado de tus pedidos en vivo</div>
-        <div id="client-tracker-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
 
       <!-- Menu + Client Cart -->
@@ -396,21 +204,27 @@
                 <h2 id="carta-title" class="carta-header-title">La carta</h2>
                 <span id="menu-order-context" class="menu-order-context" hidden></span>
               </div>
-              <div class="carta-header-actions">
-                <div class="carta-mode-switch" role="group" aria-label="Formato de la carta">
-                  <button type="button" data-menu-format="visual" aria-pressed="true">
-                    <i data-lucide="book-open" aria-hidden="true"></i>
-                    <span>Carta</span>
-                  </button>
-                  <button type="button" data-menu-format="list" aria-pressed="false">
-                    <i data-lucide="search" aria-hidden="true"></i>
-                    <span>Explorar</span>
+              <div class="carta-header-right">
+                <button type="button" id="btn-open-tracker" class="carta-tracker-pill" hidden aria-haspopup="dialog" aria-controls="client-tracker-modal">
+                  <span class="carta-tracker-dot" aria-hidden="true"></span>
+                  <span id="carta-tracker-pill-label">En curso (0)</span>
+                </button>
+                <div class="carta-header-actions">
+                  <div class="carta-mode-switch" role="group" aria-label="Formato de la carta">
+                    <button type="button" data-menu-format="visual" aria-pressed="true">
+                      <i data-lucide="book-open" aria-hidden="true"></i>
+                      <span>Carta</span>
+                    </button>
+                    <button type="button" data-menu-format="list" aria-pressed="false">
+                      <i data-lucide="search" aria-hidden="true"></i>
+                      <span>Explorar</span>
+                    </button>
+                  </div>
+                  <button type="button" id="carta-cart-link" class="carta-order-btn" aria-controls="client-cart" aria-expanded="false">
+                    <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                    <span id="carta-cart-label">Pedido (0)</span>
                   </button>
                 </div>
-                <button type="button" id="carta-cart-link" class="carta-order-btn" aria-controls="client-cart" aria-expanded="false">
-                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
-                  <span id="carta-cart-label">Pedido (0)</span>
-                </button>
               </div>
             </header>
 
@@ -424,6 +238,7 @@
 
               <div class="carta-main-stage">
                 <div id="carta-visual" class="carta-visual-shell">
+                  <div id="pos-staff-cat-quickbar" class="pos-shell-chrome pos-staff-cat-quickbar" role="navigation" aria-label="Ir a categoría en carta" hidden></div>
                   <div id="carta-book-workspace" class="carta-book-workspace">
                     <button type="button" id="carta-prev" class="carta-nav-btn carta-nav-prev" aria-label="Página anterior">
                       <i data-lucide="chevron-left" aria-hidden="true"></i>
@@ -515,6 +330,13 @@
               </button>
             </div>
           </header>
+          <div id="client-cart-tracker-bar" class="checkout-tracker-bar" hidden>
+            <div class="checkout-tracker-copy">
+              <span class="carta-tracker-dot" aria-hidden="true"></span>
+              <span id="client-cart-tracker-text">1 pedido en curso</span>
+            </div>
+            <button type="button" id="btn-cart-open-tracker" class="checkout-tracker-btn">Ver estado</button>
+          </div>
           <div id="client-cart-items"></div>
 
           <form id="client-checkout" novalidate>
@@ -657,75 +479,80 @@
           </form>
         </section>
       </div>
+
+      <!-- Mobile/Portrait Staff Floating Cart Summary Bar (<1024px) -->
+      <div id="pos-mobile-cart-bar" class="pos-shell-chrome pos-mobile-cart-bar" hidden>
+        <div>
+          <strong id="pos-mobile-cart-count">0 productos</strong>
+          <span id="pos-mobile-cart-total" class="ml-2 text-amber-300 font-bold">S/ 0.00</span>
+        </div>
+        <button type="button" id="btn-open-staff-cart" class="pos-btn pos-btn-primary pos-btn-sm">
+          <i data-lucide="shopping-bag" aria-hidden="true"></i><span>Ver pedido</span>
+        </button>
+      </div>
     </section>
 
-    <!-- ==================== VIEW 2: PANEL ADMIN (APROBACIÓN + BIXOLON) ==================== -->
-    <section id="view-admin" class="role-view hidden space-y-5" aria-labelledby="admin-view-title">
-      <div class="operator-head module-hero">
-        <div class="prep-heading">
-          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
-          <span class="module-icon module-icon-sm" data-tone="rust" aria-hidden="true"><i data-lucide="clipboard-list"></i></span>
-          <div>
-            <p class="modules-eyebrow">Módulo · Operación</p>
-            <h1 id="admin-view-title" class="operator-title">Panel de pedidos</h1>
-            <p class="operator-caption">Aprueba los pedidos para enviarlos a cocina e imprimir la comanda.</p>
+    <!-- ==================== VIEW 2: PANEL ADMIN (MASTER-DETAIL) ==================== -->
+    <section id="view-admin" class="role-view hidden" aria-labelledby="pos-header-title">
+      <div class="pos-admin-controls">
+        <div class="pos-admin-toolbar-row">
+          <div id="admin-filter-tabs" class="pos-segmented-tabs" role="group" aria-label="Bandejas de pedidos">
+            <button type="button" data-admin-filter="POR_APROBAR" class="admin-filter-btn">
+              <i data-lucide="inbox" aria-hidden="true"></i><span>Por aprobar</span><span data-order-count aria-hidden="true">0</span>
+            </button>
+            <button type="button" data-admin-filter="EN_COCINA" class="admin-filter-btn">
+              <i data-lucide="chef-hat" aria-hidden="true"></i><span>En cocina</span><span data-order-count aria-hidden="true">0</span>
+            </button>
+            <button type="button" data-admin-filter="LISTO_CHEF" class="admin-filter-btn">
+              <i data-lucide="circle-check" aria-hidden="true"></i><span>Listos</span><span data-order-count aria-hidden="true">0</span>
+            </button>
+            <button type="button" data-admin-filter="ENTREGADO" class="admin-filter-btn">
+              <i data-lucide="history" aria-hidden="true"></i><span>Historial</span><span data-order-count aria-hidden="true">0</span>
+            </button>
+          </div>
+          <button id="btn-admin-new-order" type="button" class="pos-btn pos-btn-primary"><i data-lucide="plus" aria-hidden="true"></i><span>Nuevo pedido</span></button>
+        </div>
+        <div class="pos-admin-toolbar-row">
+          <div class="pos-search-input-wrap">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas">
           </div>
         </div>
       </div>
-
-      <div id="admin-filter-tabs" role="group" aria-label="Bandejas de pedidos">
-        <button type="button" data-admin-filter="POR_APROBAR" class="admin-filter-btn">
-          <i data-lucide="inbox" aria-hidden="true"></i><span>Por aprobar</span><span data-order-count aria-hidden="true">0</span>
-        </button>
-        <button type="button" data-admin-filter="EN_COCINA" class="admin-filter-btn">
-          <i data-lucide="chef-hat" aria-hidden="true"></i><span>En cocina</span><span data-order-count aria-hidden="true">0</span>
-        </button>
-        <button type="button" data-admin-filter="LISTO_CHEF" class="admin-filter-btn">
-          <i data-lucide="circle-check" aria-hidden="true"></i><span>Listos</span><span data-order-count aria-hidden="true">0</span>
-        </button>
-        <button type="button" data-admin-filter="ENTREGADO" class="admin-filter-btn">
-          <i data-lucide="history" aria-hidden="true"></i><span>Historial</span><span data-order-count aria-hidden="true">0</span>
-        </button>
+      <p id="admin-order-search-summary" class="text-sm mb-3" style="color: var(--pos-text-secondary);" hidden></p>
+      <div id="admin-master-detail" class="pos-master-detail" data-mobile-detail="false">
+        <div id="admin-orders-list" class="pos-master-list" role="region" aria-label="Listado de pedidos"></div>
+        <div id="admin-order-detail" class="pos-detail-pane" role="region" aria-label="Detalle del pedido seleccionado"></div>
       </div>
-
-      <div class="admin-toolbar">
-        <button id="btn-admin-new-order" type="button" class="admin-tool admin-tool-primary"><i data-lucide="plus" aria-hidden="true"></i> Nuevo pedido</button>
-        <input id="admin-order-search" type="search" placeholder="Buscar por código, cliente o mesa" aria-label="Buscar pedidos en todas las bandejas" class="min-h-11 min-w-0 grow rounded-xl border border-slate-200 bg-white px-3 text-base">
-      </div>
-      <p id="admin-order-search-summary" class="text-sm text-slate-600" hidden></p>
-      <div id="admin-orders-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
     </section>
 
-    <!-- ==================== VIEW 3: INTERFAZ MÓVIL DEL CHEF ==================== -->
-    <section id="view-chef" class="role-view hidden prep-board" aria-labelledby="prep-view-title">
-      <header class="prep-header">
-        <div class="prep-heading">
-          <button type="button" id="prep-back" class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
-          <span class="module-icon module-icon-sm" data-tone="orange" aria-hidden="true"><i data-lucide="cooking-pot"></i></span>
-          <div>
-            <p class="modules-eyebrow">Módulo · Estaciones</p>
-            <h1 id="prep-view-title" class="operator-title">Preparación</h1>
-            <p id="chef-active-count" aria-live="polite"></p>
+    <!-- ==================== VIEW 3: COCINA Y BARRA (KDS) ==================== -->
+    <section id="view-chef" class="role-view hidden prep-board" aria-labelledby="pos-header-title">
+      <div class="pos-kds-toolbar">
+        <div class="pos-kds-group">
+          <div class="pos-mode-pills" role="group" aria-label="Estación de preparación">
+            <button type="button" data-prep-station="COCINA" class="pos-mode-pill" aria-pressed="true"><i data-lucide="cooking-pot" class="w-4 h-4 inline mr-1" aria-hidden="true"></i>Cocina</button>
+            <button type="button" data-prep-station="BARRA" class="pos-mode-pill" aria-pressed="false"><i data-lucide="cup-soda" class="w-4 h-4 inline mr-1" aria-hidden="true"></i>Barra</button>
           </div>
-        </div>
-        <div class="prep-header-actions">
-          <div class="prep-switch" role="group" aria-label="Estación de preparación">
-            <button type="button" data-prep-station="COCINA" aria-pressed="true"><i data-lucide="cooking-pot" aria-hidden="true"></i> Cocina</button>
-            <button type="button" data-prep-station="BARRA" aria-pressed="false"><i data-lucide="cup-soda" aria-hidden="true"></i> Barra</button>
+          <div class="prep-filters" role="group" aria-label="Estado en la estación">
+            <button type="button" data-prep-filter="pending" class="pos-tab-btn" aria-pressed="true">Por preparar</button>
+            <button type="button" data-prep-filter="ready" class="pos-tab-btn" aria-pressed="false">Terminados</button>
           </div>
-          <details id="prep-menu" class="prep-menu">
-            <summary aria-label="Opciones de preparación"><i data-lucide="ellipsis" aria-hidden="true"></i></summary>
-            <div class="prep-menu-actions">
-              <button type="button" id="prep-settings-open"><i data-lucide="settings" aria-hidden="true"></i> Configuración</button>
-              <button type="button" id="prep-code-open"><i data-lucide="qr-code" aria-hidden="true"></i> Ingresar código de comanda</button>
-              <button type="button" id="prep-logout"><i data-lucide="log-out" aria-hidden="true"></i> Cerrar sesión</button>
-            </div>
-          </details>
+          <span id="chef-active-count" class="pos-kds-count" aria-live="polite"></span>
         </div>
-      </header>
-      <div class="prep-filters" role="group" aria-label="Estado en la estación">
-        <button type="button" data-prep-filter="pending" aria-pressed="true">Por preparar</button>
-        <button type="button" data-prep-filter="ready" aria-pressed="false">Terminados</button>
+        <div class="pos-kds-group">
+          <button type="button" id="prep-code-open" class="pos-btn pos-btn-secondary pos-btn-sm">
+            <i data-lucide="scan-line" aria-hidden="true"></i><span>Código BB-…</span>
+          </button>
+          <button type="button" id="btn-kds-fullscreen" class="pos-btn pos-btn-secondary pos-btn-sm" aria-pressed="false">
+            <i data-lucide="maximize-2" aria-hidden="true"></i><span>Pantalla completa</span>
+          </button>
+          <button type="button" id="prep-settings-open" class="pos-btn pos-btn-subtle pos-btn-sm">
+            <i data-lucide="sliders-horizontal" aria-hidden="true"></i><span>Tiempos</span>
+          </button>
+          <button type="button" id="prep-back" class="sr-only" tabindex="-1">Volver</button>
+          <details id="prep-menu" class="sr-only" hidden><summary></summary></details>
+        </div>
       </div>
       <dialog id="prep-scan" class="prep-dialog" aria-labelledby="prep-code-title">
         <header>
@@ -795,194 +622,303 @@
     </section>
 
     <!-- ==================== VIEW 4: GESTIÓN (INVENTARIO, KARDEX, PROVEEDORES, CAJA) ==================== -->
-    <section id="view-gestion" class="role-view hidden space-y-5" aria-labelledby="management-view-title">
-      <div class="operator-head module-hero management-nav">
-        <div class="prep-heading">
-          <button type="button" data-back-modules class="module-hero-back" aria-label="Volver a Módulos" title="Volver a Módulos"><i data-lucide="arrow-left" aria-hidden="true"></i></button>
-          <span class="module-icon module-icon-sm" data-tone="blue" aria-hidden="true"><i data-lucide="database"></i></span>
-          <div>
-            <p class="modules-eyebrow">Módulo · Administración</p>
-            <h1 id="management-view-title" class="operator-title">Gestión</h1>
-            <p class="operator-caption">Controla inventario, Kardex, compras a proveedores y movimientos de caja.</p>
-          </div>
-        </div>
-        <div class="gestion-tabs" role="group" aria-label="Módulos de gestión">
-          <button type="button" data-subtab="inventario" class="gestion-tab"><i data-lucide="package" aria-hidden="true"></i> Inventario</button>
-          <button type="button" data-subtab="kardex" class="gestion-tab"><i data-lucide="list-restart" aria-hidden="true"></i> Kardex</button>
-          <button type="button" data-subtab="proveedores" class="gestion-tab"><i data-lucide="truck" aria-hidden="true"></i> Proveedores</button>
-          <button type="button" data-subtab="caja" class="gestion-tab"><i data-lucide="wallet" aria-hidden="true"></i> Caja</button>
-        </div>
-      </div>
-
+    <section id="view-gestion" class="role-view hidden space-y-4" aria-labelledby="pos-header-title">
       <!-- SUBTAB: INVENTARIO -->
       <div id="subtab-inventario" class="gestion-panel space-y-4">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="inv-kpis"></div>
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="inventory-toolbar">
-            <div>
-              <h3 class="font-bold text-sm text-slate-900">Inventario de insumos</h3>
-              <p class="text-xs text-slate-500">Al aprobar un pedido, se descuentan los insumos de su receta y el movimiento queda en el Kardex.</p>
-            </div>
-            <div class="inventory-actions">
-              <button type="button" id="btn-open-ingredient" class="admin-tool"><i data-lucide="package-plus" aria-hidden="true"></i> Nuevo insumo</button>
-              <button type="button" id="btn-open-recipes" class="admin-tool"><i data-lucide="clipboard-list" aria-hidden="true"></i> Recetas de la carta</button>
-              <button type="button" id="btn-open-adjust" class="admin-tool admin-tool-primary"><i data-lucide="sliders-horizontal" aria-hidden="true"></i> Ajustar stock</button>
-            </div>
+        <div class="pos-kpi-grid is-3" id="inv-kpis"></div>
+        <div class="pos-filter-bar">
+          <div class="pos-search-input-wrap">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="inv-search" type="search" placeholder="Buscar insumo o código..." aria-label="Buscar insumo">
           </div>
-          <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
-                <tr>
-                  <th class="py-3 px-4">Código</th>
-                  <th class="py-3 px-4">Insumo</th>
-                  <th class="py-3 px-4">Estación</th>
-                  <th class="py-3 px-4 text-right">Stock Actual</th>
-                  <th class="py-3 px-4 text-right">Mínimo</th>
-                  <th class="py-3 px-4 text-right">Costo Unit.</th>
-                  <th class="py-3 px-4 text-center">Estado</th>
-                </tr>
-              </thead>
-              <tbody id="inv-tbody" class="divide-y divide-slate-100"></tbody>
-            </table>
+          <select id="inv-filter-station" class="pos-filter-select" aria-label="Filtrar por estación">
+            <option value="ALL">Todas las estaciones</option>
+            <option value="COCINA">Cocina</option>
+            <option value="BARRA">Barra</option>
+          </select>
+          <select id="inv-filter-status" class="pos-filter-select" aria-label="Filtrar por estado">
+            <option value="ALL">Todos los estados</option>
+            <option value="faltante">Faltante (&lt; 0)</option>
+            <option value="bajo">Stock bajo</option>
+            <option value="optimo">Óptimo</option>
+          </select>
+          <div class="pos-filter-actions">
+            <button type="button" id="btn-open-ingredient" class="pos-btn pos-btn-secondary pos-btn-sm"><i data-lucide="package-plus" aria-hidden="true"></i><span>Nuevo insumo</span></button>
+            <button type="button" id="btn-open-recipes" class="pos-btn pos-btn-secondary pos-btn-sm"><i data-lucide="clipboard-list" aria-hidden="true"></i><span>Recetas</span></button>
+            <button type="button" id="btn-open-adjust" class="pos-btn pos-btn-primary pos-btn-sm"><i data-lucide="sliders-horizontal" aria-hidden="true"></i><span>Ajustar stock</span></button>
           </div>
         </div>
+        <div class="pos-responsive-table-desktop pos-table-wrap" tabindex="0" role="region" aria-label="Tabla de inventario">
+          <table class="pos-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Insumo</th>
+                <th>Estación</th>
+                <th class="text-right">Stock actual</th>
+                <th class="text-right">Mínimo</th>
+                <th class="text-right">Costo unit.</th>
+                <th class="text-center">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
+        <div id="inv-mobile-list" class="pos-responsive-cards-mobile pos-mobile-cards"></div>
       </div>
 
       <!-- SUBTAB: KARDEX -->
-      <div id="subtab-kardex" class="gestion-panel hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
-          <div>
-            <h3 class="font-bold text-sm text-slate-900">Kardex Físico y Valorizado</h3>
-            <p class="text-xs text-slate-500">Movimientos automáticos generados al aprobar pedidos del Admin o registrar compras.</p>
+      <div id="subtab-kardex" class="gestion-panel hidden space-y-4">
+        <div class="pos-filter-bar">
+          <div class="pos-search-input-wrap">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <input id="kardex-search" type="search" placeholder="Código, pedido o insumo..." aria-label="Buscar movimientos en Kardex">
           </div>
-          <button type="button" id="btn-export-kardex" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
-          </button>
+          <select id="kardex-filter-station" class="pos-filter-select" aria-label="Filtrar Kardex por estación">
+            <option value="ALL">Todas las estaciones</option>
+            <option value="COCINA">Cocina</option>
+            <option value="BARRA">Barra</option>
+          </select>
+          <select id="kardex-filter-type" class="pos-filter-select" aria-label="Filtrar por tipo de movimiento">
+            <option value="ALL">Todos los tipos</option>
+            <option value="ENTRADA">Entradas (+)</option>
+            <option value="SALIDA">Salidas (-)</option>
+          </select>
+          <input id="kardex-filter-date" type="date" class="pos-filter-select" aria-label="Filtrar Kardex por fecha">
+          <button type="button" id="btn-kardex-clear" class="pos-btn pos-btn-subtle pos-btn-sm" hidden>Limpiar</button>
+          <div class="pos-filter-actions">
+            <button type="button" id="btn-export-kardex" class="pos-btn pos-btn-success pos-btn-sm">
+              <i data-lucide="download" aria-hidden="true"></i><span>Exportar CSV</span>
+            </button>
+          </div>
         </div>
-        <div class="inventory-search">
-          <label for="kardex-search">Buscar movimientos</label>
-          <input id="kardex-search" type="search" placeholder="Código de pedido o insumo">
-        </div>
-        <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+        <div class="pos-responsive-table-desktop pos-table-wrap" tabindex="0" role="region" aria-label="Tabla Kardex">
+          <table class="pos-table">
+            <thead>
               <tr>
-                <th class="py-3 px-4">Fecha / Hora</th>
-                <th class="py-3 px-4">Insumo</th>
-                <th class="py-3 px-4">Tipo</th>
-                <th class="py-3 px-4">Documento / Pedido</th>
-                <th class="py-3 px-4 text-right">Ant.</th>
-                <th class="py-3 px-4 text-right">Cant.</th>
-                <th class="py-3 px-4 text-right">Saldo</th>
+                <th>Fecha / Hora</th>
+                <th>Insumo</th>
+                <th>Estación</th>
+                <th>Tipo</th>
+                <th>Documento / Pedido</th>
+                <th class="text-right">Ant.</th>
+                <th class="text-right">Cant.</th>
+                <th class="text-right">Saldo</th>
               </tr>
             </thead>
-            <tbody id="kardex-tbody" class="divide-y divide-slate-100"></tbody>
+            <tbody id="kardex-tbody"></tbody>
           </table>
         </div>
+        <div id="kardex-mobile-list" class="pos-responsive-cards-mobile pos-mobile-cards"></div>
       </div>
 
-      <!-- SUBTAB: PROVEEDORES -->
-      <div id="subtab-proveedores" class="gestion-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-            <h3 class="font-bold text-sm text-slate-900">Proveedores de The Burgers Brother</h3>
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" id="btn-open-supplier" class="admin-tool"><i data-lucide="user-plus" aria-hidden="true"></i> Nuevo proveedor</button>
-              <button type="button" id="btn-open-purchase" class="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold">+ Registrar Compra</button>
-            </div>
+      <!-- SUBTAB: PROVEEDORES & COMPRAS -->
+      <div id="subtab-proveedores" class="gestion-panel hidden space-y-4">
+        <div class="pos-admin-toolbar-row">
+          <div class="pos-segmented-tabs" role="group" aria-label="Vistas de proveedores y compras">
+            <button type="button" data-suppliers-tab="directory" class="pos-tab-btn" aria-pressed="true">
+              <i data-lucide="users" aria-hidden="true"></i><span>Directorio</span>
+            </button>
+            <button type="button" data-suppliers-tab="purchases" class="pos-tab-btn" aria-pressed="false">
+              <i data-lucide="shopping-cart" aria-hidden="true"></i><span>Compras al Kardex</span>
+            </button>
           </div>
-          <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
-                <tr>
-                  <th class="py-3 px-4">RUC / Razón Social</th>
-                  <th class="py-3 px-4">Rubro</th>
-                  <th class="py-3 px-4">Contacto</th>
-                </tr>
-              </thead>
-              <tbody id="sup-tbody" class="divide-y divide-slate-100"></tbody>
-            </table>
+          <div class="pos-dash-cta-group">
+            <button type="button" id="btn-open-supplier" class="pos-btn pos-btn-secondary pos-btn-sm"><i data-lucide="user-plus" aria-hidden="true"></i><span>Nuevo proveedor</span></button>
+            <button type="button" id="btn-open-purchase" class="pos-btn pos-btn-primary pos-btn-sm"><i data-lucide="plus" aria-hidden="true"></i><span>Registrar compra</span></button>
           </div>
         </div>
-        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-200">
-            <h3 class="font-bold text-sm text-slate-900">Compras Ingresadas al Kardex</h3>
-          </div>
-          <div id="pur-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
+
+        <div id="sup-directory-panel" class="pos-card">
+          <div id="sup-directory-desktop" class="pos-responsive-table-desktop"></div>
+          <div id="sup-directory-mobile" class="pos-responsive-cards-mobile"></div>
+        </div>
+
+        <div id="sup-purchases-panel" class="pos-card hidden">
+          <div id="pur-list-desktop" class="pos-responsive-table-desktop"></div>
+          <div id="pur-list-mobile" class="pos-responsive-cards-mobile"></div>
         </div>
       </div>
 
-      <!-- SUBTAB: CAJA Y BOLETAS -->
+      <!-- SUBTAB: CAJA, BOLETAS Y REPORTES -->
       <div id="subtab-caja" class="gestion-panel hidden space-y-4">
-        <div id="shift-control-card" class="shift-control-card"></div>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="caja-kpis"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 class="font-bold text-sm text-slate-900">Movimientos de Caja (Jornada de Hoy)</h3>
-              <button type="button" id="btn-open-expense" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">+ Registrar Egreso</button>
+        <div class="pos-segmented-tabs" role="group" aria-label="Vistas del módulo Caja y Boletas">
+          <button type="button" data-caja-tab="actual" class="pos-tab-btn" aria-pressed="true">
+            <i data-lucide="wallet" aria-hidden="true"></i><span>Caja actual</span>
+          </button>
+          <button type="button" data-caja-tab="boletas" class="pos-tab-btn" aria-pressed="false">
+            <i data-lucide="receipt" aria-hidden="true"></i><span>Boletas internas</span>
+          </button>
+          <button type="button" data-caja-tab="reportes" class="pos-tab-btn" aria-pressed="false">
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i><span>Reportes</span>
+          </button>
+        </div>
+
+        <!-- Vista A: Caja actual -->
+        <div id="caja-panel-actual" class="space-y-4">
+          <div id="shift-control-card" class="shift-control-card"></div>
+          <div class="pos-kpi-grid is-4" id="caja-kpis"></div>
+          <div class="pos-card">
+            <div class="pos-card-header">
+              <h3>Movimientos de Caja (Jornada de hoy)</h3>
+              <button type="button" id="btn-open-expense" class="pos-btn pos-btn-danger pos-btn-sm">
+                <i data-lucide="minus-circle" aria-hidden="true"></i><span>Registrar egreso</span>
+              </button>
             </div>
-            <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200">
+            <div class="pos-responsive-table-desktop pos-table-wrap" tabindex="0" role="region" aria-label="Tabla de movimientos de caja">
+              <table class="pos-table">
+                <thead>
                   <tr>
-                    <th class="py-3 px-4">Hora</th>
-                    <th class="py-3 px-4">Concepto</th>
-                    <th class="py-3 px-4">Método</th>
-                    <th class="py-3 px-4 text-right">Monto</th>
+                    <th>Hora</th>
+                    <th>Concepto</th>
+                    <th>Método</th>
+                    <th class="text-right">Monto</th>
                   </tr>
                 </thead>
-                <tbody id="caja-tbody" class="divide-y divide-slate-100"></tbody>
+                <tbody id="caja-tbody"></tbody>
               </table>
             </div>
-          </div>
-          <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-slate-200">
-              <h3 class="font-bold text-sm text-slate-900">Boletas Internas Emitidas (Hoy)</h3>
-            </div>
-            <div id="boletas-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
+            <div id="caja-mobile-list" class="pos-responsive-cards-mobile pos-mobile-cards"></div>
           </div>
         </div>
 
-        <section id="reports-panel" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-4" aria-labelledby="reports-heading">
+        <!-- Vista B: Boletas internas -->
+        <div id="caja-panel-boletas" class="space-y-4 hidden">
+          <div class="pos-card space-y-3">
+            <div class="pos-admin-toolbar-row">
+              <div>
+                <h3 style="margin:0;font-size:16px;font-weight:800;">Boletas internas emitidas (Turno actual)</h3>
+                <p style="margin:4px 0 0;font-size:12px;color:var(--pos-text-secondary);">Documento de control interno · No válido como comprobante SUNAT.</p>
+              </div>
+              <div class="pos-search-input-wrap" style="max-width:300px;">
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input id="boletas-search" type="search" placeholder="Buscar boleta, código o cliente..." aria-label="Buscar boletas internas">
+              </div>
+            </div>
+            <div id="boletas-list" class="pos-card" style="padding:0;overflow:hidden;"></div>
+          </div>
+        </div>
+
+        <!-- Vista C: Reportes -->
+        <section id="reports-panel" class="pos-card space-y-4 hidden" aria-labelledby="reports-heading">
           <div class="reports-toolbar">
             <div>
-              <h3 id="reports-heading" class="font-bold text-sm text-slate-900">Historial y Reportes de Ventas</h3>
-              <p id="reports-range-label" class="text-xs text-slate-500">Consulta ventas, egresos y cierres por día, semana, mes o año desde D1.</p>
+              <h3 id="reports-heading" style="margin:0;font-size:16px;font-weight:800;">Historial y Reportes de Ventas</h3>
+              <p id="reports-range-label" style="margin:4px 0 0;font-size:13px;color:var(--pos-text-secondary);">Consulta ventas, egresos y cierres por día, semana, mes o año desde D1.</p>
             </div>
             <div class="reports-controls">
               <div class="reports-period-tabs" role="group" aria-label="Periodo del reporte">
-                <button type="button" data-report-period="day" class="gestion-tab" aria-pressed="true">Día</button>
-                <button type="button" data-report-period="week" class="gestion-tab" aria-pressed="false">Semana</button>
-                <button type="button" data-report-period="month" class="gestion-tab" aria-pressed="false">Mes</button>
-                <button type="button" data-report-period="year" class="gestion-tab" aria-pressed="false">Año</button>
+                <button type="button" data-report-period="day" class="pos-tab-btn" aria-pressed="true">Día</button>
+                <button type="button" data-report-period="week" class="pos-tab-btn" aria-pressed="false">Semana</button>
+                <button type="button" data-report-period="month" class="pos-tab-btn" aria-pressed="false">Mes</button>
+                <button type="button" data-report-period="year" class="pos-tab-btn" aria-pressed="false">Año</button>
               </div>
               <label class="sr-only" for="report-date">Fecha de referencia</label>
-              <input id="report-date" type="date" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold">
-              <button type="button" id="btn-export-report" class="admin-tool"><i data-lucide="download" aria-hidden="true"></i> Exportar CSV</button>
+              <input id="report-date" type="date" class="pos-filter-select">
+              <button type="button" id="btn-export-report" class="pos-btn pos-btn-secondary pos-btn-sm"><i data-lucide="download" aria-hidden="true"></i><span>Exportar CSV</span></button>
             </div>
           </div>
           <div id="reports-kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
           <div id="reports-methods" class="reports-methods"></div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <div class="lg:col-span-7 overflow-x-auto border border-slate-200 rounded-xl" tabindex="0" role="region" aria-label="Resumen de jornadas o meses">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead id="reports-thead" class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200"></thead>
-                <tbody id="reports-tbody" class="divide-y divide-slate-100"></tbody>
-              </table>
-            </div>
-            <div class="lg:col-span-5 border border-slate-200 rounded-xl overflow-hidden">
-              <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
-                <h4 class="font-bold text-xs text-slate-900 uppercase tracking-wider">Boletas del Periodo</h4>
+            <div class="lg:col-span-7">
+              <div class="pos-responsive-table-desktop pos-table-wrap" tabindex="0" role="region" aria-label="Resumen de jornadas o meses">
+                <table class="pos-table">
+                  <thead id="reports-thead"></thead>
+                  <tbody id="reports-tbody"></tbody>
+                </table>
               </div>
-              <div id="reports-boletas-list" class="divide-y divide-slate-100 max-h-80 overflow-y-auto"></div>
+              <div id="reports-mobile-list" class="pos-responsive-cards-mobile pos-mobile-cards"></div>
+            </div>
+            <div class="lg:col-span-5 pos-card" style="padding:0;overflow:hidden;">
+              <div style="padding:12px 14px;background:var(--pos-surface-2);border-bottom:1px solid var(--pos-border);">
+                <h4 style="margin:0;font-size:12px;font-weight:800;text-transform:uppercase;color:var(--pos-text-secondary);">Boletas del periodo</h4>
+              </div>
+              <div id="reports-boletas-list" style="max-height:360px;overflow-y:auto;"></div>
             </div>
           </div>
         </section>
       </div>
     </section>
 
-  </main>
+    <!-- ==================== VIEW 5: CÓDIGOS QR INDEPENDIENTE ==================== -->
+    <section id="view-qr" class="role-view hidden space-y-4" aria-labelledby="pos-header-title">
+      <div id="pos-qr-root"></div>
+    </section>
+
+    <!-- ==================== VIEW 6: CONFIGURACIÓN AGRUPADA ==================== -->
+    <section id="view-configuracion" class="role-view hidden space-y-4" aria-labelledby="pos-header-title">
+      <div class="pos-settings-grid">
+        <article class="pos-card pos-settings-section">
+          <h3>Notificaciones y sonido</h3>
+          <p>Activa las alertas sonoras en este navegador cuando ingresen pedidos nuevos o estén listos en cocina.</p>
+          <button type="button" id="config-sound-toggle" class="pos-btn pos-btn-primary" aria-pressed="false">
+            <i data-lucide="volume-x" aria-hidden="true"></i><span>Activar sonido</span>
+          </button>
+          <p id="config-sound-status" role="status" class="mt-2 font-semibold"></p>
+        </article>
+
+        <article class="pos-card pos-settings-section" id="config-security-card" hidden>
+          <h3>Seguridad · Clave de Cocina</h3>
+          <p>Cambia la clave de acceso que utiliza el equipo de Cocina y Barra (8 a 100 caracteres, distinta a Admin).</p>
+          <form id="config-chef-form" class="pos-settings-form">
+            <label for="config-chef-password" class="font-bold text-sm">Nueva clave para Cocina</label>
+            <input id="config-chef-password" type="password" minlength="8" maxlength="100" autocomplete="new-password" placeholder="Mínimo 8 caracteres" required>
+            <p id="config-chef-status" role="status" class="text-sm font-semibold"></p>
+            <button type="submit" class="pos-btn pos-btn-secondary">
+              <i data-lucide="key-round" aria-hidden="true"></i><span>Actualizar clave de Cocina</span>
+            </button>
+          </form>
+        </article>
+
+        <article class="pos-card pos-settings-section">
+          <h3>Preferencias de KDS (Cocina / Barra)</h3>
+          <p>Ajusta los umbrales de alerta (Mesa y Delivery), el volumen y el tamaño de texto de las comandas.</p>
+          <button type="button" id="config-open-kds-prefs" class="pos-btn pos-btn-secondary">
+            <i data-lucide="sliders-horizontal" aria-hidden="true"></i><span>Configurar pantalla KDS</span>
+          </button>
+        </article>
+
+        <article class="pos-card pos-settings-section">
+          <h3>Cuenta y sesión</h3>
+          <p id="config-account-summary">Sesión activa del personal.</p>
+          <div class="pos-dash-cta-group">
+            <button type="button" id="config-open-roles" class="pos-btn pos-btn-secondary" hidden>
+              <i data-lucide="shield-check" aria-hidden="true"></i><span>Ver roles y accesos</span>
+            </button>
+            <button type="button" id="config-logout-btn" class="pos-btn pos-btn-danger">
+              <i data-lucide="log-out" aria-hidden="true"></i><span>Cerrar sesión</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 7: ROLES Y ACCESOS ==================== -->
+    <section id="view-roles" class="role-view hidden space-y-4" aria-labelledby="pos-header-title">
+      <div id="pos-roles-root"></div>
+    </section>
+
+      </main>
+    </div>
+
+    <nav id="pos-mobile-nav" class="pos-shell-chrome pos-mobile-nav" aria-label="Navegación rápida del POS" hidden></nav>
+  </div>
+
+  <div id="pos-more-backdrop" class="pos-shell-chrome pos-drawer-backdrop" hidden></div>
+  <aside id="pos-more-drawer" class="pos-shell-chrome pos-more-drawer" role="dialog" aria-modal="true" aria-labelledby="pos-more-title" hidden></aside>
+
+  <dialog id="modal-confirm" class="pos-confirm-dialog" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
+    <div class="pos-confirm-head">
+      <h2 id="confirm-modal-title">Confirmar acción</h2>
+      <button type="button" id="confirm-modal-close" class="pos-more-close" aria-label="Cerrar confirmación"><i data-lucide="x" aria-hidden="true"></i></button>
+    </div>
+    <p id="confirm-modal-message" class="pos-confirm-body"></p>
+    <div class="pos-confirm-foot">
+      <button type="button" id="confirm-modal-cancel" class="pos-btn pos-btn-secondary">Volver</button>
+      <button type="button" id="confirm-modal-accept" class="pos-btn pos-btn-danger">Confirmar</button>
+    </div>
+  </dialog>
 
   <!-- ==================== MODALS ==================== -->
 
@@ -1280,6 +1216,24 @@
     </div>
   </dialog>
 
+  <!-- MODAL: ESTADO DE PEDIDOS EN VIVO -->
+  <dialog id="client-tracker-modal" class="business-closed-modal client-tracker-modal" aria-labelledby="tracker-modal-title">
+    <div class="business-closed-modal-card client-tracker-modal-card">
+      <div class="business-closed-modal-top">
+        <div class="client-tracker-modal-titlewrap">
+          <span class="carta-tracker-dot" aria-hidden="true"></span>
+          <h2 id="tracker-modal-title">Estado de tus pedidos</h2>
+        </div>
+        <button type="button" id="btn-close-tracker-modal" class="business-closed-x" aria-label="Cerrar estado de pedidos">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="client-tracker-modal-sub">Se actualiza automáticamente en vivo mientras preparamos tu orden.</p>
+      <div id="client-tracker-list" class="client-tracker-list" role="region" aria-live="polite"></div>
+      <button type="button" id="btn-accept-tracker-modal" class="business-closed-modal-cta">Seguir viendo la carta</button>
+    </div>
+  </dialog>
+
   <!-- MODAL: STOCK ADJUST / PURCHASE / EXPENSE -->
   <dialog id="inventory-recipes" class="prep-dialog inventory-dialog" aria-labelledby="inventory-recipes-title">
     <header>
@@ -1464,13 +1418,13 @@
   </dialog>
 
   <script type="module">
-    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261127b';
+    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261127c';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
     import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
-    import { menuPages, drinkOptions } from './visual-menu.js?v=20261127b';
+    import { menuPages, drinkOptions } from './visual-menu.js?v=20261127c';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
     import { createPosSounds } from './pos-sounds.js';
     import {
@@ -1481,7 +1435,37 @@
       canFitBookSpread,
       buildMenuPageLeaf,
       bindBottomSheetSwipe
-    } from './carta-components.js?v=20261127b';
+    } from './carta-components.js?v=20261127c';
+    import {
+      POS_ROUTES,
+      resolveActiveNavId,
+      getRailItems,
+      getMobileBottomItems,
+      getDesktopSidebarGroups,
+      getMoreDrawerGroups,
+      getHeaderMeta,
+      renderNavBadgeText
+    } from './pos/shell.js?v=20261127d';
+    import {
+      computeDashboardModel,
+      renderDashboardHtml,
+      renderAdminOrderListHtml,
+      renderAdminOrderDetailHtml,
+      filterIngredients,
+      renderInventoryKpisHtml,
+      renderInventoryRowsAndCards,
+      filterKardexMovements,
+      renderKardexRowsAndCards
+    } from './pos/views.js?v=20261127d';
+    import {
+      renderSuppliersDirectoryHtml,
+      renderPurchasesViewHtml,
+      renderCajaMovementsHtml,
+      renderBoletasListHtml,
+      renderReportsMobileHtml,
+      renderQrTablesGridHtml,
+      renderRolesCardsHtml
+    } from './pos/admin-views.js?v=20261127d';
 
     (function () {
       'use strict';
@@ -1547,7 +1531,22 @@
         receivedOrders: readTrackedOrders(),
         staffOrderEntry: false,
         adminFilter: 'POR_APROBAR',
+        selectedAdminOrderId: '',
+        adminMobileDetailOpen: false,
         gestionSubtab: 'inventario',
+        invSearch: '',
+        invStation: 'ALL',
+        invStatus: 'ALL',
+        kardexStation: 'ALL',
+        kardexType: 'ALL',
+        kardexDate: '',
+        suppliersSubtab: 'directory',
+        cajaSubtab: 'actual',
+        boletasSearch: '',
+        kdsFullscreen: false,
+        sidebarCollapsed: false,
+        moreDrawerOpen: false,
+        accountMenuOpen: false,
         activeBixolonOrder: null,
         businessStatus: { open: true, isSunday: false, closedManual: false, reason: null, message: '', businessDate: '' },
         activeShift: null,
@@ -1558,6 +1557,44 @@
         reportLoading: false,
         submittingOrder: false
       };
+      try {
+        ui.sidebarCollapsed = localStorage.getItem('pos-sidebar-collapsed') === '1';
+      } catch {}
+
+      function confirmPosAction({ title = 'Confirmar acción', message = '', confirmLabel = 'Confirmar', cancelLabel = 'Volver', tone = 'danger' } = {}) {
+        const dlg = document.getElementById('modal-confirm');
+        if (!dlg) return Promise.resolve(window.confirm(message || title));
+        document.getElementById('confirm-modal-title').textContent = title;
+        document.getElementById('confirm-modal-message').textContent = message;
+        const acceptBtn = document.getElementById('confirm-modal-accept');
+        const cancelBtn = document.getElementById('confirm-modal-cancel');
+        const closeBtn = document.getElementById('confirm-modal-close');
+        acceptBtn.textContent = confirmLabel;
+        acceptBtn.className = `pos-btn ${tone === 'primary' ? 'pos-btn-primary' : 'pos-btn-danger'}`;
+        cancelBtn.textContent = cancelLabel;
+        return new Promise(resolve => {
+          let settled = false;
+          const finish = result => {
+            if (settled) return;
+            settled = true;
+            dlg.removeEventListener('close', onClose);
+            acceptBtn.removeEventListener('click', onAccept);
+            cancelBtn.removeEventListener('click', onCancel);
+            closeBtn.removeEventListener('click', onCancel);
+            if (dlg.open) dlg.close();
+            resolve(result);
+          };
+          const onAccept = () => finish(true);
+          const onCancel = () => finish(false);
+          const onClose = () => finish(false);
+          acceptBtn.addEventListener('click', onAccept);
+          cancelBtn.addEventListener('click', onCancel);
+          closeBtn.addEventListener('click', onCancel);
+          dlg.addEventListener('close', onClose);
+          dlg.showModal();
+          if (window.lucide?.createIcons) window.lucide.createIcons();
+        });
+      }
 
       // ==================== TOAST & PUSH NOTIFICATION ====================
       function showToast(msg, tone = 'ok', cue = tone === 'ok' ? 'action-success' : tone === 'err' ? 'error' : null) {
@@ -1581,7 +1618,7 @@
       const posSounds = createPosSounds();
       let soundEnabled = false;
       const prepSoundButton = document.getElementById('prep-sound');
-      const modulesSoundButton = document.getElementById('modules-sound-toggle');
+      const configSoundButton = document.getElementById('config-sound-toggle');
 
       function playPosSound(cue) {
         if (!soundEnabled || !staffMenu) return false;
@@ -1593,7 +1630,8 @@
       function setSoundButtonState(button, label) {
         if (!button) return;
         button.setAttribute('aria-pressed', String(soundEnabled));
-        button.querySelector('span').textContent = label;
+        const span = button.querySelector('span');
+        if (span) span.textContent = label;
         button.querySelector('svg, i')?.remove();
         const icon = document.createElement('i');
         icon.dataset.lucide = soundEnabled ? 'volume-2' : 'volume-x';
@@ -1603,46 +1641,48 @@
 
       function renderSoundButtons() {
         const fullLabel = soundEnabled ? 'Silenciar' : 'Activar sonido';
-        for (const button of [soundButton, prepSoundButton, modulesSoundButton]) {
-          setSoundButtonState(button, fullLabel);
+        const headerSoundButton = document.getElementById('header-sound-toggle');
+        for (const button of [soundButton, prepSoundButton, configSoundButton, headerSoundButton]) {
+          setSoundButtonState(button, button === headerSoundButton ? (soundEnabled ? 'Sonido activo' : 'Silenciado') : fullLabel);
         }
-        const soundBadge = document.getElementById('mod-badge-sound');
-        if (soundBadge) {
-          soundBadge.textContent = soundEnabled ? 'Activo' : 'Silenciado';
-          soundBadge.dataset.active = String(soundEnabled);
+        const cfgStatus = document.getElementById('config-sound-status');
+        if (cfgStatus) {
+          cfgStatus.textContent = soundEnabled ? 'Avisos sonoros activos en este navegador.' : 'Avisos sonoros silenciados.';
         }
-        lucide.createIcons();
+        if (window.lucide?.createIcons) lucide.createIcons();
       }
 
       async function toggleSound(event) {
-        const trigger = event.currentTarget;
+        const trigger = event?.currentTarget || document.getElementById('header-sound-toggle');
         const inPrep = trigger === prepSoundButton;
         const status = inPrep ? prepSoundStatus : document.getElementById('staff-sound-status');
-        if (!inPrep || prepPreferences.snoozeUntil <= Date.now()) status.textContent = '';
+        if (status && (!inPrep || prepPreferences.snoozeUntil <= Date.now())) status.textContent = '';
         if (soundEnabled) {
           soundEnabled = false;
           posSounds.mute();
         } else {
-          trigger.disabled = true;
+          if (trigger) trigger.disabled = true;
           try {
             soundEnabled = await posSounds.enable();
           } catch {
             soundEnabled = false;
           } finally {
-            trigger.disabled = false;
+            if (trigger) trigger.disabled = false;
           }
           if (soundEnabled) {
             posSounds.ready().then(() => playPosSound('action-success'));
-          } else {
+          } else if (status) {
             status.textContent = 'No se pudo activar el sonido en este navegador.';
           }
         }
         renderSoundButtons();
-        if (trigger === modulesSoundButton) {
+        if (trigger && trigger.id === 'header-sound-toggle') {
           showToast(soundEnabled ? 'Avisos sonoros activados.' : 'Sonido silenciado.', 'info');
         }
       }
-      soundButton.onclick = prepSoundButton.onclick = modulesSoundButton.onclick = toggleSound;
+      if (soundButton) soundButton.onclick = toggleSound;
+      if (prepSoundButton) prepSoundButton.onclick = toggleSound;
+      if (configSoundButton) configSoundButton.onclick = toggleSound;
 
       // ==================== KARDEX DEDUCTION ON APPROVAL ====================
       function recipeIngredients(product) {
@@ -1954,124 +1994,393 @@
         ).length;
       }
 
+      const posNavAside = document.getElementById('pos-nav-aside');
+      const posHeaderEl = document.getElementById('pos-header');
+      const posMobileNav = document.getElementById('pos-mobile-nav');
+      const posMoreBackdrop = document.getElementById('pos-more-backdrop');
+      const posMoreDrawer = document.getElementById('pos-more-drawer');
+      let lastMoreTrigger = null;
+      let renderedAsideHtml = '';
+      let renderedHeaderHtml = '';
+      let renderedMobileNavHtml = '';
+
+      function navigatePosRoute(routeId, triggerEl = null) {
+        if (!staffReady) return;
+        const route = Object.values(POS_ROUTES).find(entry => entry.id === routeId);
+        if (!route) return;
+        if (ui.moreDrawerOpen) closeMoreDrawer({ restoreFocus: false });
+        ui.accountMenuOpen = false;
+
+        if (routeId === 'nuevo-pedido') {
+          startCounterOrder();
+          return;
+        }
+        if (routeId === 'carta') {
+          ui.staffOrderEntry = false;
+          ui.clientMode = 'MESA';
+          ui.kdsFullscreen = false;
+          staffMenu = true;
+          showMenuFormat('visual');
+          switchRole('cliente', { pushHistory: true });
+          window.scrollTo(0, 0);
+          return;
+        }
+        if (routeId === 'terminados') {
+          prepFilter = 'ready';
+          prepHistoryPage = 0;
+          ui.staffOrderEntry = false;
+          switchRole('chef', { pushHistory: true });
+          window.scrollTo(0, 0);
+          return;
+        }
+        if (route.station) {
+          prepStation = route.station;
+          localStorage.setItem('pos-prep-station', prepStation);
+          prepFilter = 'pending';
+          prepHistoryPage = 0;
+        }
+        if (route.subtab) {
+          ui.gestionSubtab = route.subtab;
+        }
+        const targetRole = route.roles[0];
+        if (!canOpenPosView(targetRole)) return;
+        ui.staffOrderEntry = false;
+        if (targetRole !== 'chef') ui.kdsFullscreen = false;
+        switchRole(targetRole, { pushHistory: true });
+        if (triggerEl instanceof HTMLElement && targetRole === 'gestion') {
+          window.scrollTo(0, 0);
+        }
+      }
+
+      function renderMoreDrawerContent(activeNavId) {
+        const isDesktop = window.innerWidth >= 1024;
+        const groups = getMoreDrawerGroups(staffArea, { includeNuevoPedido: true });
+        posMoreDrawer.innerHTML = `
+          <div class="pos-more-head">
+            <h2 id="pos-more-title">Módulos y sistema</h2>
+            <button type="button" id="btn-close-more-drawer" class="pos-more-close" aria-label="Cerrar menú"><i data-lucide="x" aria-hidden="true"></i></button>
+          </div>
+          <div class="pos-more-body">
+            ${groups.map(group => `
+              <section class="pos-more-group">
+                <h3>${group.label}</h3>
+                <div class="pos-more-grid">
+                  ${group.items.map(item => `
+                    <button type="button" class="pos-more-item" data-pos-route="${item.id}" aria-current="${activeNavId === item.id ? 'page' : 'false'}">
+                      <span class="pos-more-item-main">
+                        <span class="pos-more-item-icon" aria-hidden="true"><i data-lucide="${item.icon}"></i></span>
+                        <span>
+                          <strong>${item.label}</strong>
+                          <span>${item.subtitle}</span>
+                        </span>
+                      </span>
+                      <i data-lucide="chevron-right" class="w-4 h-4 shrink-0" style="color:var(--pos-text-secondary);" aria-hidden="true"></i>
+                    </button>
+                  `).join('')}
+                </div>
+              </section>
+            `).join('')}
+            ${!isDesktop ? '' : ''}
+          </div>
+        `;
+      }
+
+      function openMoreDrawer(triggerEl = null) {
+        if (!staffReady) return;
+        lastMoreTrigger = triggerEl || document.activeElement;
+        ui.moreDrawerOpen = true;
+        ui.accountMenuOpen = false;
+        const activeNavId = resolveActiveNavId({
+          role: ui.role, staffOrderEntry: ui.staffOrderEntry,
+          gestionSubtab: ui.gestionSubtab, prepStation, prepFilter
+        });
+        renderMoreDrawerContent(activeNavId);
+        posMoreBackdrop.hidden = false;
+        posMoreDrawer.hidden = false;
+        renderPosShellChrome();
+        if (window.lucide?.createIcons) lucide.createIcons();
+        requestAnimationFrame(() => document.getElementById('btn-close-more-drawer')?.focus());
+      }
+
+      function closeMoreDrawer({ restoreFocus = true } = {}) {
+        if (!ui.moreDrawerOpen) return;
+        ui.moreDrawerOpen = false;
+        posMoreBackdrop.hidden = true;
+        posMoreDrawer.hidden = true;
+        renderPosShellChrome();
+        if (restoreFocus && lastMoreTrigger instanceof HTMLElement && lastMoreTrigger.isConnected) {
+          lastMoreTrigger.focus({ preventScroll: true });
+        }
+      }
+
+      function renderPosShellChrome() {
+        const showShell = staffReady && (staffMenu || ui.staffOrderEntry);
+        document.body.toggleAttribute('data-staff-shell', showShell);
+        document.body.toggleAttribute('data-staff-role', showShell);
+        if (showShell) document.body.setAttribute('data-staff-role', staffArea || 'admin');
+        else document.body.removeAttribute('data-staff-role');
+        document.body.toggleAttribute('data-kds-focus', showShell && ui.kdsFullscreen && ui.role === 'chef');
+
+        if (!showShell) {
+          posNavAside.hidden = true;
+          posHeaderEl.hidden = true;
+          posMobileNav.hidden = true;
+          posMoreBackdrop.hidden = true;
+          posMoreDrawer.hidden = true;
+          return;
+        }
+
+        posNavAside.hidden = false;
+        posHeaderEl.hidden = false;
+        posMobileNav.hidden = false;
+        posNavAside.classList.toggle('is-collapsed', ui.sidebarCollapsed);
+
+        const activeNavId = resolveActiveNavId({
+          role: ui.role,
+          staffOrderEntry: ui.staffOrderEntry,
+          gestionSubtab: ui.gestionSubtab,
+          prepStation,
+          prepFilter
+        });
+        const metrics = {
+          pendingCount: (state.orders || []).filter(o => o.status === 'POR_APROBAR').length,
+          cocinaPending: countPendingStation(state.orders || [], 'COCINA'),
+          barraPending: countPendingStation(state.orders || [], 'BARRA')
+        };
+
+        const railItems = getRailItems(staffArea);
+        const sidebarGroups = getDesktopSidebarGroups(staffArea);
+        const mobileItems = getMobileBottomItems(staffArea);
+        const isAdmin = staffArea === 'admin';
+        const profileShort = isAdmin ? 'Nicol' : 'Cocina';
+        const profileRole = isAdmin ? 'Admin' : 'Estaciones';
+        const profileFull = isAdmin ? 'Nicol · Admin' : 'Cocina';
+        const headerMeta = getHeaderMeta(activeNavId, { businessStatus: ui.businessStatus, prepFilter });
+
+        const asideHtml = `
+          <div>
+            <div class="pos-nav-brand">
+              <div class="pos-nav-logo-wrap">
+                <span class="pos-nav-logo-badge" aria-hidden="true">POS</span>
+                <div class="pos-nav-brand-text pos-nav-desktop-only">
+                  <strong>THE BURGERS BROTHER</strong>
+                  <span>Operación POS v2.0</span>
+                </div>
+              </div>
+              <button type="button" class="pos-sidebar-collapse-btn" data-pos-action="toggle-sidebar" aria-label="${ui.sidebarCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral'}" title="${ui.sidebarCollapsed ? 'Expandir menú' : 'Contraer menú'}">
+                <i data-lucide="${ui.sidebarCollapsed ? 'panel-left-open' : 'panel-left-close'}" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <nav class="pos-rail-list pos-nav-rail-only" aria-label="Accesos rápidos Tablet">
+              ${railItems.map(item => {
+                const badge = renderNavBadgeText(item.id, metrics);
+                return `
+                  <button type="button" class="pos-rail-btn" data-pos-route="${item.id}" aria-current="${activeNavId === item.id ? 'page' : 'false'}">
+                    <i data-lucide="${item.icon}" aria-hidden="true"></i>
+                    <span>${item.railLabel || item.label}</span>
+                    ${badge ? `<span class="pos-nav-badge" aria-hidden="true">${badge}</span>` : ''}
+                  </button>
+                `;
+              }).join('')}
+              <button type="button" class="pos-rail-btn" data-pos-action="toggle-more" aria-expanded="${ui.moreDrawerOpen}" aria-controls="pos-more-drawer">
+                <i data-lucide="menu" aria-hidden="true"></i>
+                <span>Más</span>
+              </button>
+            </nav>
+
+            <nav class="pos-sidebar-groups pos-nav-desktop-only" aria-label="Menú completo POS">
+              ${sidebarGroups.map(group => `
+                <div>
+                  <p class="pos-sidebar-group-title">${group.label}</p>
+                  <div class="pos-sidebar-list">
+                    ${group.items.map(item => {
+                      const badge = renderNavBadgeText(item.id, metrics);
+                      return `
+                        <button type="button" class="pos-sidebar-btn" data-pos-route="${item.id}" aria-current="${activeNavId === item.id ? 'page' : 'false'}">
+                          <span class="pos-sidebar-btn-main">
+                            <i data-lucide="${item.icon}" aria-hidden="true"></i>
+                            <span>${item.label}</span>
+                          </span>
+                          ${badge ? `<span class="pos-sidebar-pill">${badge}</span>` : ''}
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `).join('')}
+            </nav>
+          </div>
+        `;
+        if (asideHtml !== renderedAsideHtml) {
+          posNavAside.innerHTML = asideHtml;
+          renderedAsideHtml = asideHtml;
+        }
+
+        const headerHtml = `
+          <div class="pos-header-left">
+            <span class="pos-header-brand-mobile" aria-hidden="true">POS</span>
+            <div class="pos-header-titles">
+              <h1 id="pos-header-title" class="pos-header-title" tabindex="-1">${headerMeta.title}</h1>
+              <p class="pos-header-context">${headerMeta.contextText}</p>
+            </div>
+          </div>
+          <div class="pos-header-actions">
+            ${ui.kdsFullscreen && ui.role === 'chef' ? `
+              <button type="button" class="pos-btn pos-btn-subtle pos-btn-sm" data-pos-action="exit-kds-focus">
+                <i data-lucide="minimize-2" aria-hidden="true"></i><span>Salir pantalla completa</span>
+              </button>` : ''}
+            <button id="header-sound-toggle" type="button" class="pos-header-sound" aria-pressed="${soundEnabled}">
+              <i data-lucide="${soundEnabled ? 'volume-2' : 'volume-x'}" aria-hidden="true"></i>
+              <span>${soundEnabled ? 'Sonido activo' : 'Silenciado'}</span>
+            </button>
+            <div class="pos-account-wrap">
+              <button id="header-account-btn" type="button" class="pos-account-trigger" data-pos-action="toggle-account" aria-haspopup="menu" aria-expanded="${ui.accountMenuOpen}">
+                <span class="pos-account-avatar" aria-hidden="true">${profileShort.charAt(0)}</span>
+                <span class="pos-account-meta">
+                  <strong>${profileShort}</strong>
+                  <span class="pos-account-role">${profileRole}</span>
+                </span>
+                <i data-lucide="chevron-down" class="pos-account-chevron" aria-hidden="true"></i>
+              </button>
+              <div id="header-account-menu" class="pos-account-menu" role="menu" ${ui.accountMenuOpen ? '' : 'hidden'}>
+                <div class="pos-account-menu-head">
+                  <strong>${profileFull}</strong>
+                  <span>${isAdmin ? 'Administración total' : 'Cocina y Barra'}</span>
+                </div>
+                <button type="button" role="menuitem" data-pos-route="configuracion">
+                  <i data-lucide="settings" aria-hidden="true"></i><span>Configuración</span>
+                </button>
+                ${isAdmin ? `<button type="button" role="menuitem" data-pos-route="roles"><i data-lucide="shield-check" aria-hidden="true"></i><span>Roles y accesos</span></button>` : ''}
+                <button type="button" role="menuitem" data-pos-action="signout" data-tone="error">
+                  <i data-lucide="log-out" aria-hidden="true"></i><span>Cerrar sesión</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        if (headerHtml !== renderedHeaderHtml) {
+          posHeaderEl.innerHTML = headerHtml;
+          renderedHeaderHtml = headerHtml;
+          const soundBtn = document.getElementById('header-sound-toggle');
+          if (soundBtn) soundBtn.onclick = toggleSound;
+        }
+
+        const mobileHtml = `
+          ${mobileItems.map(item => {
+            const badge = renderNavBadgeText(item.id, metrics);
+            return `
+              <button type="button" class="pos-mobile-nav-btn" data-pos-route="${item.id}" aria-current="${activeNavId === item.id ? 'page' : 'false'}">
+                <i data-lucide="${item.icon}" aria-hidden="true"></i>
+                <span>${item.label}</span>
+                ${badge ? `<span class="pos-nav-badge" aria-hidden="true">${badge}</span>` : ''}
+              </button>
+            `;
+          }).join('')}
+          <button type="button" class="pos-mobile-nav-btn" data-pos-action="toggle-more" aria-expanded="${ui.moreDrawerOpen}" aria-controls="pos-more-drawer">
+            <i data-lucide="menu" aria-hidden="true"></i>
+            <span>Más</span>
+          </button>
+        `;
+        if (mobileHtml !== renderedMobileNavHtml) {
+          posMobileNav.innerHTML = mobileHtml;
+          renderedMobileNavHtml = mobileHtml;
+        }
+      }
+
       function renderModuleStats() {
         if (!staffReady) return;
-        const orders = state.orders || [];
-        const pendingCount = orders.filter(o => o.status === 'POR_APROBAR').length;
-        const cookingCount = orders.filter(o => o.status === 'EN_COCINA').length;
-        const readyCount = orders.filter(o => o.status === 'LISTO_CHEF').length;
-        const cocinaPending = countPendingStation(orders, 'COCINA');
-        const barraPending = countPendingStation(orders, 'BARRA');
-
-        const setText = (id, text) => {
-          const el = document.getElementById(id);
-          if (el && el.textContent !== text) el.textContent = text;
-        };
-        const setAlert = (id, flag) => {
-          const el = document.getElementById(id);
-          if (el) el.dataset.alert = String(Boolean(flag));
-        };
-
-        setText('kpi-pending-num', String(pendingCount));
-        setAlert('kpi-pending', pendingCount > 0);
-        setText('kpi-cocina-num', String(cocinaPending));
-        setAlert('kpi-cocina', cocinaPending > 0);
-        setText('kpi-barra-num', String(barraPending));
-        setAlert('kpi-barra', barraPending > 0);
-        setText('kpi-ready-num', String(readyCount));
-        setAlert('kpi-ready', readyCount > 0);
-
-        setText('mod-badge-cocina', cocinaPending ? `${cocinaPending} pend.` : 'Sin cola');
-        setAlert('mod-badge-cocina', cocinaPending > 0);
-        setText('mod-badge-barra', barraPending ? `${barraPending} pend.` : 'Sin cola');
-        setAlert('mod-badge-barra', barraPending > 0);
-
-        const dateEl = document.getElementById('modules-shift-date');
-        if (dateEl) {
-          const dayText = new Intl.DateTimeFormat('es-PE', {
-            timeZone: 'America/Lima',
-            weekday: 'long',
-            day: 'numeric',
-            month: 'short'
-          }).format(new Date());
-          dateEl.textContent = ui.businessStatus && !ui.businessStatus.open
-            ? `${dayText} · Cerrado hoy`
-            : dayText;
+        const dashRoot = document.getElementById('pos-dashboard-root');
+        if (dashRoot && ui.role === 'modulos') {
+          const model = computeDashboardModel(state, {
+            staffArea,
+            activeShift: ui.activeShift,
+            businessStatus: ui.businessStatus
+          });
+          dashRoot.innerHTML = renderDashboardHtml(model, { staffArea });
         }
-
-        if (staffArea === 'admin') {
-          setText('mod-badge-admin', pendingCount ? `${pendingCount} por aprobar` : 'Al día');
-          setAlert('mod-badge-admin', pendingCount > 0);
-          setText('mod-desc-admin', readyCount ? `${readyCount} ${readyCount === 1 ? 'listo por despachar' : 'listos por despachar'}` : 'Aprobar, cobrar y boletas');
-
-          const ingredients = state.ingredients || [];
-          const lowCount = ingredients.filter(i => i.stock <= i.minStock).length;
-          setText('mod-badge-inv', lowCount ? `${lowCount} stock bajo` : `${ingredients.length} insumos`);
-          setAlert('mod-badge-inv', lowCount > 0);
-          setText('mod-badge-kardex', `${(state.kardex || []).length} movs.`);
-          setText('mod-badge-purchases', `${(state.purchases || []).length} compras`);
-
-          const movements = state.caja?.movements || [];
-          let cashIn = 0;
-          let expOut = 0;
-          for (const m of movements) {
-            if (m.type === 'EGRESO') expOut += Math.abs(m.amount);
-            else if (m.type === 'VENTA' && m.method === 'Efectivo') cashIn += m.amount;
-          }
-          setText('mod-badge-caja', money((state.caja?.opening || 0) + cashIn - expOut));
-
-          const summaryParts = [];
-          if (pendingCount) summaryParts.push(`${pendingCount} por aprobar`);
-          if (cookingCount) summaryParts.push(`${cookingCount} en cocina`);
-          if (readyCount) summaryParts.push(`${readyCount} listos`);
-          setText('modules-subtitle', summaryParts.length ? summaryParts.join(' · ') : 'Turno al día — elige un módulo para empezar');
-        } else {
-          const doneTotal = prepHistory(orders, prepStation).length;
-          setText('mod-badge-ready', `${doneTotal} ${doneTotal === 1 ? 'lista' : 'listas'}`);
-          const parts = [];
-          if (cocinaPending) parts.push(`${cocinaPending} en Cocina`);
-          if (barraPending) parts.push(`${barraPending} en Barra`);
-          setText('modules-subtitle', parts.length ? parts.join(' · ') : 'Estaciones sin comandas pendientes');
-        }
+        renderPosShellChrome();
       }
 
       function updateBadges() {
         if (staffReady) renderModuleStats();
       }
 
-      const staffSettingsDialog = document.getElementById('staff-settings');
-      document.getElementById('staff-settings-close').onclick = () => staffSettingsDialog.close();
-
-      const rolesDialog = document.getElementById('staff-roles');
-      for (const trigger of [document.getElementById('launch-roles'), document.getElementById('staff-roles-open')]) {
-        trigger.onclick = () => {
-          if (!staffReady || staffArea !== 'admin') return;
-          trigger.focus({ preventScroll: true });
-          rolesDialog.showModal();
-        };
-      }
-      document.getElementById('staff-roles-close').onclick = () => rolesDialog.close();
-      document.getElementById('launch-settings').onclick = event => {
-        if (!staffReady) return;
-        event.currentTarget.focus({ preventScroll: true });
-        staffSettingsDialog.showModal();
-      };
+      document.getElementById('staff-settings-close')?.addEventListener('click', () => document.getElementById('staff-settings')?.close());
+      document.getElementById('staff-roles-close')?.addEventListener('click', () => document.getElementById('staff-roles')?.close());
       document.getElementById('staff-skip-link').onclick = event => {
         event.preventDefault();
         document.getElementById('pos-content').focus();
       };
+
+      document.addEventListener('click', event => {
+        const routeBtn = event.target.closest('[data-pos-route]');
+        if (routeBtn) {
+          navigatePosRoute(routeBtn.dataset.posRoute, routeBtn);
+          return;
+        }
+        const shellAction = event.target.closest('[data-pos-action]');
+        if (shellAction) {
+          const act = shellAction.dataset.posAction;
+          if (act === 'toggle-sidebar') {
+            ui.sidebarCollapsed = !ui.sidebarCollapsed;
+            try { localStorage.setItem('pos-sidebar-collapsed', ui.sidebarCollapsed ? '1' : '0'); } catch {}
+            renderPosShellChrome();
+            if (window.lucide?.createIcons) lucide.createIcons();
+          } else if (act === 'toggle-more') {
+            if (ui.moreDrawerOpen) closeMoreDrawer();
+            else openMoreDrawer(shellAction);
+          } else if (act === 'toggle-account') {
+            ui.accountMenuOpen = !ui.accountMenuOpen;
+            renderPosShellChrome();
+            if (window.lucide?.createIcons) lucide.createIcons();
+          } else if (act === 'exit-kds-focus') {
+            ui.kdsFullscreen = false;
+            if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+            renderPosShellChrome();
+            if (window.lucide?.createIcons) lucide.createIcons();
+          } else if (act === 'signout') {
+            ui.accountMenuOpen = false;
+            signOutStaff({ currentTarget: shellAction });
+          }
+          return;
+        }
+        if (ui.accountMenuOpen && !event.target.closest('.pos-account-wrap')) {
+          ui.accountMenuOpen = false;
+          renderPosShellChrome();
+          if (window.lucide?.createIcons) lucide.createIcons();
+        }
+      });
+
+      posMoreBackdrop?.addEventListener('click', () => closeMoreDrawer());
+      posMoreDrawer?.addEventListener('click', event => {
+        if (event.target.closest('#btn-close-more-drawer')) closeMoreDrawer();
+      });
+
       document.getElementById('view-modulos').addEventListener('click', event => {
-        const trigger = event.target.closest('[data-launch-action], [data-launch-role]');
-        if (!trigger || trigger.hidden) return;
-        const action = trigger.dataset.launchAction;
-        if (action === 'new-order') {
-          startCounterOrder();
-          return;
+        const trigger = event.target.closest('[data-dash-action]');
+        if (!trigger) return;
+        const action = trigger.dataset.dashAction;
+        if (action === 'new-order') return navigatePosRoute('nuevo-pedido');
+        if (action === 'nav-pedidos') return navigatePosRoute('pedidos');
+        if (action === 'nav-pedidos-por-aprobar') {
+          ui.adminFilter = 'POR_APROBAR';
+          ui.selectedAdminOrderId = '';
+          ui.adminMobileDetailOpen = false;
+          return navigatePosRoute('pedidos');
         }
-        if (action === 'open-qr') {
-          openQrModal();
-          return;
+        if (action === 'nav-pedidos-listos') {
+          ui.adminFilter = 'LISTO_CHEF';
+          ui.selectedAdminOrderId = '';
+          ui.adminMobileDetailOpen = false;
+          return navigatePosRoute('pedidos');
         }
+        if (action === 'nav-cocina') return navigatePosRoute('cocina');
+        if (action === 'nav-barra') return navigatePosRoute('barra');
+        if (action === 'nav-terminados') return navigatePosRoute('terminados');
+        if (action === 'nav-inventario') return navigatePosRoute('inventario');
+        if (action === 'nav-caja') return navigatePosRoute('caja');
+        if (action === 'nav-carta') return navigatePosRoute('carta');
         if (action === 'prep-code') {
           if (!canOpenPosView('chef')) return;
           prepFilter = 'pending';
@@ -2079,38 +2388,25 @@
           openPrepCode();
           return;
         }
-        if (action === 'prep-settings') {
-          if (!canOpenPosView('chef')) return;
-          switchRole('chef');
-          renderPrepPreferences();
-          prepSettings.showModal();
+        if (action.startsWith('open-order:')) {
+          const orderId = action.slice('open-order:'.length);
+          const order = (state.orders || []).find(o => o.id === orderId);
+          if (order && canOpenPosView('admin')) {
+            ui.adminFilter = ['ENTREGADO', 'RECHAZADO', 'CANCELADO'].includes(order.status) ? 'ENTREGADO' : order.status;
+            ui.selectedAdminOrderId = order.id;
+            ui.adminMobileDetailOpen = true;
+            switchRole('admin', { pushHistory: true });
+          }
           return;
         }
-        const role = trigger.dataset.launchRole;
-        if (!role || !canOpenPosView(role)) return;
-        if (role === 'cliente') ui.clientMode = 'MESA';
-        if (trigger.dataset.launchSubtab) ui.gestionSubtab = trigger.dataset.launchSubtab;
-        if (trigger.dataset.launchAdminFilter) ui.adminFilter = trigger.dataset.launchAdminFilter;
-        if (trigger.dataset.launchStation) {
-          prepStation = trigger.dataset.launchStation;
-          localStorage.setItem('pos-prep-station', prepStation);
+        if (action.startsWith('open-station:')) {
+          const st = action.slice('open-station:'.length);
+          return navigatePosRoute(st === 'BARRA' ? 'barra' : 'cocina');
         }
-        if (trigger.dataset.launchFilter) {
-          prepFilter = trigger.dataset.launchFilter;
-          prepHistoryPage = 0;
-        }
-        switchRole(role);
-        const view = document.getElementById('view-' + role);
-        const target = role === 'chef' ? document.getElementById('prep-back')
-          : view.querySelector(trigger.dataset.launchSubtab ? '[data-subtab="' + trigger.dataset.launchSubtab + '"]' : 'h1, h2');
-        if (target) {
-          if (target.matches('h1, h2')) target.tabIndex = -1;
-          target.focus({ preventScroll: true });
-        }
-        window.scrollTo(0, 0);
       });
 
       let staffMenu = false;
+      let staffCartDrawerOpen = false;
       let prepReturnRole = 'modulos';
       let cartDrawerOpen = false;
       let categorySheetOpen = false;
@@ -2122,12 +2418,10 @@
         const cartActive = isPublic && cartDrawerOpen;
         const sheetActive = isPublic && categorySheetOpen;
         const catalogCol = document.querySelector('.menu-catalog-col');
-        const trackerWrap = document.getElementById('client-tracker-wrap');
         const mobileNav = document.getElementById('carta-mobile-nav');
         const staffHero = document.getElementById('staff-menu-hero');
         const hasOverlay = cartActive || sheetActive;
         if (catalogCol) catalogCol.inert = hasOverlay;
-        if (trackerWrap) trackerWrap.inert = hasOverlay;
         if (mobileNav) mobileNav.inert = hasOverlay;
         if (staffHero) staffHero.inert = hasOverlay;
         document.body.toggleAttribute('data-cart-open', cartActive);
@@ -2163,7 +2457,14 @@
 
       function openCartDrawer(triggerEl = null) {
         if (!document.body.hasAttribute('data-public-menu')) {
-          focusClientCart();
+          if (window.innerWidth < 1024) {
+            lastCartTrigger = triggerEl || document.activeElement;
+            staffCartDrawerOpen = true;
+            renderClientCart();
+            requestAnimationFrame(() => document.getElementById('btn-close-cart-drawer')?.focus());
+          } else {
+            focusClientCart();
+          }
           return;
         }
         if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
@@ -2176,6 +2477,14 @@
       }
 
       function closeCartDrawer({ restoreFocus = true } = {}) {
+        if (staffCartDrawerOpen) {
+          staffCartDrawerOpen = false;
+          renderClientCart();
+          if (restoreFocus && lastCartTrigger instanceof HTMLElement && lastCartTrigger.isConnected) {
+            lastCartTrigger.focus();
+          }
+          return;
+        }
         if (!cartDrawerOpen) return;
         cartDrawerOpen = false;
         renderClientCart();
@@ -2189,12 +2498,16 @@
         document.body.toggleAttribute('data-public-menu', isPublic);
         document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry));
         if (role !== 'cliente') {
+          staffCartDrawerOpen = false;
+          document.body.removeAttribute('data-staff-cart-drawer');
           const closedModal = document.getElementById('business-closed-modal');
           if (closedModal?.open) {
             autoClosingClosedModal = true;
             closedModal.close();
             autoClosingClosedModal = false;
           }
+          const trackerModal = document.getElementById('client-tracker-modal');
+          if (trackerModal?.open) trackerModal.close();
         }
         if (!isPublic) {
           cartDrawerOpen = false;
@@ -2208,53 +2521,49 @@
       function canOpenPosView(role) {
         if (role === 'cliente') return true;
         if (!staffReady) return false;
-        return ['modulos', 'chef'].includes(role) || (staffArea === 'admin' && ['admin', 'gestion'].includes(role));
+        if (['modulos', 'chef', 'configuracion'].includes(role)) return true;
+        return staffArea === 'admin' && ['admin', 'gestion', 'qr', 'roles'].includes(role);
       }
 
-      function syncStaffHash(role) {
-        if (!staffMenu || ui.staffOrderEntry) return;
+      function syncStaffHash(role, { pushHistory = false } = {}) {
+        if (!staffMenu && !ui.staffOrderEntry) return;
         const targetHash = role === 'admin' ? '#admin'
+          : role === 'cliente' ? (ui.staffOrderEntry ? '#nuevo-pedido' : '#carta-admin')
           : role === 'gestion' ? '#gestion=' + ui.gestionSubtab
           : role === 'chef' ? (scannedPrepCode ? '#chef=' + scannedPrepCode : '#estacion=' + (prepStation === 'BARRA' ? 'barra' : 'cocina'))
+          : role === 'qr' ? '#qr'
+          : role === 'configuracion' ? '#configuracion'
+          : role === 'roles' ? '#roles'
           : '#modulos';
         if (location.hash !== targetHash) {
-          history.replaceState(null, '', location.pathname + location.search + targetHash);
+          const url = location.pathname + location.search + targetHash;
+          if (pushHistory) history.pushState(null, '', url);
+          else history.replaceState(null, '', url);
         }
       }
 
-      function switchRole(role, { updateHash = true } = {}) {
+      function switchRole(role, { updateHash = true, pushHistory = false } = {}) {
         if (!canOpenPosView(role)) return;
         if (role !== 'cliente') staffMenu = true;
         if (role === 'chef' && ['modulos', 'admin', 'gestion'].includes(ui.role)) prepReturnRole = ui.role;
-        const fromMenu = prepMenu.open;
         prepMenu.open = false;
         ui.role = role;
+        if (role !== 'chef') ui.kdsFullscreen = false;
         document.body.toggleAttribute('data-prep-view', role === 'chef');
         document.body.toggleAttribute('data-modules-view', role === 'modulos');
         updateMenuLayout(role);
         document.querySelectorAll('.role-view').forEach(v => v.classList.add('hidden'));
         document.getElementById(`view-${role}`).classList.remove('hidden');
 
+        renderPosShellChrome();
         renderActiveRole();
-        if (updateHash) syncStaffHash(role);
+        if (updateHash) syncStaffHash(role, { pushHistory });
         if (role === 'gestion' && ui.gestionSubtab === 'caja') {
           loadReport({ silent: true });
         }
         if (role === 'chef' && scannedPrepCode) {
           openPrepCode(scannedPrepCode);
           scannedPrepCode = '';
-        } else if (role === 'modulos') {
-          document.getElementById('modules-title').focus({ preventScroll: true });
-          window.scrollTo(0, 0);
-        } else if (fromMenu) {
-          if (role === 'chef') document.getElementById('prep-back').focus();
-          else {
-            const heading = document.querySelector(`#view-${role} h1, #view-${role} h2`);
-            if (heading) {
-              heading.tabIndex = -1;
-              heading.focus({ preventScroll: true });
-            }
-          }
         }
       }
 
@@ -2264,6 +2573,9 @@
         else if (ui.role === 'admin') renderAdmin();
         else if (ui.role === 'chef') renderChef();
         else if (ui.role === 'gestion') renderGestion();
+        else if (ui.role === 'qr') renderQrPage();
+        else if (ui.role === 'configuracion') renderConfigPage();
+        else if (ui.role === 'roles') renderRolesPage();
         lucide.createIcons();
       }
 
@@ -2288,6 +2600,91 @@
         }
         if (lastClosedModalTrigger instanceof HTMLElement && lastClosedModalTrigger.isConnected) {
           lastClosedModalTrigger.focus({ preventScroll: true });
+        }
+      });
+
+      let lastTrackerModalTrigger = null;
+      const trackerModalEl = document.getElementById('client-tracker-modal');
+      const clientStatusMap = {
+        POR_APROBAR: { label: 'Esperando confirmación', tone: 'pending' },
+        EN_COCINA: { label: 'Aprobado · En cocina', tone: 'cooking' },
+        LISTO_CHEF: { label: 'Listo para entregar', tone: 'ready' },
+        ENTREGADO: { label: 'Entregado', tone: 'ready' },
+        CANCELADO: { label: 'Pedido cancelado', tone: 'closed' },
+        RECHAZADO: { label: 'Pedido rechazado', tone: 'closed' }
+      };
+
+      function renderClientTracker() {
+        const tracked = ui.receivedOrders.slice(0, 3);
+        const count = tracked.length;
+        const activeCount = tracked.filter(o => !['ENTREGADO', 'CANCELADO', 'RECHAZADO'].includes(o.status)).length;
+        const isPublic = document.body.hasAttribute('data-public-menu');
+
+        const pillBtn = document.getElementById('btn-open-tracker');
+        const pillLabel = document.getElementById('carta-tracker-pill-label');
+        if (pillBtn && pillLabel) {
+          pillBtn.hidden = !count || (!isPublic && ui.staffOrderEntry);
+          pillBtn.dataset.hasActive = String(activeCount > 0);
+          const badgeCount = activeCount || count;
+          pillLabel.textContent = activeCount > 0 ? `En curso (${badgeCount})` : `Pedidos (${badgeCount})`;
+          pillBtn.setAttribute('aria-label', `Ver estado de tus pedidos (${count})`);
+        }
+
+        const cartBar = document.getElementById('client-cart-tracker-bar');
+        const cartBarText = document.getElementById('client-cart-tracker-text');
+        if (cartBar && cartBarText) {
+          cartBar.hidden = !count || ui.staffOrderEntry;
+          if (count) {
+            const latest = tracked[0];
+            const st = clientStatusMap[latest.status] || { label: latest.status };
+            cartBarText.textContent = count === 1
+              ? `${latest.code} · ${st.label}`
+              : `${count} pedidos · ${latest.code}: ${st.label}`;
+          }
+        }
+
+        const listEl = document.getElementById('client-tracker-list');
+        if (listEl) {
+          listEl.innerHTML = tracked.length
+            ? tracked.map(o => {
+                const st = clientStatusMap[o.status] || { label: o.status, tone: 'pending' };
+                return `
+                  <div class="client-tracker-item">
+                    <div class="client-tracker-meta">
+                      <span class="client-tracker-code font-mono-ticket">${escapeHtml(o.code)} · ${escapeHtml(orderOriginLabel(o))}</span>
+                      <span class="client-tracker-total">${money(o.total)}</span>
+                    </div>
+                    <span class="client-tracker-badge" data-tone="${st.tone}">${escapeHtml(st.label)}</span>
+                  </div>
+                `;
+              }).join('')
+            : '<p class="client-tracker-empty">Aún no has enviado pedidos en esta sesión.</p>';
+        }
+      }
+
+      function openClientTrackerModal(triggerEl = null) {
+        if (!trackerModalEl || !ui.receivedOrders.length) return;
+        if (cartDrawerOpen) closeCartDrawer({ restoreFocus: false });
+        if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
+        renderClientTracker();
+        lastTrackerModalTrigger = triggerEl || document.activeElement;
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+        if (!trackerModalEl.open) trackerModalEl.showModal();
+      }
+
+      const closeClientTrackerModal = () => {
+        if (trackerModalEl?.open) trackerModalEl.close();
+      };
+      document.getElementById('btn-open-tracker')?.addEventListener('click', event => openClientTrackerModal(event.currentTarget));
+      document.getElementById('btn-cart-open-tracker')?.addEventListener('click', event => openClientTrackerModal(event.currentTarget));
+      document.getElementById('btn-close-tracker-modal')?.addEventListener('click', closeClientTrackerModal);
+      document.getElementById('btn-accept-tracker-modal')?.addEventListener('click', closeClientTrackerModal);
+      trackerModalEl?.addEventListener('click', event => {
+        if (event.target === trackerModalEl) closeClientTrackerModal();
+      });
+      trackerModalEl?.addEventListener('close', () => {
+        if (lastTrackerModalTrigger instanceof HTMLElement && lastTrackerModalTrigger.isConnected) {
+          lastTrackerModalTrigger.focus({ preventScroll: true });
         }
       });
 
@@ -2423,13 +2820,27 @@
       function renderCliente() {
         const isMesa = ui.clientMode === 'MESA';
         const isRecojo = ui.clientMode === 'RECOJO';
+        const isDel = ui.clientMode === 'DELIVERY';
         const isStaffClient = staffMenu || ui.staffOrderEntry;
-        document.getElementById('admin-order-entry').hidden = !ui.staffOrderEntry;
-        document.getElementById('btn-mode-delivery').hidden = ui.staffOrderEntry;
-        document.getElementById('btn-mode-mesa').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${isMesa ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`;
-        document.getElementById('btn-mode-delivery').className = `px-3.5 py-2 rounded-lg text-xs font-bold transition-colors ${!isMesa ? 'bg-sky-500 text-white' : 'text-slate-300 hover:text-white'}`;
-        document.getElementById('btn-mode-mesa').setAttribute('aria-pressed', String(isMesa));
-        document.getElementById('btn-mode-delivery').setAttribute('aria-pressed', String(!isMesa));
+
+        const staffToolbar = document.getElementById('staff-entry-toolbar');
+        if (staffToolbar) staffToolbar.hidden = !isStaffClient;
+        const exitEntryBtn = document.getElementById('btn-admin-exit-entry');
+        if (exitEntryBtn) exitEntryBtn.hidden = !ui.staffOrderEntry;
+
+        const modeMesaBtn = document.getElementById('btn-mode-mesa');
+        const modeRecojoBtn = document.getElementById('btn-mode-recojo');
+        const modeDelBtn = document.getElementById('btn-mode-delivery');
+        if (modeMesaBtn) modeMesaBtn.setAttribute('aria-pressed', String(isMesa));
+        if (modeRecojoBtn) {
+          modeRecojoBtn.hidden = !ui.staffOrderEntry && staffArea === 'chef';
+          modeRecojoBtn.setAttribute('aria-pressed', String(isRecojo));
+        }
+        if (modeDelBtn) {
+          modeDelBtn.hidden = staffArea === 'chef';
+          modeDelBtn.setAttribute('aria-pressed', String(isDel));
+        }
+
         const mesaSelect = document.getElementById('client-mesa-select');
         mesaSelect.disabled = !isStaffClient || !isMesa;
         mesaSelect.classList.toggle('hidden', !isStaffClient || !isMesa);
@@ -2437,6 +2848,16 @@
         document.getElementById('client-cart-origin').textContent = isMesa
           ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '')
           : isRecojo ? 'Para llevar · Recoger en local' : 'Delivery';
+
+        const staffCatBar = document.getElementById('pos-staff-cat-quickbar');
+        if (staffCatBar) {
+          staffCatBar.hidden = !isStaffClient;
+          if (isStaffClient) {
+            staffCatBar.innerHTML = CARTA_CATEGORIES.map(c => `
+              <button type="button" class="carta-explore-chip" data-carta-category-page="${c.page}" aria-pressed="${currentCartaPage === c.page}">${c.shortLabel || c.label}</button>
+            `).join('');
+          }
+        }
         renderBusinessClosedUI();
         syncDeliveryLocationUI();
         const cardPayment = ui.clientDelPay === 'Tarjeta';
@@ -2446,34 +2867,8 @@
           btn.setAttribute('aria-pressed', String(btn.dataset.delPay === ui.clientDelPay));
         });
 
-        // Client live order tracker
-        const tracked = ui.receivedOrders.slice(0, 3);
-        const trackerWrap = document.getElementById('client-tracker-wrap');
-        if (tracked.length > 0) {
-          trackerWrap.classList.remove('hidden');
-          const statusMap = {
-            POR_APROBAR: { label: 'Esperando confirmación', cls: 'bg-amber-100 text-amber-800' },
-            EN_COCINA: { label: 'Aprobado • Cocinando en plancha', cls: 'bg-orange-100 text-orange-800' },
-            LISTO_CHEF: { label: 'Listo para entregar', cls: 'bg-emerald-100 text-emerald-800' },
-            ENTREGADO: { label: 'Entregado', cls: 'bg-emerald-100 text-emerald-800' },
-            CANCELADO: { label: 'Pedido cancelado', cls: 'bg-rose-100 text-rose-800' },
-            RECHAZADO: { label: 'Pedido rechazado', cls: 'bg-rose-100 text-rose-800' }
-          };
-          document.getElementById('client-tracker-list').innerHTML = tracked.map(o => {
-            const st = statusMap[o.status] || { label: o.status, cls: 'bg-slate-100 text-slate-700' };
-            return `
-              <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
-                <div>
-                  <div class="font-mono-ticket text-xs font-extrabold text-slate-900">${o.code} • ${escapeHtml(orderOriginLabel(o))}</div>
-                  <div class="text-[11px] text-slate-500">${money(o.total)}</div>
-                </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${st.cls}">${st.label}</span>
-              </div>
-            `;
-          }).join('');
-        } else {
-          trackerWrap.classList.add('hidden');
-        }
+        // Client live order tracker (popup dialog + header trigger, 0px layout impact on Carta)
+        renderClientTracker();
 
         // Categories (Explorar list filter)
         const cats = ['Todos', ...new Set(MENU.map(m => m.cat))];
@@ -2581,8 +2976,12 @@
         const cartEl = document.getElementById('client-cart');
         const backdrop = document.getElementById('cart-drawer-backdrop');
         const closeDrawerBtn = document.getElementById('btn-close-cart-drawer');
+        const isCompactStaff = !isPublic && window.innerWidth < 1024;
+        if (!isCompactStaff) staffCartDrawerOpen = false;
         const showInlineCart = units > 0 || staffMenu || ui.staffOrderEntry;
         if (isPublic) {
+          document.body.removeAttribute('data-staff-cart-drawer');
+          cartEl.removeAttribute('data-staff-cart-open');
           cartEl.hidden = !cartDrawerOpen;
           backdrop.hidden = !cartDrawerOpen;
           closeDrawerBtn.hidden = false;
@@ -2595,11 +2994,30 @@
           }
         } else {
           cartDrawerOpen = false;
-          backdrop.hidden = true;
-          closeDrawerBtn.hidden = true;
-          cartEl.hidden = !showInlineCart;
-          cartEl.removeAttribute('role');
-          cartEl.removeAttribute('aria-modal');
+          const openCompactDrawer = isCompactStaff && staffCartDrawerOpen;
+          document.body.toggleAttribute('data-staff-cart-drawer', openCompactDrawer);
+          if (openCompactDrawer) {
+            cartEl.setAttribute('data-staff-cart-open', 'true');
+            cartEl.setAttribute('role', 'dialog');
+            cartEl.setAttribute('aria-modal', 'true');
+          } else {
+            cartEl.removeAttribute('data-staff-cart-open');
+            cartEl.removeAttribute('role');
+            cartEl.removeAttribute('aria-modal');
+          }
+          backdrop.hidden = !openCompactDrawer;
+          closeDrawerBtn.hidden = !isCompactStaff;
+          cartEl.hidden = !showInlineCart && !openCompactDrawer;
+        }
+
+        const mobileStaffBar = document.getElementById('pos-mobile-cart-bar');
+        const mobileStaffCount = document.getElementById('pos-mobile-cart-count');
+        const mobileStaffTotal = document.getElementById('pos-mobile-cart-total');
+        if (mobileStaffBar) {
+          const showMobileBar = !isPublic && isCompactStaff && (ui.staffOrderEntry || units > 0);
+          mobileStaffBar.hidden = !showMobileBar;
+          if (mobileStaffCount) mobileStaffCount.textContent = units === 1 ? '1 producto' : `${units} productos`;
+          if (mobileStaffTotal) mobileStaffTotal.textContent = money(total);
         }
         syncPublicBackgroundInert();
         document.getElementById('btn-client-clear').hidden = !units;
@@ -2656,88 +3074,31 @@
         summary.hidden = !query;
         summary.textContent = filtered.length + ' pedidos encontrados en todas las bandejas';
 
-        const grid = document.getElementById('admin-orders-grid');
-        if (filtered.length === 0) {
-          grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">${query ? 'No se encontraron pedidos para esta búsqueda.' : 'Esta bandeja está vacía.'}</div>`;
-          return;
+        if (!filtered.some(o => o.id === ui.selectedAdminOrderId)) {
+          ui.selectedAdminOrderId = filtered[0]?.id || '';
+          if (!filtered.length) ui.adminMobileDetailOpen = false;
+        }
+        const selectedOrder = filtered.find(o => o.id === ui.selectedAdminOrderId) || null;
+
+        const masterWrap = document.getElementById('admin-master-detail');
+        if (masterWrap) {
+          masterWrap.dataset.mobileDetail = String(Boolean(ui.adminMobileDetailOpen && selectedOrder));
         }
 
-        grid.innerHTML = filtered.map(o => {
-          const isDel = o.channel === 'DELIVERY';
-          const isRecojo = o.channel === 'RECOJO';
-          const mapsUrl = isDel ? extractMapsUrl(o.address) : '';
-          const displayAddr = isDel ? (stripMapsUrl(o.address) || o.address) : '';
-          const payHint = o.paymentStatus === 'PAGADO'
-            ? o.paymentMethod + ' pagado'
-            : (isDel ? 'Pago por verificar' : isRecojo ? 'Pago al recoger' : 'Pago en mesa');
-          return `
-            <div class="admin-order-card">
-              <div class="admin-card-content">
-                <div class="admin-card-summary">
-                  <span class="admin-order-channel"><i data-lucide="${isDel ? 'bike' : isRecojo || o.takeaway ? 'shopping-bag' : 'utensils'}" aria-hidden="true"></i>
-                    ${escapeHtml(orderOriginLabel(o))}
-                  </span>
-                  <span class="admin-order-status" data-status="${o.status}">${adminStatus[o.status] || 'Estado desconocido'}</span>
-                  <div class="admin-order-identity">
-                    <p class="admin-order-customer">${escapeHtml(o.customer)}</p>
-                    <p class="admin-order-code font-mono-ticket">${escapeHtml(o.code)}</p>
-                    ${o.status === 'EN_COCINA' ? `<p class="admin-order-code">${orderStations(o).map(area =>
-                      stationName(area) + (stationReady(o, area) ? ': lista' : ': pendiente')).join(' · ')}</p>` : ''}
-                  </div>
-                  <div class="admin-order-payment">
-                    <p class="admin-order-total">${money(o.total)}</p>
-                    <span data-paid="${o.paymentStatus === 'PAGADO'}">${payHint}</span>
-                  </div>
-                </div>
-                ${isDel ? `<p class="admin-order-address">${escapeHtml(displayAddr)}${mapsUrl ? ` <a class="admin-maps-link" href="${mapsUrl}" target="_blank" rel="noopener noreferrer">Ver en Maps ↗</a>` : ''} · ${escapeHtml(o.phone)}</p>` : ''}
-                ${isRecojo && o.phone ? `<p class="admin-order-address">Tel: ${escapeHtml(o.phone)}</p>` : ''}
-
-                ${isDel && o.paymentRef ? `
-                  <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-semibold">
-                    ${o.paymentStatus === 'PAGADO' ? 'Prepago verificado' : 'Pago por verificar'}: ${o.paymentMethod} — Operación <span class="font-mono-ticket">${o.paymentRef}</span>
-                  </div>
-                ` : ''}
-
-                <ul class="admin-order-items">
-                  ${o.items.map(it => `
-                    <li class="admin-order-line">
-                      <span class="admin-item-qty">${it.qty}×</span>
-                      <div>
-                        <div class="admin-item-heading"><strong>${it.name}</strong><small>${it.station}</small></div>
-                        ${it.flavors?.length ? `<p>Sabores: ${it.flavors.join(', ')}</p>` : ''}
-                        ${it.extras?.length ? `<p>Extras: ${it.extras.map(e => e.name).join(', ')}</p>` : ''}
-                        ${it.note ? `<p class="admin-item-note">${it.note}</p>` : ''}
-                      </div>
-                    </li>
-                  `).join('')}
-                </ul>
-                ${o.note ? `<p class="admin-item-note admin-general-note"><strong>Nota del pedido</strong> ${o.note}</p>` : ''}
-              </div>
-
-              <!-- Action Footer -->
-              <div class="admin-order-actions p-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2">
-                <button type="button" data-admin-reprint="${o.id}" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold"><i data-lucide="clipboard-list" aria-hidden="true"></i> Ver comanda</button>
-                ${canCancelOrder(o) ? '<button type="button" data-admin-cancel="' + o.id + '" class="min-h-11 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-700"><i data-lucide="x-circle" aria-hidden="true"></i> Cancelar pedido</button>' : ''}
-                ${canEditOrder(o) ? '<button type="button" data-admin-edit="' + o.id + '" class="min-h-11 rounded-xl border border-slate-300 px-3 text-xs font-bold"><i data-lucide="pencil" aria-hidden="true"></i> Editar comanda</button>' : ''}
-                ${o.status === 'POR_APROBAR' ? `
-                  <button type="button" data-admin-approve="${o.id}" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
-                    <i data-lucide="printer" class="w-4 h-4"></i> Aprobar e imprimir
-                  </button>
-                ` : ''}
-                ${o.status === 'LISTO_CHEF' ? `
-                  ${o.paymentStatus !== 'PAGADO' ? `
-                    <button type="button" data-admin-pay-mesa="${o.id}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">Cobrar y Emitir Boleta</button>
-                  ` : `
-                    <button type="button" data-admin-deliver="${o.id}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">Despachar + Boleta Interna</button>
-                  `}
-                ` : ''}
-                ${o.status === 'ENTREGADO' ? `
-                  <button type="button" data-admin-reprint-boleta="${o.id}" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold">Ver Boleta ${o.boletaNum || ''}</button>
-                ` : ''}
-              </div>
-            </div>
-          `;
-        }).join('');
+        const listEl = document.getElementById('admin-orders-list');
+        if (listEl) {
+          listEl.innerHTML = renderAdminOrderListHtml(filtered, selectedOrder?.id || '');
+        }
+        const detailEl = document.getElementById('admin-order-detail');
+        if (detailEl) {
+          detailEl.innerHTML = renderAdminOrderDetailHtml(selectedOrder, {
+            canEdit: selectedOrder ? canEditOrder(selectedOrder) : false,
+            canCancel: selectedOrder ? canCancelOrder(selectedOrder) : false,
+            stationLabelFn: stationName,
+            stationReadyFn: stationReady,
+            orderStationsFn: orderStations
+          });
+        }
       }
 
       // ==================== RENDER 3: APP MÓVIL DEL CHEF ====================
@@ -2817,8 +3178,7 @@
       renderPrepPreferences();
 
       function openPrepDialog(dialog) {
-        prepMenu.open = false;
-        prepMenu.querySelector('summary').focus();
+        if (prepMenu) prepMenu.open = false;
         dialog.showModal();
       }
 
@@ -2834,21 +3194,32 @@
       };
       document.getElementById('prep-back').onclick = () => {
         prepAlertMessage.textContent = '';
-        const destination = canOpenPosView(prepReturnRole) ? prepReturnRole : 'cliente';
+        const destination = canOpenPosView(prepReturnRole) ? prepReturnRole : 'modulos';
         switchRole(destination);
       };
       document.getElementById('prep-code-open').onclick = () => openPrepCode();
-      document.getElementById('prep-logout').onclick = signOutStaff;
+      document.getElementById('btn-kds-fullscreen')?.addEventListener('click', () => {
+        ui.kdsFullscreen = !ui.kdsFullscreen;
+        const btn = document.getElementById('btn-kds-fullscreen');
+        if (btn) btn.setAttribute('aria-pressed', String(ui.kdsFullscreen));
+        if (ui.kdsFullscreen && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (!ui.kdsFullscreen && document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+        renderPosShellChrome();
+        if (window.lucide?.createIcons) lucide.createIcons();
+      });
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && ui.kdsFullscreen) {
+          ui.kdsFullscreen = false;
+          const btn = document.getElementById('btn-kds-fullscreen');
+          if (btn) btn.setAttribute('aria-pressed', 'false');
+          renderPosShellChrome();
+        }
+      });
       document.querySelectorAll('[data-close-prep]').forEach(button => {
         button.onclick = () => button.closest('dialog').close();
-      });
-      document.addEventListener('click', event => {
-        if (prepMenu.open && !prepMenu.contains(event.target)) prepMenu.open = false;
-      });
-      prepMenu.addEventListener('keydown', event => {
-        if (event.key !== 'Escape' || !prepMenu.open) return;
-        prepMenu.open = false;
-        prepMenu.querySelector('summary').focus();
       });
 
       function checkPrepReminders() {
@@ -2964,8 +3335,30 @@
         for (const button of document.querySelectorAll('[data-prep-station], [data-prep-filter]')) {
           button.setAttribute('aria-pressed', String(button.dataset.prepStation === station || button.dataset.prepFilter === prepFilter));
         }
+        const fsBtn = document.getElementById('btn-kds-fullscreen');
+        if (fsBtn) fsBtn.setAttribute('aria-pressed', String(ui.kdsFullscreen));
         prepHistoryControls.hidden = !historical;
         const count = document.getElementById('chef-active-count');
+
+        if (!staffReady) {
+          renderPrepCards(`
+            <div class="pos-empty-state" style="grid-column:1/-1;">
+              <span class="pos-empty-icon" aria-hidden="true"><i data-lucide="loader-2"></i></span>
+              <h3>Cargando comandas de ${stationName(station)}…</h3>
+              <p>Sincronizando con D1.</p>
+            </div>`);
+          return;
+        }
+
+        if (needsStaffRefresh) {
+          renderPrepCards(`
+            <div class="pos-empty-state" style="grid-column:1/-1;">
+              <span class="pos-empty-icon" aria-hidden="true"><i data-lucide="wifi-off"></i></span>
+              <h3>Conexión desincronizada</h3>
+              <p>${escapeHtml(staffSyncMessage.textContent || 'Actualiza la pantalla para volver a sincronizar las comandas.')}</p>
+            </div>`);
+          return;
+        }
 
         if (historical) {
           const description = renderPrepHistory(station) + ' en Terminados';
@@ -2980,7 +3373,12 @@
         const description = pending.length + ' por preparar';
         if (count.textContent !== description) count.textContent = description;
         renderPrepCards(pending.length ? pending.map(order => renderPrepCard(order, station)).join('')
-          : '<p class="prep-empty">No hay pedidos por preparar en esta estación.</p>');
+          : `
+            <div class="pos-empty-state" style="grid-column:1/-1;">
+              <span class="pos-empty-icon" aria-hidden="true"><i data-lucide="${station === 'BARRA' ? 'cup-soda' : 'cooking-pot'}"></i></span>
+              <h3>No hay comandas pendientes en ${stationName(station)}</h3>
+              <p>Las órdenes aprobadas para ${stationName(station)} aparecerán aquí automáticamente.</p>
+            </div>`);
         updatePrepTimers();
       }
 
@@ -3180,19 +3578,9 @@
             : '<tr><td colspan="6" class="py-6 text-center text-slate-400">Sin jornadas registradas en este periodo.</td></tr>';
         }
 
-        boletasEl.innerHTML = boletas.length
-          ? boletas.map(b => `
-              <div class="p-3 flex items-center justify-between gap-2 text-xs">
-                <div>
-                  <div class="font-mono-ticket font-extrabold text-slate-900">${escapeHtml(b.boletaNum)} (${escapeHtml(b.code)})</div>
-                  <div class="text-[11px] text-slate-500">${escapeHtml(b.customer)} • ${escapeHtml(b.paymentMethod)} • ${escapeHtml(b.businessDate || b.date)}</div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="font-extrabold text-slate-900">${money(b.total)}</span>
-                  <button type="button" data-admin-reprint-boleta="${escapeHtml(b.orderId)}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
-                </div>
-              </div>`).join('')
-          : '<div class="p-6 text-center text-xs text-slate-400">Sin boletas emitidas en este periodo.</div>';
+        boletasEl.innerHTML = renderBoletasListHtml(boletas, 'Sin boletas emitidas en este periodo.');
+        const reportsMobileEl = document.getElementById('reports-mobile-list');
+        if (reportsMobileEl) reportsMobileEl.innerHTML = renderReportsMobileHtml({ range, shifts, months });
       }
 
       async function loadReport({ silent = false } = {}) {
@@ -3223,67 +3611,59 @@
       }
 
       function renderGestion() {
-        document.querySelectorAll('.gestion-tab').forEach(btn => {
-          const active = btn.dataset.subtab === ui.gestionSubtab;
-          btn.setAttribute('aria-pressed', String(active));
-        });
         document.querySelectorAll('.gestion-panel').forEach(p => p.classList.add('hidden'));
         document.getElementById(`subtab-${ui.gestionSubtab}`).classList.remove('hidden');
 
         // Inventario
         const ingredients = state.ingredients || [];
-        const kardexList = state.kardex || [];
         const suppliers = state.suppliers || [];
         const purchases = state.purchases || [];
-        const lowCount = ingredients.filter(i => i.stock <= i.minStock).length;
-        const valTotal = ingredients.reduce((s, i) => s + i.stock * i.cost, 0);
-        document.getElementById('inv-kpis').innerHTML = `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Insumos Controlados</div><div class="text-2xl font-extrabold mt-1">${ingredients.length}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Valorizado Almacén</div><div class="text-2xl font-extrabold text-emerald-600 mt-1">${money(valTotal)}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Alertas Stock Bajo</div><div class="text-2xl font-extrabold text-amber-600 mt-1">${lowCount}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Movimientos Kardex</div><div class="text-2xl font-extrabold mt-1">${kardexList.length}</div></div>
-        `;
 
-        document.getElementById('inv-tbody').innerHTML = ingredients.map(i => {
-          const low = i.stock <= i.minStock;
-          return `
-            <tr class="hover:bg-slate-50">
-              <td class="py-3 px-4 font-mono-ticket text-slate-500">${i.code}</td>
-              <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(i.name)}</td>
-              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${i.station === 'COCINA' ? 'bg-orange-50 text-orange-700' : 'bg-sky-50 text-sky-700'}">${i.station}</span></td>
-              <td class="py-3 px-4 text-right font-extrabold ${low ? 'text-rose-600' : 'text-slate-900'}">${i.stock} ${i.unit}</td>
-              <td class="py-3 px-4 text-right text-slate-500">${i.minStock} ${i.unit}</td>
-              <td class="py-3 px-4 text-right text-slate-600">${money(i.cost)}</td>
-              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${low ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-700'}">${i.stock < 0 ? 'Faltante' : low ? 'Stock bajo' : 'Óptimo'}</span></td>
-            </tr>
-          `;
-        }).join('');
+        document.getElementById('inv-kpis').innerHTML = renderInventoryKpisHtml(ingredients);
+        const filteredIng = filterIngredients(ingredients, {
+          search: ui.invSearch,
+          station: ui.invStation,
+          status: ui.invStatus
+        });
+        const invRendered = renderInventoryRowsAndCards(filteredIng);
+        document.getElementById('inv-tbody').innerHTML = invRendered.tbodyHtml;
+        const invMobile = document.getElementById('inv-mobile-list');
+        if (invMobile) invMobile.innerHTML = invRendered.mobileHtml;
 
         renderKardex();
 
-        // Proveedores
-        document.getElementById('sup-tbody').innerHTML = suppliers.length
-          ? suppliers.map(s => `
-              <tr class="hover:bg-slate-50">
-                <td class="py-3 px-4"><div class="font-bold text-slate-900">${escapeHtml(s.name)}</div><div class="text-[11px] font-mono-ticket text-slate-500">RUC: ${escapeHtml(s.ruc || '—')}</div></td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(s.category || '—')}</td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(s.contact || '—')}</td>
-              </tr>
-            `).join('')
-          : '<tr><td colspan="3" class="py-6 text-center text-xs text-slate-400">Sin proveedores registrados aún.</td></tr>';
-        document.getElementById('pur-list').innerHTML = purchases.length
-          ? purchases.map(p => `
-              <div class="p-3.5 flex items-center justify-between text-xs">
-                <div>
-                  <div class="font-bold text-slate-900">${escapeHtml(p.item)}</div>
-                  <div class="text-[11px] text-slate-500">${escapeHtml(p.supplier)} • ${escapeHtml(p.doc)}</div>
-                </div>
-                <div class="font-extrabold text-slate-900">${money(p.total)}</div>
-              </div>
-            `).join('')
-          : '<div class="p-6 text-center text-xs text-slate-400">Sin compras registradas aún.</div>';
+        // Proveedores (2 subviews: Directorio | Compras)
+        document.querySelectorAll('[data-suppliers-tab]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.suppliersTab === ui.suppliersSubtab));
+        });
+        const supDirPanel = document.getElementById('sup-directory-panel');
+        const supPurPanel = document.getElementById('sup-purchases-panel');
+        if (supDirPanel) supDirPanel.classList.toggle('hidden', ui.suppliersSubtab !== 'directory');
+        if (supPurPanel) supPurPanel.classList.toggle('hidden', ui.suppliersSubtab !== 'purchases');
 
-        // Caja & Boletas
+        const supView = renderSuppliersDirectoryHtml(suppliers);
+        const supDesk = document.getElementById('sup-directory-desktop');
+        const supMob = document.getElementById('sup-directory-mobile');
+        if (supDesk) supDesk.innerHTML = supView.tableHtml;
+        if (supMob) supMob.innerHTML = supView.mobileHtml;
+
+        const purView = renderPurchasesViewHtml(purchases);
+        const purDesk = document.getElementById('pur-list-desktop');
+        const purMob = document.getElementById('pur-list-mobile');
+        if (purDesk) purDesk.innerHTML = purView.tableHtml;
+        if (purMob) purMob.innerHTML = purView.mobileHtml;
+
+        // Caja, Boletas Internas y Reportes (3 vistas separadas)
+        document.querySelectorAll('[data-caja-tab]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.cajaTab === ui.cajaSubtab));
+        });
+        const cActual = document.getElementById('caja-panel-actual');
+        const cBoletas = document.getElementById('caja-panel-boletas');
+        const cReportes = document.getElementById('reports-panel');
+        if (cActual) cActual.classList.toggle('hidden', ui.cajaSubtab !== 'actual');
+        if (cBoletas) cBoletas.classList.toggle('hidden', ui.cajaSubtab !== 'boletas');
+        if (cReportes) cReportes.classList.toggle('hidden', ui.cajaSubtab !== 'reportes');
+
         renderCajaShiftControls();
         const movements = state.caja?.movements || [];
         let cashIn = 0, digitalIn = 0, expOut = 0;
@@ -3297,43 +3677,26 @@
         const opening = Number(ui.activeShift?.opening ?? state.caja?.opening ?? 0);
         const expectedCash = opening + cashIn - expOut;
         document.getElementById('caja-kpis').innerHTML = `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Fondo Inicial</div><div class="text-xl font-extrabold mt-1">${money(opening)}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Ventas Efectivo</div><div class="text-xl font-extrabold text-emerald-600 mt-1">${money(cashIn)}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Yape / Plin / Tarjeta</div><div class="text-xl font-extrabold text-sky-600 mt-1">${money(digitalIn)}</div></div>
-          <div class="bg-slate-900 text-white p-4 rounded-2xl"><div class="text-xs text-slate-400">Efectivo Esperado</div><div class="text-xl font-extrabold text-amber-400 mt-1">${money(expectedCash)}</div></div>
+          <div class="pos-kpi-card" data-tone="neutral"><div class="pos-kpi-head"><span class="pos-kpi-label">Fondo inicial</span></div><strong class="pos-kpi-value">${money(opening)}</strong></div>
+          <div class="pos-kpi-card" data-tone="success"><div class="pos-kpi-head"><span class="pos-kpi-label">Ventas efectivo</span></div><strong class="pos-kpi-value">${money(cashIn)}</strong></div>
+          <div class="pos-kpi-card" data-tone="neutral"><div class="pos-kpi-head"><span class="pos-kpi-label">Yape / Plin / Tarjeta</span></div><strong class="pos-kpi-value">${money(digitalIn)}</strong></div>
+          <div class="pos-kpi-card" data-tone="warning" style="background:var(--pos-nav-bg);color:#FFFBF5;"><div class="pos-kpi-head"><span class="pos-kpi-label" style="color:#E9DFD1;">Efectivo esperado</span></div><strong class="pos-kpi-value" style="color:var(--pos-primary);">${money(expectedCash)}</strong></div>
         `;
-        document.getElementById('caja-tbody').innerHTML = movements.length
-          ? movements.map(m => `
-              <tr>
-                <td class="py-3 px-4 text-slate-500">${escapeHtml(m.time)}</td>
-                <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(m.desc)}</td>
-                <td class="py-3 px-4 text-slate-600">${escapeHtml(m.method)}</td>
-                <td class="py-3 px-4 text-right font-bold ${m.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${m.amount >= 0 ? '+' : ''}${money(m.amount)}</td>
-              </tr>
-            `).join('')
-          : '<tr><td colspan="4" class="py-6 text-center text-xs text-slate-400">Aún no hay movimientos registrados en esta jornada.</td></tr>';
+        const cajaMovs = renderCajaMovementsHtml(movements);
+        document.getElementById('caja-tbody').innerHTML = cajaMovs.tableHtml;
+        const cajaMob = document.getElementById('caja-mobile-list');
+        if (cajaMob) cajaMob.innerHTML = cajaMovs.mobileHtml;
 
-        const boletas = state.boletas || [];
-        const bList = document.getElementById('boletas-list');
-        if (boletas.length === 0) {
-          bList.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Aún no se emitieron boletas internas en este turno.</div>`;
-        } else {
-          bList.innerHTML = boletas.map(b => `
-            <div class="p-3.5 flex items-center justify-between gap-2 text-xs">
-              <div>
-                <div class="font-mono-ticket font-extrabold text-slate-900">${escapeHtml(b.boletaNum)} (${escapeHtml(b.code)})</div>
-                <div class="text-[11px] text-slate-500">${escapeHtml(b.customer)} • ${escapeHtml(b.paymentMethod)} • ${escapeHtml(b.date)}</div>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-extrabold text-slate-900">${money(b.total)}</span>
-                <button type="button" data-admin-reprint-boleta="${escapeHtml(b.orderId)}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
-              </div>
-            </div>
-          `).join('');
-        }
+        const bolQ = String(ui.boletasSearch || '').trim().toLocaleLowerCase('es');
+        const boletas = (state.boletas || []).filter(b => !bolQ || [b.boletaNum, b.code, b.customer, b.paymentMethod]
+          .some(v => String(v || '').toLocaleLowerCase('es').includes(bolQ)));
+        document.getElementById('boletas-list').innerHTML = renderBoletasListHtml(
+          boletas,
+          bolQ ? 'No hay boletas internas que coincidan con tu búsqueda.' : 'Aún no se emitieron boletas internas en este turno.'
+        );
 
         renderReport();
-        if (ui.gestionSubtab === 'caja' && !ui.reportCache && !ui.reportLoading) {
+        if (ui.gestionSubtab === 'caja' && ui.cajaSubtab === 'reportes' && !ui.reportCache && !ui.reportLoading) {
           loadReport({ silent: true });
         }
       }
@@ -3393,12 +3756,8 @@
         const staffHeroH = isPublic
           ? 0
           : (document.getElementById('staff-menu-hero')?.getBoundingClientRect().height || 0);
-        const trackerEl = document.getElementById('client-tracker-wrap');
-        const trackerH = !isPublic && trackerEl && !trackerEl.classList.contains('hidden')
-          ? trackerEl.getBoundingClientRect().height + 14
-          : 0;
         const mobileNavH = window.innerWidth < 1024 ? 72 : 0;
-        return Math.max(280, window.innerHeight - headerH - staffHeroH - trackerH - mobileNavH - 84);
+        return Math.max(280, window.innerHeight - headerH - staffHeroH - mobileNavH - 84);
       }
 
       function canSpreadLayout() {
@@ -3882,6 +4241,20 @@
         if (del) { ui.clientCart.splice(Number(del.dataset.ccDel), 1); renderClientCart(); return; }
 
         // Admin filters & actions
+        const selOrder = e.target.closest('[data-select-order]');
+        if (selOrder) {
+          ui.selectedAdminOrderId = selOrder.dataset.selectOrder;
+          ui.adminMobileDetailOpen = true;
+          renderAdmin();
+          lucide.createIcons();
+          return;
+        }
+        if (e.target.closest('#btn-mobile-back-orders')) {
+          ui.adminMobileDetailOpen = false;
+          renderAdmin();
+          lucide.createIcons();
+          return;
+        }
         const editButton = e.target.closest('[data-admin-edit]');
         if (editButton) {
           const order = state.orders.find(entry => entry.id === editButton.dataset.adminEdit);
@@ -3889,7 +4262,13 @@
           return;
         }
         const af = e.target.closest('[data-admin-filter]');
-        if (af) { ui.adminFilter = af.dataset.adminFilter; renderAdmin(); return; }
+        if (af) {
+          ui.adminFilter = af.dataset.adminFilter;
+          ui.adminMobileDetailOpen = false;
+          renderAdmin();
+          lucide.createIcons();
+          return;
+        }
 
         const appBtn = e.target.closest('[data-admin-approve]');
         if (appBtn) {
@@ -3897,7 +4276,13 @@
           if (!order || order.status !== 'POR_APROBAR') return;
           let verifiedPayment = false;
           if (order.channel === 'DELIVERY' && order.paymentStatus !== 'PAGADO') {
-            if (!window.confirm('¿Verificaste el pago de este pedido en tu cuenta?')) return;
+            const ok = await confirmPosAction({
+              title: 'Verificar pago de Delivery',
+              message: `¿Confirmas que ya verificaste el pago (${order.paymentMethod} · Ref ${order.paymentRef || 'sin ref'}) del pedido ${order.code}?`,
+              confirmLabel: 'Sí, aprobar e imprimir',
+              tone: 'primary'
+            });
+            if (!ok) return;
             verifiedPayment = true;
           }
           appBtn.disabled = true;
@@ -3962,13 +4347,37 @@
           return;
         }
 
+        const supTab = e.target.closest('[data-suppliers-tab]');
+        if (supTab) {
+          ui.suppliersSubtab = supTab.dataset.suppliersTab;
+          renderGestion();
+          lucide.createIcons();
+          return;
+        }
+        const cajaTab = e.target.closest('[data-caja-tab]');
+        if (cajaTab) {
+          ui.cajaSubtab = cajaTab.dataset.cajaTab;
+          renderGestion();
+          if (ui.cajaSubtab === 'reportes') loadReport({ silent: !ui.reportCache });
+          lucide.createIcons();
+          return;
+        }
+        if (e.target.closest('[data-trigger-supplier]')) {
+          document.getElementById('btn-open-supplier')?.click();
+          return;
+        }
+        if (e.target.closest('[data-trigger-purchase]')) {
+          document.getElementById('btn-open-purchase')?.click();
+          return;
+        }
+
         // Gestión subtabs
         const gt = e.target.closest('[data-subtab]');
         if (gt) {
           ui.gestionSubtab = gt.dataset.subtab;
           renderGestion();
           syncStaffHash('gestion');
-          if (ui.gestionSubtab === 'caja') loadReport({ silent: !ui.reportCache });
+          if (ui.gestionSubtab === 'caja' && ui.cajaSubtab === 'reportes') loadReport({ silent: !ui.reportCache });
           return;
         }
       });
@@ -3999,9 +4408,14 @@
       }
 
       async function cancelOrder(order) {
-        const kitchenNote = order.status === 'POR_APROBAR' ? '' : ' El consumo registrado en inventario se conservará.';
-        if (!window.confirm('¿Cancelar el pedido ' + order.code + '?' + kitchenNote)) return;
-        if (!canCancelOrder(order)) return;
+        const kitchenNote = order.status === 'POR_APROBAR' ? '' : ' El consumo registrado en inventario se conservará en Kardex.';
+        const confirmed = await confirmPosAction({
+          title: `Cancelar pedido ${order.code}`,
+          message: `¿Seguro que deseas cancelar el pedido de ${order.customer || 'cliente'}?${kitchenNote}`,
+          confirmLabel: 'Sí, cancelar pedido',
+          tone: 'danger'
+        });
+        if (!confirmed || !canCancelOrder(order)) return;
         const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/cancel`, { body: {} });
         if (result?.ok) showToast('Pedido ' + order.code + ' cancelado.', 'info');
       }
@@ -4145,28 +4559,49 @@
         }
       }
 
-      function startCounterOrder() {
+      async function startCounterOrder() {
         if (!staffReady || staffArea !== 'admin') return;
-        if (!ui.staffOrderEntry && ui.clientCart.length &&
-            !window.confirm('¿Descartar el carrito actual para crear un pedido de mostrador?')) return;
+        if (!ui.staffOrderEntry && ui.clientCart.length) {
+          const ok = await confirmPosAction({
+            title: 'Iniciar nuevo pedido de mostrador',
+            message: 'Tienes productos en el carrito de Carta. ¿Deseas limpiarlos para empezar un nuevo pedido?',
+            confirmLabel: 'Sí, nuevo pedido',
+            tone: 'primary'
+          });
+          if (!ok) return;
+        }
         if (!ui.staffOrderEntry) resetOrderEntry();
         ui.staffOrderEntry = true;
-        switchRole('cliente', { updateHash: false });
-        document.getElementById('admin-order-entry').scrollIntoView();
+        showMenuFormat('list', { focusSearch: true });
+        switchRole('cliente', { pushHistory: true });
+        window.scrollTo(0, 0);
       }
 
-      document.getElementById('admin-order-search').addEventListener('input', renderActiveRole);
+      document.getElementById('admin-order-search').addEventListener('input', () => {
+        ui.adminMobileDetailOpen = false;
+        renderActiveRole();
+      });
       document.getElementById('btn-admin-new-order').onclick = startCounterOrder;
-      document.getElementById('btn-admin-exit-entry').onclick = () => {
-        if (ui.clientCart.length && !window.confirm('¿Descartar este pedido sin guardar?')) return;
+      document.getElementById('btn-admin-exit-entry').onclick = async () => {
+        if (ui.clientCart.length) {
+          const ok = await confirmPosAction({
+            title: 'Salir de Nuevo pedido',
+            message: '¿Descartar este pedido sin guardar y regresar a Pedidos?',
+            confirmLabel: 'Descartar y volver',
+            tone: 'danger'
+          });
+          if (!ok) return;
+        }
         resetOrderEntry();
         ui.staffOrderEntry = false;
-        switchRole('admin');
+        switchRole('admin', { pushHistory: true });
       };
 
       // Specific listeners
-      document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; clearCheckoutError(); renderCliente(); });
-      document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; clearCheckoutError(); renderCliente(); });
+      document.getElementById('btn-mode-mesa').addEventListener('click', () => { ui.clientMode = 'MESA'; clearCheckoutError(); renderCliente(); lucide.createIcons(); });
+      document.getElementById('btn-mode-recojo')?.addEventListener('click', () => { ui.clientMode = 'RECOJO'; clearCheckoutError(); renderCliente(); lucide.createIcons(); });
+      document.getElementById('btn-mode-delivery').addEventListener('click', () => { ui.clientMode = 'DELIVERY'; clearCheckoutError(); renderCliente(); lucide.createIcons(); });
+      document.getElementById('btn-open-staff-cart')?.addEventListener('click', event => openCartDrawer(event.currentTarget));
       document.getElementById('client-remote-mode')?.addEventListener('click', event => {
         const modeBtn = event.target.closest('[data-remote-mode]');
         if (!modeBtn || ui.clientMode === 'MESA') return;
@@ -4379,10 +4814,8 @@
         }
       });
 
-      document.getElementById('btn-qr-download-png').addEventListener('click', () => {
+      function downloadTableQrPng(title, payload) {
         if (typeof window.qrcode !== 'function') return;
-        const payload = getCurrentQrFullUrl();
-        const title = document.getElementById('qr-mesa-title').textContent;
         const qr = window.qrcode(0, 'M');
         qr.addData(payload);
         qr.make();
@@ -4417,6 +4850,99 @@
         a.download = `QR_TheBurgersBrother_${title.replace(/\s+/g, '_')}.png`;
         a.click();
         showToast(`QR real descargado (${title}).`);
+      }
+
+      document.getElementById('btn-qr-download-png').addEventListener('click', () => {
+        downloadTableQrPng(
+          document.getElementById('qr-mesa-title').textContent,
+          getCurrentQrFullUrl()
+        );
+      });
+
+      let qrPageInitialized = false;
+      function getQrPageBaseUrl() {
+        const pageInput = document.getElementById('qr-page-base-url');
+        const modalInput = document.getElementById('qr-base-url');
+        return (pageInput?.value ?? modalInput?.value ?? getDefaultBaseUrl()).trim().replace(/#.*$/, '');
+      }
+
+      function renderQrPage() {
+        const root = document.getElementById('pos-qr-root');
+        if (!root) return;
+        const activeBase = qrPageInitialized ? getQrPageBaseUrl() : (document.getElementById('qr-base-url')?.value.trim() || getDefaultBaseUrl());
+        const baseInputEl = document.getElementById('qr-page-base-url');
+        if (qrPageInitialized && baseInputEl && document.activeElement === baseInputEl) {
+          const base = activeBase;
+          for (const num of [1, 2, 3, 4, 5, 6]) {
+            const payload = base ? `${base}#mesa=${num}` : `THE_BURGERS_BROTHER::mesa=${num}`;
+            const card = root.querySelector(`[data-qr-table="${num}"]`);
+            if (!card) continue;
+            const prevBox = card.querySelector('.pos-qr-preview');
+            if (prevBox) prevBox.innerHTML = makeQrSvgString(payload, 4, 4);
+            const urlEl = card.querySelector('.pos-qr-url');
+            if (urlEl) {
+              urlEl.textContent = payload;
+              urlEl.title = payload;
+            }
+          }
+          const delEl = document.getElementById('qr-page-delivery-url');
+          if (delEl) delEl.textContent = base ? `${base}#delivery=1` : 'THE_BURGERS_BROTHER::delivery=1';
+          return;
+        }
+        root.innerHTML = renderQrTablesGridHtml({
+          baseUrl: activeBase,
+          makeQrSvgFn: makeQrSvgString
+        });
+        qrPageInitialized = true;
+      }
+
+      document.getElementById('view-qr')?.addEventListener('input', event => {
+        if (event.target.id === 'qr-page-base-url') {
+          const modalField = document.getElementById('qr-base-url');
+          if (modalField) modalField.value = event.target.value;
+          renderQrPage();
+        }
+      });
+
+      document.getElementById('view-qr')?.addEventListener('click', event => {
+        const base = getQrPageBaseUrl();
+        const dlBtn = event.target.closest('[data-qr-download]');
+        if (dlBtn) {
+          const num = dlBtn.dataset.qrDownload;
+          const payload = base ? `${base}#mesa=${num}` : `THE_BURGERS_BROTHER::mesa=${num}`;
+          downloadTableQrPng(`Mesa ${num}`, payload);
+          return;
+        }
+        const copyBtn = event.target.closest('[data-qr-copy]');
+        if (copyBtn) {
+          const num = copyBtn.dataset.qrCopy;
+          const payload = base ? `${base}#mesa=${num}` : `THE_BURGERS_BROTHER::mesa=${num}`;
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(payload).then(() => showToast(`Enlace de Mesa ${num} copiado.`)).catch(() => fallbackCopy(payload));
+          } else fallbackCopy(payload);
+          return;
+        }
+        const testBtn = event.target.closest('[data-qr-test]');
+        if (testBtn) {
+          const num = testBtn.dataset.qrTest;
+          const target = `mesa=${num}`;
+          try { window.location.hash = target; } catch {}
+          applyHashRoute(`#${target}`);
+          showToast(`QR escaneado: Mesa ${num} cargada como cliente.`);
+          return;
+        }
+        if (event.target.closest('#btn-page-copy-delivery')) {
+          const delUrl = base ? `${base}#delivery=1` : 'THE_BURGERS_BROTHER::delivery=1';
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(delUrl).then(() => showToast('Enlace web de Carta Delivery copiado.')).catch(() => fallbackCopy(delUrl, 'Enlace web de Carta Delivery copiado.'));
+          } else fallbackCopy(delUrl, 'Enlace web de Carta Delivery copiado.');
+          return;
+        }
+        if (event.target.closest('#btn-page-open-delivery')) {
+          try { window.location.hash = 'delivery=1'; } catch {}
+          applyHashRoute('#delivery=1');
+          showToast('Carta web para Delivery abierta.');
+        }
       });
 
       document.getElementById('form-customize').addEventListener('submit', (e) => {
@@ -4617,10 +5143,7 @@
         closeCartDrawer({ restoreFocus: false });
         renderActiveRole();
         showToast(`Pedido ${newOrder.code} enviado. Esperando confirmación.`);
-        document.getElementById('client-tracker-wrap')?.scrollIntoView({
-          block: 'nearest',
-          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-        });
+        openClientTrackerModal(document.getElementById('btn-open-tracker'));
       });
 
       const chefInput = document.getElementById('chef-code-input');
@@ -4745,24 +5268,57 @@
       });
 
       function renderKardex() {
-        const query = document.getElementById('kardex-search').value.trim().toLocaleLowerCase('es');
-        const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        const movements = state.kardex.filter(k => (k.ingName + ' ' + k.doc).toLocaleLowerCase('es').includes(query));
-        document.getElementById('kardex-tbody').innerHTML = movements.map(k => `
-          <tr class="hover:bg-slate-50">
-            <td class="py-3 px-4 text-slate-500 whitespace-nowrap">${k.date}</td>
-            <td class="py-3 px-4 font-bold text-slate-900">${escape(k.ingName)}</td>
-            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${k.qty >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}">${k.type}</span></td>
-            <td class="py-3 px-4 text-slate-700">${escape(k.doc)}</td>
-            <td class="py-3 px-4 text-right text-slate-500">${k.prev} ${k.unit}</td>
-            <td class="py-3 px-4 text-right font-bold ${k.qty >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${k.qty >= 0 ? '+' + k.qty : k.qty} ${k.unit}</td>
-            <td class="py-3 px-4 text-right font-extrabold text-slate-900">${k.next} ${k.unit}</td>
-          </tr>
-        `).join('') || '<tr><td colspan="7" class="p-4">No se encontraron movimientos.</td></tr>';
+        const query = document.getElementById('kardex-search')?.value || '';
+        const station = document.getElementById('kardex-filter-station')?.value || 'ALL';
+        const type = document.getElementById('kardex-filter-type')?.value || 'ALL';
+        const date = document.getElementById('kardex-filter-date')?.value || '';
+        const clearBtn = document.getElementById('btn-kardex-clear');
+        if (clearBtn) clearBtn.hidden = !(query.trim() || station !== 'ALL' || type !== 'ALL' || date);
 
+        const movements = filterKardexMovements(state.kardex || [], state.ingredients || [], {
+          search: query,
+          station,
+          type,
+          date
+        });
+        const rendered = renderKardexRowsAndCards(movements, state.ingredients || []);
+        document.getElementById('kardex-tbody').innerHTML = rendered.tbodyHtml;
+        const mobileList = document.getElementById('kardex-mobile-list');
+        if (mobileList) mobileList.innerHTML = rendered.mobileHtml;
       }
 
-      document.getElementById('kardex-search').addEventListener('input', renderKardex);
+      document.getElementById('kardex-search')?.addEventListener('input', () => { renderKardex(); lucide.createIcons(); });
+      document.getElementById('kardex-filter-station')?.addEventListener('change', () => { renderKardex(); lucide.createIcons(); });
+      document.getElementById('kardex-filter-type')?.addEventListener('change', () => { renderKardex(); lucide.createIcons(); });
+      document.getElementById('kardex-filter-date')?.addEventListener('change', () => { renderKardex(); lucide.createIcons(); });
+      document.getElementById('btn-kardex-clear')?.addEventListener('click', () => {
+        document.getElementById('kardex-search').value = '';
+        document.getElementById('kardex-filter-station').value = 'ALL';
+        document.getElementById('kardex-filter-type').value = 'ALL';
+        document.getElementById('kardex-filter-date').value = '';
+        renderKardex();
+        lucide.createIcons();
+      });
+      document.getElementById('inv-search')?.addEventListener('input', event => {
+        ui.invSearch = event.target.value;
+        renderGestion();
+        lucide.createIcons();
+      });
+      document.getElementById('inv-filter-station')?.addEventListener('change', event => {
+        ui.invStation = event.target.value;
+        renderGestion();
+        lucide.createIcons();
+      });
+      document.getElementById('inv-filter-status')?.addEventListener('change', event => {
+        ui.invStatus = event.target.value;
+        renderGestion();
+        lucide.createIcons();
+      });
+      document.getElementById('boletas-search')?.addEventListener('input', event => {
+        ui.boletasSearch = event.target.value;
+        renderGestion();
+        lucide.createIcons();
+      });
 
       const recipeDialog = document.getElementById('inventory-recipes');
       const recipeProduct = document.getElementById('recipe-product');
@@ -5143,13 +5699,19 @@
           params.has('modulos') ||
           params.has('personal') ||
           params.has('admin') ||
+          params.has('nuevo-pedido') ||
+          params.has('carta-admin') ||
           params.has('gestion') ||
+          params.has('qr') ||
+          params.has('configuracion') ||
+          params.has('roles') ||
           (params.has('chef') && !params.get('chef'))
         );
         if (isStaffRoute) {
           const open = () => {
             if (generation !== staffRouteGeneration) return;
             document.documentElement.removeAttribute('data-staff-loading');
+            ui.staffOrderEntry = false;
             if (preparation) {
               const station = preparation.get('estacion');
               if (station) {
@@ -5158,12 +5720,29 @@
               }
               scannedPrepCode = preparation.get('chef') || '';
               switchRole('chef');
+            } else if (params.has('nuevo-pedido') && canOpenPosView('admin')) {
+              if (!ui.staffOrderEntry) resetOrderEntry();
+              ui.staffOrderEntry = true;
+              showMenuFormat('list');
+              switchRole('cliente');
+            } else if (params.has('carta-admin') && canOpenPosView('modulos')) {
+              ui.staffOrderEntry = false;
+              ui.clientMode = 'MESA';
+              showMenuFormat('visual');
+              staffMenu = true;
+              switchRole('cliente');
             } else if (params.has('admin') && canOpenPosView('admin')) {
               switchRole('admin');
             } else if (params.has('gestion') && canOpenPosView('gestion')) {
               const sub = params.get('gestion');
               if (['inventario', 'kardex', 'proveedores', 'caja'].includes(sub)) ui.gestionSubtab = sub;
               switchRole('gestion');
+            } else if (params.has('qr') && canOpenPosView('qr')) {
+              switchRole('qr');
+            } else if (params.has('configuracion') && canOpenPosView('configuracion')) {
+              switchRole('configuracion');
+            } else if (params.has('roles') && canOpenPosView('roles')) {
+              switchRole('roles');
             } else if (params.has('chef') && !params.get('chef')) {
               switchRole('chef');
             } else {
@@ -5227,8 +5806,8 @@
 
       document.getElementById('carta-cart-link').addEventListener('click', event => {
         event.preventDefault();
-        if (document.body.hasAttribute('data-public-menu')) {
-          if (cartDrawerOpen) closeCartDrawer();
+        if (document.body.hasAttribute('data-public-menu') || window.innerWidth < 1024) {
+          if (cartDrawerOpen || staffCartDrawerOpen) closeCartDrawer();
           else openCartDrawer(event.currentTarget);
         } else {
           focusClientCart();
@@ -5236,15 +5815,30 @@
       });
       document.getElementById('btn-close-cart-drawer').addEventListener('click', () => closeCartDrawer());
       document.getElementById('cart-drawer-backdrop').addEventListener('click', () => closeCartDrawer());
+      window.addEventListener('resize', () => {
+        if (ui.role === 'cliente' && (staffMenu || ui.staffOrderEntry)) renderClientCart();
+      });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
         if (document.querySelector('dialog[open], [id^="modal-"].fixed:not(.hidden)')) return;
+        if (ui.moreDrawerOpen) {
+          event.preventDefault();
+          closeMoreDrawer({ restoreFocus: true });
+          return;
+        }
+        if (ui.accountMenuOpen) {
+          event.preventDefault();
+          ui.accountMenuOpen = false;
+          renderPosShellChrome();
+          document.getElementById('header-account-btn')?.focus();
+          return;
+        }
         if (categorySheetOpen) {
           event.preventDefault();
           closeCategorySheet({ restoreFocus: true });
           return;
         }
-        if (cartDrawerOpen) {
+        if (cartDrawerOpen || staffCartDrawerOpen) {
           event.preventDefault();
           closeCartDrawer({ restoreFocus: true });
         }
@@ -5355,26 +5949,70 @@
         return true;
       }
 
+      function renderConfigPage() {
+        const isAdmin = staffReady && staffArea === 'admin';
+        const secCard = document.getElementById('config-security-card');
+        if (secCard) secCard.hidden = !isAdmin;
+        const rolesBtn = document.getElementById('config-open-roles');
+        if (rolesBtn) rolesBtn.hidden = !isAdmin;
+        const accSummary = document.getElementById('config-account-summary');
+        if (accSummary) {
+          accSummary.textContent = isAdmin
+            ? 'Sesión activa como Admin · Nicol (acceso completo a operación y administración).'
+            : 'Sesión activa como Cocina (consulta de comandas de Cocina/Barra y Carta).';
+        }
+        renderSoundButtons();
+      }
+
+      function renderRolesPage() {
+        const root = document.getElementById('pos-roles-root');
+        if (root) root.innerHTML = renderRolesCardsHtml();
+      }
+
       function updateStaffNavigation() {
         const isAdmin = staffReady && staffArea === 'admin';
-        const isChef = staffReady && staffArea === 'chef';
         document.getElementById('chef-access-settings').hidden = !isAdmin;
-        document.getElementById('modules-profile').textContent = isAdmin ? 'Admin · Nicol' : 'Cocina';
-        document.getElementById('modules-operation-title').textContent = isChef ? 'Tu estación' : 'Operación en vivo';
-        document.getElementById('modules-shortcuts-title').textContent = isChef ? 'Herramientas y ajustes' : 'Gestión y sistema';
-        document.getElementById('mod-desc-carta').textContent = isChef ? 'Consultar platos e ingredientes' : 'Menú visual, precios y QR';
-        document.getElementById('mod-badge-carta').textContent = isChef ? 'Menú' : 'QR y menú';
-        document.getElementById('mod-desc-settings').textContent = isChef ? 'Sonido y avisos de llegada' : 'Sonido, avisos y clave Cocina';
-        document.querySelectorAll('[data-staff-scope]').forEach(el => {
-          const scope = el.dataset.staffScope;
-          el.hidden = (scope === 'admin' && !isAdmin) || (scope === 'chef' && !isChef);
-        });
-        document.querySelectorAll('#view-modulos [data-launch-role]:not([data-staff-scope])').forEach(tile => {
-          tile.hidden = !canOpenPosView(tile.dataset.launchRole);
-        });
+        renderPosShellChrome();
         if (staffReady) renderModuleStats();
       }
       updateStaffNavigation();
+
+      document.getElementById('config-open-kds-prefs')?.addEventListener('click', () => {
+        if (!staffReady) return;
+        renderPrepPreferences();
+        prepSettings.showModal();
+      });
+      document.getElementById('config-open-roles')?.addEventListener('click', () => navigatePosRoute('roles'));
+      document.getElementById('config-logout-btn')?.addEventListener('click', signOutStaff);
+
+      document.getElementById('config-chef-form')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!staffReady || staffArea !== 'admin') return;
+        const input = document.getElementById('config-chef-password');
+        const status = document.getElementById('config-chef-status');
+        const btn = event.submitter;
+        if (btn) btn.disabled = true;
+        status.textContent = '';
+        try {
+          const response = await fetch('/api/access/chef', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: input.value })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error);
+          status.textContent = 'Clave de Cocina actualizada correctamente.';
+          status.style.color = 'var(--pos-success-ink)';
+          input.value = '';
+          showToast('Clave de Cocina actualizada.');
+        } catch (error) {
+          status.textContent = error.message || 'No se pudo actualizar la clave.';
+          status.style.color = 'var(--pos-error-ink)';
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+
       const chefAccessDialog = document.getElementById('chef-access-dialog');
       const chefAccessForm = document.getElementById('chef-access-form');
       const chefAccessStatus = document.getElementById('chef-access-status');
@@ -5408,7 +6046,7 @@
       };
       async function signOutStaff(event) {
         const button = event.currentTarget;
-        button.disabled = true;
+        if (button) button.disabled = true;
         try {
           await staffWrites;
           const response = await fetch('/api/session', { method: 'DELETE' });
@@ -5416,10 +6054,9 @@
           location.replace(staffLoginUrl());
         } catch {
           showToast('No se pudo cerrar sesión. Intenta de nuevo.', 'err');
-          button.disabled = false;
+          if (button) button.disabled = false;
         }
       }
-      document.getElementById('modules-logout').onclick = signOutStaff;
 
       async function refreshAfterWrite() {
         staffSyncRetry.disabled = true;
@@ -5511,7 +6148,7 @@
           ]);
           if (results.slice(1).some(result => result.status === 'fulfilled' && result.value)) {
             saveTrackedOrders();
-            if (ui.role === 'cliente') renderCliente();
+            if (ui.role === 'cliente') renderClientTracker();
           }
         } finally {
           polling = false;
