@@ -3,7 +3,7 @@
  * Covers Proveedores/Compras, Caja/Boletas/Reportes, Códigos QR, Configuración, and Roles.
  */
 
-import { escapeHtml, money } from './views.js';
+import { escapeHtml, money } from './views.js?v=20261127g';
 
 export function renderSuppliersDirectoryHtml(suppliers) {
   if (!suppliers?.length) {

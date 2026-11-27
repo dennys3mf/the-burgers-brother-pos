@@ -208,4 +208,14 @@ test('order elapsed timers parse es-PE 12h/24h Lima timestamps accurately and em
 
   const routeSrc = readFileSync(new URL('../functions/api/[[route]].js', import.meta.url), 'utf8');
   assert.match(routeSrc, /serverTimeIso:\s*clock\.iso/);
+
+  // Ensure transitive ES module imports carry matching cache-busting query versions
+  const viewsSrc = readFileSync(new URL('../public/pos/views.js', import.meta.url), 'utf8');
+  const adminViewsSrc = readFileSync(new URL('../public/pos/admin-views.js', import.meta.url), 'utf8');
+  const htmlSrc = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const htmlPrepTag = /from '\.\/preparation\.js\?v=([^']+)'/.exec(htmlSrc)?.[1];
+  const htmlViewsTag = /from '\.\/pos\/views\.js\?v=([^']+)'/.exec(htmlSrc)?.[1];
+  assert.ok(htmlPrepTag && htmlViewsTag);
+  assert.equal(/from '\.\.\/preparation\.js\?v=([^']+)'/.exec(viewsSrc)?.[1], htmlPrepTag);
+  assert.equal(/from '\.\/views\.js\?v=([^']+)'/.exec(adminViewsSrc)?.[1], htmlViewsTag);
 });
