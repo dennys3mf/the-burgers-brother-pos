@@ -3010,7 +3010,12 @@
         if (clearBtn) clearBtn.hidden = units === 0;
 
         const itemsEl = document.getElementById('np-cart-items');
-        if (itemsEl) itemsEl.innerHTML = renderNuevoPedidoCartItemsHtml(ui.clientCart);
+        if (itemsEl) {
+          itemsEl.innerHTML = renderNuevoPedidoCartItemsHtml(ui.clientCart);
+          if (window.lucide?.createIcons && itemsEl.querySelector('[data-lucide]')) {
+            lucide.createIcons();
+          }
+        }
 
         const fieldsWrap = document.getElementById('np-checkout-fields');
         if (fieldsWrap) fieldsWrap.hidden = units === 0;
