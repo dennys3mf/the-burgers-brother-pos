@@ -394,6 +394,9 @@
         </div>
       </div>
 
+      <!-- Closed Business Day Notice (Sundays / Closed Dates) -->
+      <div id="business-closed-banner" class="business-closed-banner" role="status" hidden></div>
+
       <!-- Active Client Order Tracker (if client just placed orders) -->
       <div id="client-tracker-wrap" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">
         <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado de tus pedidos en vivo</div>
@@ -567,6 +570,7 @@
                 <span id="client-total-label">Total</span>
                 <output id="client-cart-total">S/ 0.00</output>
               </div>
+              <p id="client-closed-notice" class="business-closed-inline" role="status" hidden></p>
               <p id="client-checkout-error" role="alert"></p>
               <button type="submit" id="btn-submit-client-order">
                 <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
@@ -803,9 +807,12 @@
       <!-- SUBTAB: PROVEEDORES -->
       <div id="subtab-proveedores" class="gestion-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <h3 class="font-bold text-sm text-slate-900">Proveedores de The Burgers Brother</h3>
-            <button type="button" id="btn-open-purchase" class="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold">+ Registrar Compra</button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="btn-open-supplier" class="admin-tool"><i data-lucide="user-plus" aria-hidden="true"></i> Nuevo proveedor</button>
+              <button type="button" id="btn-open-purchase" class="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold">+ Registrar Compra</button>
+            </div>
           </div>
           <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
             <table class="w-full text-left text-xs border-collapse">
@@ -830,11 +837,12 @@
 
       <!-- SUBTAB: CAJA Y BOLETAS -->
       <div id="subtab-caja" class="gestion-panel hidden space-y-4">
+        <div id="shift-control-card" class="shift-control-card"></div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="caja-kpis"></div>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 class="font-bold text-sm text-slate-900">Movimientos de Caja (Turno Activo)</h3>
+              <h3 class="font-bold text-sm text-slate-900">Movimientos de Caja (Jornada de Hoy)</h3>
               <button type="button" id="btn-open-expense" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">+ Registrar Egreso</button>
             </div>
             <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Tabla desplazable">
@@ -853,11 +861,47 @@
           </div>
           <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-slate-200">
-              <h3 class="font-bold text-sm text-slate-900">Boletas Internas Emitidas</h3>
+              <h3 class="font-bold text-sm text-slate-900">Boletas Internas Emitidas (Hoy)</h3>
             </div>
             <div id="boletas-list" class="divide-y divide-slate-100 max-h-96 overflow-y-auto"></div>
           </div>
         </div>
+
+        <section id="reports-panel" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-4" aria-labelledby="reports-heading">
+          <div class="reports-toolbar">
+            <div>
+              <h3 id="reports-heading" class="font-bold text-sm text-slate-900">Historial y Reportes de Ventas</h3>
+              <p id="reports-range-label" class="text-xs text-slate-500">Consulta ventas, egresos y cierres por día, semana, mes o año desde D1.</p>
+            </div>
+            <div class="reports-controls">
+              <div class="reports-period-tabs" role="group" aria-label="Periodo del reporte">
+                <button type="button" data-report-period="day" class="gestion-tab" aria-pressed="true">Día</button>
+                <button type="button" data-report-period="week" class="gestion-tab" aria-pressed="false">Semana</button>
+                <button type="button" data-report-period="month" class="gestion-tab" aria-pressed="false">Mes</button>
+                <button type="button" data-report-period="year" class="gestion-tab" aria-pressed="false">Año</button>
+              </div>
+              <label class="sr-only" for="report-date">Fecha de referencia</label>
+              <input id="report-date" type="date" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold">
+              <button type="button" id="btn-export-report" class="admin-tool"><i data-lucide="download" aria-hidden="true"></i> Exportar CSV</button>
+            </div>
+          </div>
+          <div id="reports-kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+          <div id="reports-methods" class="reports-methods"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div class="lg:col-span-7 overflow-x-auto border border-slate-200 rounded-xl" tabindex="0" role="region" aria-label="Resumen de jornadas o meses">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead id="reports-thead" class="bg-slate-50 text-slate-500 uppercase text-[11px] border-b border-slate-200"></thead>
+                <tbody id="reports-tbody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+            <div class="lg:col-span-5 border border-slate-200 rounded-xl overflow-hidden">
+              <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                <h4 class="font-bold text-xs text-slate-900 uppercase tracking-wider">Boletas del Periodo</h4>
+              </div>
+              <div id="reports-boletas-list" class="divide-y divide-slate-100 max-h-80 overflow-y-auto"></div>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -956,7 +1000,7 @@
       <!-- Target Selector -->
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Destino del QR</label>
+          <label class="block font-bold text-slate-700 mb-1">Mesa del local (QR exclusivo mesas)</label>
           <select id="qr-target-select" class="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-white font-semibold">
             <option value="mesa=1">Mesa 1</option>
             <option value="mesa=2">Mesa 2</option>
@@ -964,12 +1008,11 @@
             <option value="mesa=4">Mesa 4</option>
             <option value="mesa=5">Mesa 5</option>
             <option value="mesa=6">Mesa 6</option>
-            <option value="delivery=1">Carta Delivery</option>
           </select>
         </div>
         <div>
-          <label class="block font-bold text-slate-700 mb-1">URL pública donde alojarás la app</label>
-          <input id="qr-base-url" type="url" placeholder="https://tu-sitio.netlify.app" class="w-full px-2.5 py-2 rounded-lg border border-slate-200 font-mono-ticket text-[11px] focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+          <label class="block font-bold text-slate-700 mb-1">URL pública del POS</label>
+          <input id="qr-base-url" type="url" placeholder="https://theburgersbrother.com" class="w-full px-2.5 py-2 rounded-lg border border-slate-200 font-mono-ticket text-[11px] focus:ring-2 focus:ring-amber-500 focus:outline-none" />
         </div>
       </div>
 
@@ -981,19 +1024,35 @@
 
       <!-- Clear explanation for local preview vs hosted -->
       <div id="qr-host-notice" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
-        <b>Importante:</b> Mientras pruebas este archivo sin subirlo a internet, un celular externo no podrá abrir una URL local. Sube este HTML gratis a <b>Netlify Drop</b>, <b>Vercel</b> o tu hosting y pega esa URL arriba para que cualquier celular abra la mesa exacta al escanear.
+        <b>Importante:</b> Usa el dominio público en producción para que los celulares de las mesas abran su mesa exacta al escanear.
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-xs">
         <button type="button" id="btn-qr-simulate-scan" class="col-span-2 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold flex items-center justify-center gap-1.5">
-          <i data-lucide="scan-line" class="w-4 h-4"></i> Probar Escaneo QR Aquí Mismo
+          <i data-lucide="scan-line" class="w-4 h-4"></i> Probar Escaneo de Mesa Aquí
         </button>
         <button type="button" id="btn-qr-download-png" class="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold flex items-center justify-center gap-1.5">
           <i data-lucide="download" class="w-3.5 h-3.5"></i> Descargar PNG
         </button>
         <button type="button" id="btn-qr-copy-link" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5">
-          <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Enlace
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Enlace Mesa
         </button>
+      </div>
+
+      <div id="qr-delivery-card" class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-extrabold text-slate-900 uppercase tracking-wide">Carta web para Delivery</span>
+          <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Sin QR · Enlace web</span>
+        </div>
+        <div id="delivery-url-label" class="font-mono-ticket text-[11px] bg-white p-2 rounded-lg border border-slate-200 text-slate-700 break-all"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="btn-copy-delivery-link" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Delivery
+          </button>
+          <button type="button" id="btn-open-delivery-menu" class="py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold flex items-center justify-center gap-1.5">
+            <i data-lucide="bike" class="w-3.5 h-3.5"></i> Abrir Carta Delivery
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1214,11 +1273,11 @@
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label for="pur-qty" class="block font-bold text-slate-700 mb-1">Cantidad</label>
-          <input id="pur-qty" type="number" min="1" required value="20" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          <input id="pur-qty" type="number" min="0.001" step="any" required value="20" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
         </div>
         <div>
           <label for="pur-total" class="block font-bold text-slate-700 mb-1">Total Compra (S/)</label>
-          <input id="pur-total" type="number" step="0.50" min="1" required value="120" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+          <input id="pur-total" type="number" step="0.01" min="0" required value="120" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
         </div>
       </div>
       <div>
@@ -1249,6 +1308,59 @@
       <div class="pt-2 flex justify-end gap-2">
         <button type="button" data-close-modal="modal-expense" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 text-white font-bold">Registrar Egreso</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-supplier" class="prep-dialog management-dialog" aria-labelledby="supplier-dialog-title">
+    <header>
+      <h2 id="supplier-dialog-title">Nuevo Proveedor</h2>
+      <button type="button" data-close-modal="modal-supplier" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+    </header>
+    <form id="form-supplier" class="p-5 space-y-3 text-xs">
+      <div>
+        <label for="sup-name" class="block font-bold text-slate-700 mb-1">Razón Social / Nombre</label>
+        <input id="sup-name" type="text" required maxlength="100" placeholder="Ej. Carnes del Sur SAC" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label for="sup-ruc" class="block font-bold text-slate-700 mb-1">RUC (opcional)</label>
+          <input id="sup-ruc" type="text" maxlength="20" placeholder="20123456789" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+        <div>
+          <label for="sup-cat" class="block font-bold text-slate-700 mb-1">Rubro</label>
+          <input id="sup-cat" type="text" maxlength="80" placeholder="Carnes / Bebidas" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+        </div>
+      </div>
+      <div>
+        <label for="sup-contact" class="block font-bold text-slate-700 mb-1">Contacto / Teléfono</label>
+        <input id="sup-contact" type="text" maxlength="100" placeholder="958 000 000" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" data-close-modal="modal-supplier" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-amber-500 text-slate-950 font-bold">Guardar proveedor</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-shift-close" class="prep-dialog management-dialog" aria-labelledby="shift-close-dialog-title">
+    <header>
+      <h2 id="shift-close-dialog-title">Cerrar Caja de la Jornada</h2>
+      <button type="button" data-close-modal="modal-shift-close" aria-label="Cerrar"><i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i></button>
+    </header>
+    <form id="form-shift-close" class="p-5 space-y-3 text-xs">
+      <div id="shift-close-summary" class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1 text-slate-800"></div>
+      <div>
+        <label for="shift-counted-cash" class="block font-bold text-slate-700 mb-1">Efectivo real contado en gaveta (S/) <span class="text-slate-500 font-normal">(Opcional)</span></label>
+        <input id="shift-counted-cash" type="number" step="0.10" min="0" max="1000000" placeholder="Ej. 350.00" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div>
+        <label for="shift-close-notes" class="block font-bold text-slate-700 mb-1">Observaciones del cierre (opcional)</label>
+        <input id="shift-close-notes" type="text" maxlength="250" placeholder="Sin novedades" class="w-full px-3 py-2 rounded-lg border border-slate-200" />
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" data-close-modal="modal-shift-close" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">Cancelar</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-amber-500 text-slate-950 font-bold">Confirmar Cierre de Caja</button>
       </div>
     </form>
   </dialog>
@@ -1325,7 +1437,15 @@
         staffOrderEntry: false,
         adminFilter: 'POR_APROBAR',
         gestionSubtab: 'inventario',
-        activeBixolonOrder: null
+        activeBixolonOrder: null,
+        businessStatus: { open: true, isSunday: false, closedManual: false, reason: null, message: '', businessDate: '' },
+        activeShift: null,
+        lastClosedShift: null,
+        reportPeriod: 'day',
+        reportDate: '',
+        reportCache: null,
+        reportLoading: false,
+        submittingOrder: false
       };
 
       // ==================== TOAST & PUSH NOTIFICATION ====================
@@ -1423,39 +1543,6 @@
 
       function stockQuantity(value) {
         return Math.round(value * 1000) / 1000;
-      }
-
-      function recordStockChange(ingredient, next, type, doc, orderId) {
-        const prev = ingredient.stock;
-        ingredient.stock = stockQuantity(next);
-        state.counters.kardex += 1;
-        state.kardex.unshift({
-          id: 'k' + state.counters.kardex,
-          date: nowStr(),
-          ingName: ingredient.name,
-          ingredientId: ingredient.id,
-          orderId,
-          type, doc, prev, qty: stockQuantity(ingredient.stock - prev),
-          next: ingredient.stock, unit: ingredient.unit
-        });
-      }
-
-      function deductInventoryForOrder(order, action = 'Aprobación') {
-        const usage = new Map();
-        const add = (id, qty) => usage.set(id, (usage.get(id) || 0) + qty);
-        for (const item of order.items) {
-          for (const [id, qty] of recipeIngredients(menuById.get(item.menuId))) {
-            if (qty > 0) add(id, qty * item.qty);
-          }
-          for (const selected of item.extras || []) {
-            const extra = EXTRAS.find(entry => entry.id === selected.id);
-            if (extra) add(extra.ingId, extra.qty * item.qty);
-          }
-        }
-        for (const ingredient of state.ingredients) {
-          if (!usage.has(ingredient.id)) continue;
-          recordStockChange(ingredient, ingredient.stock - usage.get(ingredient.id), 'SALIDA', action + ' ' + order.code, order.id);
-        }
       }
 
       function serviceTicketUrl(order) {
@@ -1755,12 +1842,15 @@
 
         const dateEl = document.getElementById('modules-shift-date');
         if (dateEl) {
-          dateEl.textContent = new Intl.DateTimeFormat('es-PE', {
+          const dayText = new Intl.DateTimeFormat('es-PE', {
             timeZone: 'America/Lima',
             weekday: 'long',
             day: 'numeric',
             month: 'short'
           }).format(new Date());
+          dateEl.textContent = ui.businessStatus && !ui.businessStatus.open
+            ? `${dayText} · Cerrado hoy`
+            : dayText;
         }
 
         if (staffArea === 'admin') {
@@ -1962,6 +2052,9 @@
 
         renderActiveRole();
         if (updateHash) syncStaffHash(role);
+        if (role === 'gestion' && ui.gestionSubtab === 'caja') {
+          loadReport({ silent: true });
+        }
         if (role === 'chef' && scannedPrepCode) {
           openPrepCode(scannedPrepCode);
           scannedPrepCode = '';
@@ -1990,6 +2083,40 @@
       }
 
       // ==================== RENDER 1: CLIENTE (QR / DELIVERY) ====================
+      function renderBusinessClosedUI() {
+        const bs = ui.businessStatus;
+        const closed = Boolean(bs && !bs.open);
+        const banner = document.getElementById('business-closed-banner');
+        const notice = document.getElementById('client-closed-notice');
+        const submitBtn = document.getElementById('btn-submit-client-order');
+        const labelEl = document.getElementById('btn-submit-client-label');
+        if (banner) {
+          banner.hidden = !closed;
+          if (closed) {
+            const badge = bs.isSunday ? 'Domingo · Local cerrado' : 'Local cerrado hoy';
+            const detail = bs.message || 'Hoy no estamos atendiendo pedidos por la carta digital.';
+            banner.innerHTML = `<span class="business-closed-pill">${escapeHtml(badge)}</span><p>${escapeHtml(detail)}</p>`;
+          } else {
+            banner.innerHTML = '';
+          }
+        }
+        const blockSubmit = closed && !ui.staffOrderEntry;
+        if (notice) {
+          notice.hidden = !blockSubmit;
+          notice.textContent = blockSubmit
+            ? (bs.message || 'Hoy el local está cerrado. No se pueden enviar pedidos por la carta digital.')
+            : '';
+        }
+        if (submitBtn && !ui.submittingOrder) {
+          submitBtn.disabled = blockSubmit;
+          if (labelEl) {
+            labelEl.textContent = blockSubmit
+              ? 'Cerrado hoy'
+              : (ui.staffOrderEntry ? 'Crear pedido' : 'Enviar pedido');
+          }
+        }
+      }
+
       function renderCliente() {
         const isMesa = ui.clientMode === 'MESA';
         document.getElementById('admin-order-entry').hidden = !ui.staffOrderEntry;
@@ -2003,9 +2130,7 @@
         document.getElementById('client-delivery-fields').classList.toggle('hidden', isMesa);
         document.getElementById('client-cart-origin').textContent = isMesa
           ? ui.clientMesa + (ui.staffOrderEntry ? ' · Mostrador' : '') : 'Delivery';
-        if (!document.getElementById('btn-submit-client-order').disabled) {
-          document.getElementById('btn-submit-client-label').textContent = ui.staffOrderEntry ? 'Crear pedido' : 'Enviar pedido';
-        }
+        renderBusinessClosedUI();
         document.getElementById('client-name-optional').hidden = !isMesa;
         document.getElementById('client-name-required').hidden = isMesa;
         document.getElementById('client-name').required = !isMesa;
@@ -2191,6 +2316,7 @@
           backCartLink.hidden = !units;
           backCartLink.textContent = `Ir a tu pedido (${units}) · ${money(total)}`;
         }
+        renderBusinessClosedUI();
       }
 
       // ==================== RENDER 2: ADMIN ====================
@@ -2581,6 +2707,207 @@
       };
 
       // ==================== RENDER 4: GESTIÓN ====================
+      function renderCajaShiftControls() {
+        const container = document.getElementById('shift-control-card');
+        if (!container) return;
+        const bs = ui.businessStatus || { open: true, isSunday: false, closedManual: false, reason: null, businessDate: '' };
+        const shift = ui.activeShift?.status === 'OPEN' ? ui.activeShift : null;
+        const lastClosed = ui.lastClosedShift;
+        const closedToday = !shift && lastClosed && lastClosed.businessDate === bs.businessDate;
+
+        let pillCls = 'bg-amber-100 text-amber-800';
+        let pillText = 'Jornada pendiente';
+        let headline = `Caja aún sin abrir (${escapeHtml(bs.businessDate || 'Hoy')})`;
+        let subline = 'Abre la jornada con el fondo inicial o al recibir un pedido de atención.';
+
+        if (shift) {
+          pillCls = 'bg-emerald-100 text-emerald-700';
+          pillText = 'Jornada activa · ' + escapeHtml(shift.businessDate);
+          headline = 'Caja abierta del día';
+          subline = `Fondo inicial: ${money(shift.opening)} · Efectivo esperado: ${money(shift.expectedCash)} · Corte automático a las 00:00 (Lima)`;
+        } else if (!bs.open) {
+          pillCls = 'bg-rose-100 text-rose-700';
+          pillText = bs.isSunday ? 'Domingo · No laborable' : 'Día marcado cerrado';
+          headline = bs.isSunday ? 'Local cerrado los domingos' : 'Local cerrado hoy';
+          subline = escapeHtml(bs.message || 'La carta QR y Delivery bloquean nuevos pedidos hoy.');
+        } else if (closedToday) {
+          pillCls = 'bg-slate-200 text-slate-700';
+          pillText = lastClosed.status === 'AUTO_CLOSED' ? 'Cerrada automática 00:00' : 'Jornada cerrada hoy';
+          headline = `Cierre guardado (${escapeHtml(lastClosed.businessDate)})`;
+          subline = `Esperado: ${money(lastClosed.expectedCash)}${lastClosed.countedCash != null ? ` · Contado: ${money(lastClosed.countedCash)}` : ''}`;
+        }
+
+        const lastNote = !closedToday && lastClosed
+          ? `<p class="text-[11px] text-slate-500 mt-1">Último cierre (${escapeHtml(lastClosed.businessDate)}): ${lastClosed.status === 'AUTO_CLOSED' ? 'Corte automático 00:00' : 'Cierre manual'} · Esperado ${money(lastClosed.expectedCash)}${lastClosed.countedCash != null ? ` · Contado ${money(lastClosed.countedCash)}` : ''}</p>`
+          : '';
+
+        let actionsHtml = '';
+        if (shift) {
+          actionsHtml += `
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="sr-only" for="shift-opening-input">Fondo inicial en efectivo</label>
+              <input id="shift-opening-input" type="number" step="0.50" min="0" max="100000" value="${Number(shift.opening ?? 0)}" class="w-28 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" />
+              <button type="button" id="btn-open-shift" class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-900 text-xs font-bold">Guardar fondo</button>
+            </div>
+            <button type="button" id="btn-open-close-shift-modal" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold">Cerrar Caja (Corte del Día)</button>`;
+        } else if (bs.open && !closedToday) {
+          actionsHtml += `
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="sr-only" for="shift-opening-input">Fondo inicial en efectivo</label>
+              <input id="shift-opening-input" type="number" step="0.50" min="0" max="100000" value="${Number(state.caja?.opening ?? 150)}" class="w-28 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold" />
+              <button type="button" id="btn-open-shift" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">Abrir Caja del Día</button>
+            </div>`;
+        }
+        if (!bs.isSunday && !shift) {
+          actionsHtml += `<button type="button" id="btn-toggle-day-status" class="px-3.5 py-2 rounded-xl ${bs.closedManual ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-800'} text-xs font-bold">${bs.closedManual ? 'Reabrir Carta Digital Hoy' : 'Marcar Día Cerrado'}</button>`;
+        }
+
+        container.innerHTML = `
+          <div class="shift-control-info">
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${pillCls}">${pillText}</span>
+            <h3 class="text-sm font-extrabold text-slate-900 mt-1.5">${headline}</h3>
+            <p class="text-xs text-slate-600">${subline}</p>
+            ${lastNote}
+          </div>
+          <div class="shift-control-actions">${actionsHtml}</div>
+        `;
+      }
+
+      const reportPeriodLabels = {
+        day: 'Jornada diaria',
+        week: 'Resumen semanal',
+        month: 'Resumen mensual',
+        year: 'Resumen anual'
+      };
+
+      function csvCell(value) {
+        return `"${String(value ?? '').replaceAll('"', '""')}"`;
+      }
+
+      function renderReport() {
+        const rangeLabel = document.getElementById('reports-range-label');
+        const kpisEl = document.getElementById('reports-kpis');
+        const methodsEl = document.getElementById('reports-methods');
+        const theadEl = document.getElementById('reports-thead');
+        const tbodyEl = document.getElementById('reports-tbody');
+        const boletasEl = document.getElementById('reports-boletas-list');
+        if (!kpisEl || !tbodyEl) return;
+
+        document.querySelectorAll('[data-report-period]').forEach(btn => {
+          btn.setAttribute('aria-pressed', String(btn.dataset.reportPeriod === ui.reportPeriod));
+        });
+        const dateInput = document.getElementById('report-date');
+        const activeDate = ui.reportDate || ui.businessStatus?.businessDate || '';
+        if (dateInput && !dateInput.value && activeDate) dateInput.value = activeDate;
+
+        const data = ui.reportCache;
+        if (!data) {
+          rangeLabel.textContent = ui.reportLoading ? 'Consultando historial en D1…' : 'Selecciona un periodo para ver el reporte.';
+          kpisEl.innerHTML = '';
+          methodsEl.innerHTML = '';
+          theadEl.innerHTML = '';
+          tbodyEl.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">${ui.reportLoading ? 'Cargando datos…' : 'Sin reporte cargado aún.'}</td></tr>`;
+          boletasEl.innerHTML = '';
+          return;
+        }
+
+        const { range, summary, byMethod, shifts = [], months = [], boletas = [] } = data;
+        const pLabel = reportPeriodLabels[range.period] || 'Reporte';
+        rangeLabel.textContent = `${pLabel}: ${range.startDate}${range.endDate !== range.startDate ? ` al ${range.endDate}` : ''}`;
+
+        kpisEl.innerHTML = `
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Ventas Totales</div><div class="text-base font-extrabold text-slate-900 mt-0.5">${money(summary.totalSales)}</div></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Efectivo</div><div class="text-base font-extrabold text-emerald-600 mt-0.5">${money(summary.cashSales)}</div></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Digital (Yape/Plin/Tarj.)</div><div class="text-base font-extrabold text-sky-600 mt-0.5">${money(summary.digitalSales)}</div></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Egresos</div><div class="text-base font-extrabold text-rose-600 mt-0.5">${money(summary.expensesTotal)}</div></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Flujo Caja Neto</div><div class="text-base font-extrabold text-slate-900 mt-0.5">${money(summary.netCashFlow)}</div></div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-[11px] text-slate-500">Boletas · Ticket Prom.</div><div class="text-base font-extrabold text-slate-900 mt-0.5">${summary.boletasCount} · ${money(summary.ticketAvg)}</div></div>
+        `;
+
+        methodsEl.innerHTML = [
+          `<span><strong>Efectivo:</strong> ${money(byMethod.Efectivo)}</span>`,
+          `<span><strong>Yape:</strong> ${money(byMethod.Yape)}</span>`,
+          `<span><strong>Plin:</strong> ${money(byMethod.Plin)}</span>`,
+          `<span><strong>Tarjeta:</strong> ${money(byMethod.Tarjeta)}</span>`,
+          `<span><strong>Pedidos válidos:</strong> ${summary.ordersCount}</span>`,
+          `<span><strong>Jornadas:</strong> ${summary.openDays}</span>`,
+          summary.cancelledCount ? `<span><strong>Cancelados:</strong> ${summary.cancelledCount}</span>` : ''
+        ].filter(Boolean).join('');
+
+        if (range.period === 'year') {
+          theadEl.innerHTML = '<tr><th class="py-2.5 px-3">Mes</th><th class="py-2.5 px-3 text-right">Jornadas</th><th class="py-2.5 px-3 text-right">Efectivo</th><th class="py-2.5 px-3 text-right">Digital</th><th class="py-2.5 px-3 text-right">Egresos</th><th class="py-2.5 px-3 text-right">Total Ventas</th></tr>';
+          tbodyEl.innerHTML = months.length
+            ? months.map(m => `
+                <tr class="hover:bg-slate-50">
+                  <td class="py-2.5 px-3 font-mono-ticket font-bold text-slate-900">${escapeHtml(m.month)}</td>
+                  <td class="py-2.5 px-3 text-right text-slate-600">${m.openDays}</td>
+                  <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">${money(m.cashSales)}</td>
+                  <td class="py-2.5 px-3 text-right font-semibold text-sky-700">${money(m.digitalSales)}</td>
+                  <td class="py-2.5 px-3 text-right font-semibold text-rose-600">${money(m.expensesTotal)}</td>
+                  <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">${money(m.totalSales)}</td>
+                </tr>`).join('')
+            : '<tr><td colspan="6" class="py-6 text-center text-slate-400">Sin jornadas registradas en este año.</td></tr>';
+        } else {
+          theadEl.innerHTML = '<tr><th class="py-2.5 px-3">Jornada</th><th class="py-2.5 px-3">Estado</th><th class="py-2.5 px-3 text-right">Efectivo</th><th class="py-2.5 px-3 text-right">Digital</th><th class="py-2.5 px-3 text-right">Egresos</th><th class="py-2.5 px-3 text-right">Total Ventas</th></tr>';
+          tbodyEl.innerHTML = shifts.length
+            ? shifts.map(s => {
+                const stText = s.status === 'OPEN' ? 'Abierta' : s.status === 'AUTO_CLOSED' ? 'Auto 00:00' : 'Cerrada';
+                const stCls = s.status === 'OPEN' ? 'bg-emerald-100 text-emerald-700' : s.status === 'AUTO_CLOSED' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+                return `
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-mono-ticket font-bold text-slate-900">${escapeHtml(s.businessDate)}</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${stCls}">${stText}</span></td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">${money(s.cashSales)}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-sky-700">${money(s.digitalSales)}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-rose-600">${money(s.expensesTotal)}</td>
+                    <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">${money((s.cashSales || 0) + (s.digitalSales || 0))}</td>
+                  </tr>`;
+              }).join('')
+            : '<tr><td colspan="6" class="py-6 text-center text-slate-400">Sin jornadas registradas en este periodo.</td></tr>';
+        }
+
+        boletasEl.innerHTML = boletas.length
+          ? boletas.map(b => `
+              <div class="p-3 flex items-center justify-between gap-2 text-xs">
+                <div>
+                  <div class="font-mono-ticket font-extrabold text-slate-900">${escapeHtml(b.boletaNum)} (${escapeHtml(b.code)})</div>
+                  <div class="text-[11px] text-slate-500">${escapeHtml(b.customer)} • ${escapeHtml(b.paymentMethod)} • ${escapeHtml(b.businessDate || b.date)}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-slate-900">${money(b.total)}</span>
+                  <button type="button" data-admin-reprint-boleta="${escapeHtml(b.orderId)}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
+                </div>
+              </div>`).join('')
+          : '<div class="p-6 text-center text-xs text-slate-400">Sin boletas emitidas en este periodo.</div>';
+      }
+
+      async function loadReport({ silent = false } = {}) {
+        if (!staffReady || staffArea !== 'admin') return;
+        const dateParam = ui.reportDate || ui.businessStatus?.businessDate || '';
+        const params = new URLSearchParams({ period: ui.reportPeriod });
+        if (dateParam) params.set('date', dateParam);
+        ui.reportLoading = true;
+        if (!silent) renderReport();
+        try {
+          const response = await fetch(`/api/reports?${params.toString()}`);
+          if (response.status === 401) {
+            location.replace(staffLoginUrl(location.hash));
+            return;
+          }
+          if (!response.ok) throw new Error();
+          const data = await response.json();
+          ui.reportCache = data;
+          if (!ui.reportDate && data.range?.endDate && ui.reportPeriod === 'day') {
+            ui.reportDate = data.range.endDate;
+          }
+        } catch {
+          if (!silent) showToast('No se pudo cargar el reporte histórico.', 'err');
+        } finally {
+          ui.reportLoading = false;
+          if (ui.role === 'gestion' && ui.gestionSubtab === 'caja') renderReport();
+        }
+      }
+
       function renderGestion() {
         document.querySelectorAll('.gestion-tab').forEach(btn => {
           const active = btn.dataset.subtab === ui.gestionSubtab;
@@ -2590,21 +2917,25 @@
         document.getElementById(`subtab-${ui.gestionSubtab}`).classList.remove('hidden');
 
         // Inventario
-        const lowCount = state.ingredients.filter(i => i.stock <= i.minStock).length;
-        const valTotal = state.ingredients.reduce((s, i) => s + i.stock * i.cost, 0);
+        const ingredients = state.ingredients || [];
+        const kardexList = state.kardex || [];
+        const suppliers = state.suppliers || [];
+        const purchases = state.purchases || [];
+        const lowCount = ingredients.filter(i => i.stock <= i.minStock).length;
+        const valTotal = ingredients.reduce((s, i) => s + i.stock * i.cost, 0);
         document.getElementById('inv-kpis').innerHTML = `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Insumos Controlados</div><div class="text-2xl font-extrabold mt-1">${state.ingredients.length}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Insumos Controlados</div><div class="text-2xl font-extrabold mt-1">${ingredients.length}</div></div>
           <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Valorizado Almacén</div><div class="text-2xl font-extrabold text-emerald-600 mt-1">${money(valTotal)}</div></div>
           <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Alertas Stock Bajo</div><div class="text-2xl font-extrabold text-amber-600 mt-1">${lowCount}</div></div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Movimientos Kardex</div><div class="text-2xl font-extrabold mt-1">${state.kardex.length}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Movimientos Kardex</div><div class="text-2xl font-extrabold mt-1">${kardexList.length}</div></div>
         `;
 
-        document.getElementById('inv-tbody').innerHTML = state.ingredients.map(i => {
+        document.getElementById('inv-tbody').innerHTML = ingredients.map(i => {
           const low = i.stock <= i.minStock;
           return `
             <tr class="hover:bg-slate-50">
               <td class="py-3 px-4 font-mono-ticket text-slate-500">${i.code}</td>
-              <td class="py-3 px-4 font-bold text-slate-900">${i.name}</td>
+              <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(i.name)}</td>
               <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${i.station === 'COCINA' ? 'bg-orange-50 text-orange-700' : 'bg-sky-50 text-sky-700'}">${i.station}</span></td>
               <td class="py-3 px-4 text-right font-extrabold ${low ? 'text-rose-600' : 'text-slate-900'}">${i.stock} ${i.unit}</td>
               <td class="py-3 px-4 text-right text-slate-500">${i.minStock} ${i.unit}</td>
@@ -2617,64 +2948,79 @@
         renderKardex();
 
         // Proveedores
-        document.getElementById('sup-tbody').innerHTML = state.suppliers.map(s => `
-          <tr class="hover:bg-slate-50">
-            <td class="py-3 px-4"><div class="font-bold text-slate-900">${s.name}</div><div class="text-[11px] font-mono-ticket text-slate-500">RUC: ${s.ruc}</div></td>
-            <td class="py-3 px-4 text-slate-600">${s.category}</td>
-            <td class="py-3 px-4 text-slate-600">${s.contact}</td>
-          </tr>
-        `).join('');
-        document.getElementById('pur-list').innerHTML = state.purchases.map(p => `
-          <div class="p-3.5 flex items-center justify-between text-xs">
-            <div>
-              <div class="font-bold text-slate-900">${p.item}</div>
-              <div class="text-[11px] text-slate-500">${p.supplier} • ${p.doc}</div>
-            </div>
-            <div class="font-extrabold text-slate-900">${money(p.total)}</div>
-          </div>
-        `).join('');
+        document.getElementById('sup-tbody').innerHTML = suppliers.length
+          ? suppliers.map(s => `
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4"><div class="font-bold text-slate-900">${escapeHtml(s.name)}</div><div class="text-[11px] font-mono-ticket text-slate-500">RUC: ${escapeHtml(s.ruc || '—')}</div></td>
+                <td class="py-3 px-4 text-slate-600">${escapeHtml(s.category || '—')}</td>
+                <td class="py-3 px-4 text-slate-600">${escapeHtml(s.contact || '—')}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="3" class="py-6 text-center text-xs text-slate-400">Sin proveedores registrados aún.</td></tr>';
+        document.getElementById('pur-list').innerHTML = purchases.length
+          ? purchases.map(p => `
+              <div class="p-3.5 flex items-center justify-between text-xs">
+                <div>
+                  <div class="font-bold text-slate-900">${escapeHtml(p.item)}</div>
+                  <div class="text-[11px] text-slate-500">${escapeHtml(p.supplier)} • ${escapeHtml(p.doc)}</div>
+                </div>
+                <div class="font-extrabold text-slate-900">${money(p.total)}</div>
+              </div>
+            `).join('')
+          : '<div class="p-6 text-center text-xs text-slate-400">Sin compras registradas aún.</div>';
 
         // Caja & Boletas
+        renderCajaShiftControls();
+        const movements = state.caja?.movements || [];
         let cashIn = 0, digitalIn = 0, expOut = 0;
-        state.caja.movements.forEach(m => {
+        movements.forEach(m => {
           if (m.type === 'EGRESO') expOut += Math.abs(m.amount);
           else if (m.type === 'VENTA') {
             if (m.method === 'Efectivo') cashIn += m.amount;
             else digitalIn += m.amount;
           }
         });
-        const expectedCash = state.caja.opening + cashIn - expOut;
+        const opening = Number(ui.activeShift?.opening ?? state.caja?.opening ?? 0);
+        const expectedCash = opening + cashIn - expOut;
         document.getElementById('caja-kpis').innerHTML = `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Fondo Inicial</div><div class="text-xl font-extrabold mt-1">${money(state.caja.opening)}</div></div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Fondo Inicial</div><div class="text-xl font-extrabold mt-1">${money(opening)}</div></div>
           <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Ventas Efectivo</div><div class="text-xl font-extrabold text-emerald-600 mt-1">${money(cashIn)}</div></div>
           <div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="text-xs text-slate-500">Yape / Plin / Tarjeta</div><div class="text-xl font-extrabold text-sky-600 mt-1">${money(digitalIn)}</div></div>
           <div class="bg-slate-900 text-white p-4 rounded-2xl"><div class="text-xs text-slate-400">Efectivo Esperado</div><div class="text-xl font-extrabold text-amber-400 mt-1">${money(expectedCash)}</div></div>
         `;
-        document.getElementById('caja-tbody').innerHTML = state.caja.movements.map(m => `
-          <tr>
-            <td class="py-3 px-4 text-slate-500">${m.time}</td>
-            <td class="py-3 px-4 font-semibold text-slate-800">${m.desc}</td>
-            <td class="py-3 px-4 text-slate-600">${m.method}</td>
-            <td class="py-3 px-4 text-right font-bold ${m.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${m.amount >= 0 ? '+' : ''}${money(m.amount)}</td>
-          </tr>
-        `).join('');
+        document.getElementById('caja-tbody').innerHTML = movements.length
+          ? movements.map(m => `
+              <tr>
+                <td class="py-3 px-4 text-slate-500">${escapeHtml(m.time)}</td>
+                <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(m.desc)}</td>
+                <td class="py-3 px-4 text-slate-600">${escapeHtml(m.method)}</td>
+                <td class="py-3 px-4 text-right font-bold ${m.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${m.amount >= 0 ? '+' : ''}${money(m.amount)}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="4" class="py-6 text-center text-xs text-slate-400">Aún no hay movimientos registrados en esta jornada.</td></tr>';
 
+        const boletas = state.boletas || [];
         const bList = document.getElementById('boletas-list');
-        if (state.boletas.length === 0) {
+        if (boletas.length === 0) {
           bList.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Aún no se emitieron boletas internas en este turno.</div>`;
         } else {
-          bList.innerHTML = state.boletas.map(b => `
+          bList.innerHTML = boletas.map(b => `
             <div class="p-3.5 flex items-center justify-between gap-2 text-xs">
               <div>
-                <div class="font-mono-ticket font-extrabold text-slate-900">${b.boletaNum} (${b.code})</div>
-                <div class="text-[11px] text-slate-500">${b.customer} • ${b.paymentMethod} • ${b.date}</div>
+                <div class="font-mono-ticket font-extrabold text-slate-900">${escapeHtml(b.boletaNum)} (${escapeHtml(b.code)})</div>
+                <div class="text-[11px] text-slate-500">${escapeHtml(b.customer)} • ${escapeHtml(b.paymentMethod)} • ${escapeHtml(b.date)}</div>
               </div>
               <div class="flex items-center gap-2">
                 <span class="font-extrabold text-slate-900">${money(b.total)}</span>
-                <button type="button" data-admin-reprint-boleta="${b.orderId}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
+                <button type="button" data-admin-reprint-boleta="${escapeHtml(b.orderId)}" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">Imprimir</button>
               </div>
             </div>
           `).join('');
+        }
+
+        renderReport();
+        if (ui.gestionSubtab === 'caja' && !ui.reportCache && !ui.reportLoading) {
+          loadReport({ silent: true });
         }
       }
 
@@ -3139,7 +3485,7 @@
       }
 
       // ==================== EVENT DELEGATION ====================
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', async (e) => {
         const cm = e.target.closest('[data-close-modal]');
         if (cm) {
           closeModal(cm.dataset.closeModal);
@@ -3256,45 +3602,23 @@
         if (appBtn) {
           const order = state.orders.find(o => o.id === appBtn.dataset.adminApprove);
           if (!order || order.status !== 'POR_APROBAR') return;
+          let verifiedPayment = false;
           if (order.channel === 'DELIVERY' && order.paymentStatus !== 'PAGADO') {
             if (!window.confirm('¿Verificaste el pago de este pedido en tu cuenta?')) return;
-            order.paymentStatus = 'PAGADO';
+            verifiedPayment = true;
           }
-          order.status = 'EN_COCINA';
-          order.approvedAt = nowStr();
-          order.preparationStartedAt = new Date().toISOString();
-          deductInventoryForOrder(order);
-
-          if (order.channel === 'DELIVERY' && order.paymentStatus === 'PAGADO') {
-            state.counters.boleta += 1;
-            order.boletaNum = `BI-001-${pad(state.counters.boleta, 5)}`;
-            state.caja.movements.unshift({
-              id: 'cm_' + Date.now(),
-              time: timeStr(),
-              desc: `Delivery ${order.code} (${order.boletaNum})`,
-              method: order.paymentMethod,
-              amount: order.total,
-              type: 'VENTA'
-            });
-            state.boletas.unshift({
-              boletaNum: order.boletaNum,
-              code: order.code,
-              orderId: order.id,
-              customer: order.customer,
-              paymentMethod: order.paymentMethod,
-              total: order.total,
-              date: nowStr()
-            });
-          }
-
-          const saved = saveState();
-          renderActiveRole();
-          saved.then(ok => {
-            if (!ok) return;
-            showToast(`Pedido ${order.code} aprobado y enviado a Preparación.`,
-              'ok', order.channel === 'DELIVERY' ? 'payment-success' : 'action-success');
-            openBixolonModal(order);
+          appBtn.disabled = true;
+          const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/approve`, {
+            body: { verifiedPayment }
           });
+          appBtn.disabled = false;
+          if (!result?.order) return;
+          showToast(
+            `Pedido ${result.order.code} aprobado y enviado a Preparación.`,
+            'ok',
+            result.order.channel === 'DELIVERY' ? 'payment-success' : 'action-success'
+          );
+          openBixolonModal(result.order);
           return;
         }
 
@@ -3314,7 +3638,9 @@
 
         const repBol = e.target.closest('[data-admin-reprint-boleta]');
         if (repBol) {
-          const order = state.orders.find(o => o.id === repBol.dataset.adminReprintBoleta);
+          const orderId = repBol.dataset.adminReprintBoleta;
+          const order = state.orders.find(o => o.id === orderId)
+            || ui.reportCache?.orders?.find(o => o.id === orderId);
           if (order) openBixolonModal(order);
           return;
         }
@@ -3334,21 +3660,24 @@
         if (delivBtn) {
           const order = state.orders.find(o => o.id === delivBtn.dataset.adminDeliver);
           if (!order || order.status !== 'LISTO_CHEF') return;
-          order.status = 'ENTREGADO';
-          const saved = saveState();
-          renderActiveRole();
-          saved.then(ok => {
-            if (!ok) return;
-            showToast(`Pedido ${order.code} despachado con Boleta Interna ${order.boletaNum}.`);
-            openBixolonModal(order);
-          });
+          delivBtn.disabled = true;
+          const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/deliver`, { body: {} });
+          delivBtn.disabled = false;
+          if (!result?.order) return;
+          showToast(`Pedido ${result.order.code} despachado${result.order.boletaNum ? ` con Boleta Interna ${result.order.boletaNum}` : ''}.`);
+          openBixolonModal(result.order);
           return;
         }
 
-        // Chef keypad & quick fill
         // Gestión subtabs
         const gt = e.target.closest('[data-subtab]');
-        if (gt) { ui.gestionSubtab = gt.dataset.subtab; renderGestion(); syncStaffHash('gestion'); return; }
+        if (gt) {
+          ui.gestionSubtab = gt.dataset.subtab;
+          renderGestion();
+          syncStaffHash('gestion');
+          if (ui.gestionSubtab === 'caja') loadReport({ silent: !ui.reportCache });
+          return;
+        }
       });
 
       const clientTakeaway = document.getElementById('client-takeaway');
@@ -3379,13 +3708,9 @@
       async function cancelOrder(order) {
         const kitchenNote = order.status === 'POR_APROBAR' ? '' : ' El consumo registrado en inventario se conservará.';
         if (!window.confirm('¿Cancelar el pedido ' + order.code + '?' + kitchenNote)) return;
-        const index = state.orders.indexOf(order);
-        if (index < 0 || !canCancelOrder(order)) return;
-        state.orders.splice(index, 1);
-        state.orders.unshift({ ...order, status: 'CANCELADO' });
-        const saved = saveState();
-        renderActiveRole();
-        if (await saved) showToast('Pedido ' + order.code + ' cancelado.', 'info');
+        if (!canCancelOrder(order)) return;
+        const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/cancel`, { body: {} });
+        if (result?.ok) showToast('Pedido ' + order.code + ' cancelado.', 'info');
       }
 
       function canEditOrder(order) {
@@ -3466,10 +3791,17 @@
         if (event.target === editTakeaway && editTakeaway.checked && !Number(editTapers.value)) editTapers.value = '1';
         updateOrderEdit();
       });
+      const toOrderItemPayload = item => ({
+        menuId: item.menuId,
+        qty: item.qty,
+        extras: (item.extras || []).map(extra => typeof extra === 'string' ? extra : extra.id),
+        flavors: item.flavors || [],
+        note: item.note || ''
+      });
+
       editForm.onsubmit = async event => {
         event.preventDefault();
-        const index = state.orders.findIndex(order => order.id === editingOrder.id);
-        const order = state.orders[index];
+        const order = state.orders.find(entry => entry.id === editingOrder.id);
         if (!order || !canEditOrder(order) || JSON.stringify(order) !== JSON.stringify(editingOrder)) {
           editError.textContent = 'El pedido cambió. Cierra y vuelve a abrir la comanda.';
           return;
@@ -3482,28 +3814,31 @@
         if (pricesChanged && order.channel === 'DELIVERY' && !window.confirm('El total de delivery cambiará. Coordina el importe con el cliente antes de aprobar el pago. ¿Guardar el cambio?')) return;
         const note = editNote.value.trim().replace(/[<>&"']/g, char =>
           ({ '<': '‹', '>': '›', '&': '＆', '"': '”', "'": '’' })[char]);
-        const updated = { ...order, ...changes, note };
+        const payloadItems = (changes.items || []).filter(item => !isOrderCharge(item)).map(toOrderItemPayload);
+        const payloadAdded = addedItems.filter(item => !isOrderCharge(item)).map(toOrderItemPayload);
+        const tapers = (changes.items || []).find(item => item.menuId === 'taper')?.qty || 0;
         if (addedItems.length && order.status !== 'POR_APROBAR') {
-          deductInventoryForOrder({ ...updated, items: addedItems }, 'Adición');
-          updated.status = 'EN_COCINA';
-          updated.completedAt = null;
-          updated.stationCompletedAt = { ...order.stationCompletedAt };
-          if (order.status === 'LISTO_CHEF') {
-            for (const area of orderStations(order)) {
-              updated.stationCompletedAt[area] ||= order.completedAt || updated.approvedAt || new Date().toISOString();
-            }
-          }
-          for (const area of orderStations({ items: addedItems })) delete updated.stationCompletedAt[area];
           ui.adminFilter = 'EN_COCINA';
         }
-        state.orders.splice(index, 1);
-        state.orders.unshift(updated);
-        editDialog.close();
-        const saved = saveState();
-        renderActiveRole();
-        if (await saved) {
+        const btn = event.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/edit`, {
+          body: {
+            items: payloadItems,
+            addedItems: payloadAdded,
+            takeaway: changes.takeaway,
+            tapers,
+            note
+          },
+          ifMatch: true
+        });
+        if (btn) btn.disabled = false;
+        if (result?.order) {
+          editDialog.close();
           showToast('Comanda actualizada.');
-          if (updated.status !== 'POR_APROBAR') openBixolonModal(updated);
+          if (result.order.status !== 'POR_APROBAR') openBixolonModal(result.order);
+        } else if (needsStaffRefresh) {
+          editDialog.close();
         }
       };
 
@@ -3561,7 +3896,8 @@
         try {
           const loc = window.location;
           if (loc && (loc.protocol === 'https:' || loc.protocol === 'http:') && !loc.hostname.includes('googleusercontent') && loc.hostname !== 'about') {
-            return `${loc.origin}${loc.pathname}`;
+            const path = loc.pathname.startsWith('/personal') ? '/' : loc.pathname;
+            return `${loc.origin}${path}`;
           }
         } catch (e) {}
         return '';
@@ -3576,9 +3912,15 @@
         return `THE_BURGERS_BROTHER::${target}`;
       }
 
+      function getDeliveryUrl() {
+        const baseInput = document.getElementById('qr-base-url').value.trim().replace(/#.*$/, '');
+        const base = baseInput || getDefaultBaseUrl();
+        return base ? `${base}#delivery=1` : 'THE_BURGERS_BROTHER::delivery=1';
+      }
+
       function renderQrModalContent() {
         const target = document.getElementById('qr-target-select').value;
-        const label = target.startsWith('delivery') ? 'Carta Delivery' : `Mesa ${target.split('=')[1]}`;
+        const label = `Mesa ${target.split('=')[1]}`;
         document.getElementById('qr-mesa-title').textContent = label;
         const payload = getCurrentQrFullUrl();
         const isPublicUrl = /^https?:\/\//i.test(payload);
@@ -3591,6 +3933,8 @@
           ? payload
           : `Código interno (${payload}) — Pega tu URL https:// arriba para QR web`;
         document.getElementById('qr-host-notice').classList.toggle('hidden', isPublicUrl);
+        const delivLabel = document.getElementById('delivery-url-label');
+        if (delivLabel) delivLabel.textContent = getDeliveryUrl();
       }
 
       function openQrModal() {
@@ -3618,7 +3962,7 @@
         try { window.location.hash = target; } catch (e) {}
         applyHashRoute(`#${target}`);
         closeModal('modal-qr');
-        showToast(target.startsWith('delivery') ? 'QR escaneado: Carta Delivery abierta.' : `QR escaneado: ${ui.clientMesa} cargada automáticamente.`);
+        showToast(`QR escaneado: ${ui.clientMesa} cargada automáticamente.`);
       });
 
       document.getElementById('btn-qr-copy-link').addEventListener('click', () => {
@@ -3628,6 +3972,22 @@
         } else {
           fallbackCopy(text);
         }
+      });
+
+      document.getElementById('btn-copy-delivery-link')?.addEventListener('click', () => {
+        const text = getDeliveryUrl();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('Enlace web de Carta Delivery copiado.')).catch(() => fallbackCopy(text, 'Enlace web de Carta Delivery copiado.'));
+        } else {
+          fallbackCopy(text, 'Enlace web de Carta Delivery copiado.');
+        }
+      });
+
+      document.getElementById('btn-open-delivery-menu')?.addEventListener('click', () => {
+        try { window.location.hash = 'delivery=1'; } catch (e) {}
+        applyHashRoute('#delivery=1');
+        closeModal('modal-qr');
+        showToast('Carta web para Delivery abierta.');
       });
 
       function fallbackCopy(text, message = 'Enlace / código QR copiado.') {
@@ -3813,6 +4173,7 @@
         if (pendingOrder?.serialized !== serialized) {
           pendingOrder = { serialized, id: crypto.randomUUID() };
         }
+        ui.submittingOrder = true;
         button.disabled = true;
         const label = document.getElementById('btn-submit-client-label');
         const originalLabel = label.textContent;
@@ -3825,6 +4186,9 @@
             body: JSON.stringify({ ...draft, id: pendingOrder.id })
           });
           const result = await response.json();
+          if (response.status === 403 && result?.closed) {
+            await syncBusinessStatus();
+          }
           if (!response.ok) throw new Error(result.error);
           newOrder = result.order;
           if (!ui.staffOrderEntry) {
@@ -3836,8 +4200,10 @@
           showCheckoutError(error.message || 'No se pudo enviar el pedido. Intenta de nuevo.');
           return;
         } finally {
+          ui.submittingOrder = false;
           button.disabled = false;
           label.textContent = originalLabel;
+          renderBusinessClosedUI();
         }
         ui.clientCart = [];
         clientTakeaway.checked = false;
@@ -3929,36 +4295,16 @@
         const order = state.orders.find(o => o.id === oid);
         if (!order || order.status !== 'LISTO_CHEF' || order.paymentStatus === 'PAGADO') return;
 
-        state.counters.boleta += 1;
-        order.boletaNum = `BI-001-${pad(state.counters.boleta, 5)}`;
-        order.paymentStatus = 'PAGADO';
-        order.paymentMethod = method;
-        order.status = 'ENTREGADO';
-
-        state.caja.movements.unshift({
-          id: 'cm_' + Date.now(),
-          time: timeStr(),
-          desc: `${order.table} ${order.code} (${order.boletaNum})`,
-          method,
-          amount: order.total,
-          type: 'VENTA'
+        const btn = e.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi(`/api/orders/${encodeURIComponent(order.id)}/pay`, {
+          body: { paymentMethod: method }
         });
-        state.boletas.unshift({
-          boletaNum: order.boletaNum,
-          code: order.code,
-          orderId: order.id,
-          customer: order.customer,
-          paymentMethod: method,
-          total: order.total,
-          date: nowStr()
-        });
-
-        const saved = saveState();
+        if (btn) btn.disabled = false;
+        if (!result?.order) return;
         closeModal('modal-pay-mesa');
-        renderActiveRole();
-        if (!await saved) return;
-        showToast(`Cobrado ${money(order.total)} (${method}). Boleta ${order.boletaNum} emitida.`, 'ok', 'payment-success');
-        openBixolonModal(order);
+        showToast(`Cobrado ${money(result.order.total)} (${method}). Boleta ${result.order.boletaNum} emitida.`, 'ok', 'payment-success');
+        openBixolonModal(result.order);
       });
 
       // Bixolon print buttons
@@ -4083,14 +4429,14 @@
           return;
         }
         const quantity = stockQuantity(recipeQuantity.valueAsNumber);
-        state.recipeQuantities ||= {};
-        state.recipeQuantities[product.id] ||= {};
-        state.recipeQuantities[product.id][ingredient.id] = quantity;
         const button = event.submitter;
         button.disabled = true;
-        const saved = await saveState();
+        const result = await callStaffApi('/api/inventory/recipes', {
+          method: 'PUT',
+          body: { productId: product.id, ingredientId: ingredient.id, quantity }
+        });
         button.disabled = false;
-        if (!saved) {
+        if (!result?.ok) {
           recipeDialog.close();
           return;
         }
@@ -4116,21 +4462,19 @@
           ingredientError.textContent = 'Ya existe un insumo con ese nombre.';
           return;
         }
-        const usedCodes = new Set(state.ingredients.map(item => item.code));
-        let number = state.ingredients.length + 1;
-        while (usedCodes.has('IN-' + pad(number, 2))) number++;
-        state.ingredients.push({
-          id: 'ing_' + crypto.randomUUID(), code: 'IN-' + pad(number, 2), name,
-          station: document.getElementById('ingredient-station').value, unit: ingredientUnit.value,
-          stock: 0, minStock: stockQuantity(ingredientMinimum.valueAsNumber), cost: 0
-        });
         const button = event.submitter;
         button.disabled = true;
-        const saved = await saveState();
+        const result = await callStaffApi('/api/inventory/ingredients', {
+          body: {
+            name,
+            station: document.getElementById('ingredient-station').value,
+            unit: ingredientUnit.value,
+            minStock: stockQuantity(ingredientMinimum.valueAsNumber)
+          }
+        });
         button.disabled = false;
         ingredientDialog.close();
-        if (saved) {
-          renderGestion();
+        if (result?.ok) {
           showToast('Insumo creado. Usa Ajustar stock para registrar el conteo.');
         }
       };
@@ -4156,19 +4500,48 @@
         event.preventDefault();
         const ingredient = state.ingredients.find(item => item.id === adjustmentIngredient.value);
         const type = adjustmentType.value;
-        const quantity = adjustmentQuantity.valueAsNumber;
+        const quantity = stockQuantity(adjustmentQuantity.valueAsNumber);
         const reason = document.getElementById('adj-reason').value.trim();
         if (!ingredient || !reason || !Number.isFinite(quantity) || quantity < Number(adjustmentQuantity.min)) return;
-        const next = type === 'CONTEO' ? quantity : ingredient.stock + (type === 'ENTRADA' ? quantity : -quantity);
-        recordStockChange(ingredient, next, type, reason);
+        const btn = event.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi('/api/inventory/adjust', {
+          body: { ingredientId: ingredient.id, type, quantity, reason }
+        });
+        if (btn) btn.disabled = false;
+        if (!result?.ok) return;
         closeModal('modal-adjust');
-        renderGestion();
-        if (await saveState()) showToast('Ajuste registrado en Kardex.');
+        showToast('Ajuste registrado en Kardex.');
+      });
+
+      document.getElementById('btn-open-supplier')?.addEventListener('click', event => {
+        document.getElementById('form-supplier').reset();
+        event.currentTarget.focus({ preventScroll: true });
+        openModal('modal-supplier');
+      });
+
+      document.getElementById('form-supplier')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        const name = document.getElementById('sup-name').value.trim();
+        const ruc = document.getElementById('sup-ruc').value.trim();
+        const category = document.getElementById('sup-cat').value.trim();
+        const contact = document.getElementById('sup-contact').value.trim();
+        if (!name) return;
+        const btn = event.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi('/api/suppliers', {
+          body: { name, ruc, category, contact }
+        });
+        if (btn) btn.disabled = false;
+        if (!result?.ok) return;
+        closeModal('modal-supplier');
+        showToast('Proveedor registrado.');
       });
 
       document.getElementById('btn-open-purchase').addEventListener('click', event => {
-        document.getElementById('pur-sup').innerHTML = state.suppliers.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-        document.getElementById('pur-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
+        const suppliers = state.suppliers?.length ? state.suppliers : [{ name: 'Proveedor directo' }];
+        document.getElementById('pur-sup').innerHTML = suppliers.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
+        document.getElementById('pur-ing').innerHTML = state.ingredients.map(i => `<option value="${i.id}">${escapeHtml(i.name)} (${i.unit})</option>`).join('');
         event.currentTarget.focus({ preventScroll: true });
         openModal('modal-purchase');
       });
@@ -4176,19 +4549,18 @@
         e.preventDefault();
         const sup = document.getElementById('pur-sup').value;
         const ing = state.ingredients.find(i => i.id === document.getElementById('pur-ing').value);
-        const qty = parseInt(document.getElementById('pur-qty').value, 10) || 0;
+        const qty = stockQuantity(parseFloat(document.getElementById('pur-qty').value) || 0);
         const total = parseFloat(document.getElementById('pur-total').value) || 0;
         const doc = document.getElementById('pur-doc').value.trim();
         if (!ing || qty <= 0) return;
-        const prev = ing.stock;
-        ing.stock += qty;
-        state.counters.kardex += 1;
-        state.kardex.unshift({ id: 'k' + state.counters.kardex, date: nowStr(), ingName: ing.name, type: 'ENTRADA', doc: `Compra ${doc}`, prev, qty, next: ing.stock, unit: ing.unit });
-        state.purchases.unshift({ id: 'pur_' + Date.now(), date: nowStr(), doc, supplier: sup, item: `${ing.name} (${qty} ${ing.unit})`, total });
-        const saved = saveState();
+        const btn = e.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi('/api/purchases', {
+          body: { supplier: sup, ingredientId: ing.id, quantity: qty, total, doc }
+        });
+        if (btn) btn.disabled = false;
+        if (!result?.ok) return;
         closeModal('modal-purchase');
-        renderGestion();
-        if (!await saved) return;
         showToast(`Compra ingresada: +${qty} ${ing.unit} de ${ing.name}.`);
       });
 
@@ -4202,12 +4574,152 @@
         const desc = document.getElementById('exp-desc').value.trim();
         const amt = parseFloat(document.getElementById('exp-amt').value) || 0;
         if (!desc || amt <= 0) return;
-        state.caja.movements.unshift({ id: 'cm_' + Date.now(), time: timeStr(), desc, method: 'Efectivo', amount: -amt, type: 'EGRESO' });
-        const saved = saveState();
+        const btn = e.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi('/api/caja/expense', {
+          body: { desc, amount: amt }
+        });
+        if (btn) btn.disabled = false;
+        if (!result?.ok) return;
         closeModal('modal-expense');
-        renderGestion();
-        if (!await saved) return;
         showToast('Egreso registrado en Caja.');
+      });
+
+      document.getElementById('shift-control-card')?.addEventListener('click', async event => {
+        const openBtn = event.target.closest('#btn-open-shift');
+        if (openBtn) {
+          const input = document.getElementById('shift-opening-input');
+          const openingAmount = stockQuantity(parseFloat(input?.value || '0'));
+          if (!Number.isFinite(openingAmount) || openingAmount < 0) {
+            showToast('Ingresa un fondo inicial válido.', 'err');
+            return;
+          }
+          openBtn.disabled = true;
+          const result = await callStaffApi('/api/shifts/open', { body: { openingAmount } });
+          openBtn.disabled = false;
+          if (result?.ok) showToast(`Jornada ${result.shift?.businessDate || 'del día'} abierta.`);
+          return;
+        }
+
+        const closeModalBtn = event.target.closest('#btn-open-close-shift-modal');
+        if (closeModalBtn) {
+          const shift = ui.activeShift;
+          if (!shift) return;
+          const summaryEl = document.getElementById('shift-close-summary');
+          const countedInput = document.getElementById('shift-counted-cash');
+          const notesInput = document.getElementById('shift-close-notes');
+          if (summaryEl) {
+            summaryEl.innerHTML = `
+              <div><strong>Jornada:</strong> ${escapeHtml(shift.businessDate)}</div>
+              <div><strong>Fondo inicial:</strong> ${money(shift.opening)} · <strong>Ventas efectivo:</strong> ${money(shift.cashSales)}</div>
+              <div><strong>Digital (Yape/Plin/Tarj.):</strong> ${money(shift.digitalSales)} · <strong>Egresos:</strong> ${money(shift.expensesTotal)}</div>
+              <div class="pt-1 border-t border-slate-200 font-extrabold text-slate-900">Efectivo esperado en gaveta: ${money(shift.expectedCash)}</div>
+            `;
+          }
+          if (countedInput) {
+            countedInput.value = '';
+            countedInput.placeholder = Number(shift.expectedCash || 0).toFixed(2);
+          }
+          if (notesInput) notesInput.value = '';
+          openModal('modal-shift-close');
+          return;
+        }
+
+        const toggleDayBtn = event.target.closest('#btn-toggle-day-status');
+        if (toggleDayBtn) {
+          const bs = ui.businessStatus || {};
+          const closed = !bs.closedManual;
+          toggleDayBtn.disabled = true;
+          const result = await callStaffApi('/api/business/day-status', {
+            body: {
+              businessDate: bs.businessDate,
+              closed,
+              reason: closed ? 'No se atiende hoy' : ''
+            }
+          });
+          toggleDayBtn.disabled = false;
+          if (result?.ok) {
+            showToast(closed
+              ? 'Día marcado como cerrado. La carta QR y Delivery bloquearán envíos hoy.'
+              : 'Carta digital reabierta para pedidos hoy.');
+          }
+        }
+      });
+
+      document.getElementById('form-shift-close')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        const countedRaw = document.getElementById('shift-counted-cash').value.trim();
+        const notes = document.getElementById('shift-close-notes').value.trim();
+        const countedCash = countedRaw === '' ? null : Number(countedRaw);
+        if (countedCash !== null && (!Number.isFinite(countedCash) || countedCash < 0)) {
+          showToast('Ingresa un monto en efectivo válido.', 'err');
+          return;
+        }
+        const btn = event.submitter;
+        if (btn) btn.disabled = true;
+        const result = await callStaffApi('/api/shifts/close', {
+          body: { countedCash, notes }
+        });
+        if (btn) btn.disabled = false;
+        if (!result?.ok) return;
+        closeModal('modal-shift-close');
+        showToast(`Caja cerrada (${result.shift?.businessDate || ''}). Corte guardado en D1.`);
+      });
+
+      document.getElementById('reports-panel')?.addEventListener('click', event => {
+        const periodBtn = event.target.closest('[data-report-period]');
+        if (periodBtn) {
+          const next = periodBtn.dataset.reportPeriod;
+          if (next && next !== ui.reportPeriod) {
+            ui.reportPeriod = next;
+            loadReport();
+          }
+        }
+      });
+
+      document.getElementById('report-date')?.addEventListener('change', event => {
+        ui.reportDate = event.target.value;
+        loadReport();
+      });
+
+      document.getElementById('btn-export-report')?.addEventListener('click', () => {
+        const data = ui.reportCache;
+        if (!data) {
+          showToast('Aún no hay un reporte cargado para exportar.', 'err');
+          return;
+        }
+        const { range, summary, shifts = [], months = [], boletas = [] } = data;
+        const rows = [
+          ['Periodo', range.period, 'Desde', range.startDate, 'Hasta', range.endDate],
+          ['Ventas Totales', summary.totalSales, 'Efectivo', summary.cashSales, 'Digital', summary.digitalSales, 'Egresos', summary.expensesTotal, 'Flujo Neto', summary.netCashFlow, 'Pedidos', summary.ordersCount, 'Boletas', summary.boletasCount],
+          []
+        ];
+        if (range.period === 'year') {
+          rows.push(['Mes', 'Jornadas', 'Efectivo', 'Digital', 'Egresos', 'Total Ventas', 'Pedidos', 'Boletas']);
+          for (const m of months) {
+            rows.push([m.month, m.openDays, m.cashSales, m.digitalSales, m.expensesTotal, m.totalSales, m.ordersCount, m.boletasCount]);
+          }
+        } else {
+          rows.push(['Jornada', 'Estado', 'Fondo Inicial', 'Efectivo', 'Digital', 'Egresos', 'Efectivo Esperado', 'Efectivo Contado', 'Boletas']);
+          for (const s of shifts) {
+            rows.push([s.businessDate, s.status, s.opening, s.cashSales, s.digitalSales, s.expensesTotal, s.expectedCash, s.countedCash ?? '', s.boletasCount]);
+          }
+        }
+        if (boletas.length) {
+          rows.push([], ['Boleta', 'Pedido', 'Fecha', 'Cliente', 'Método', 'Total']);
+          for (const b of boletas) {
+            rows.push([b.boletaNum, b.code, b.businessDate || b.date, b.customer, b.paymentMethod, b.total]);
+          }
+        }
+        const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reporte_${range.period}_${range.startDate}_${range.endDate}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Reporte exportado en CSV.');
       });
 
       document.getElementById('btn-export-kardex').addEventListener('click', () => {
@@ -4285,6 +4797,7 @@
         }
         document.documentElement.removeAttribute('data-staff-loading');
         staffMenu = false;
+        syncBusinessStatus();
         if (!h) { switchRole('cliente', { updateHash: false }); return; }
         if (/^[1-6]$/.test(params.get('mesa') || '')) {
           const m = `Mesa ${params.get('mesa')}`;
@@ -4363,7 +4876,6 @@
       let writeGeneration = 0;
       let staffRead = 0;
       let staffETag = null;
-      let confirmedState = null;
       let needsStaffRefresh = false;
       let polling = false;
 
@@ -4377,6 +4889,25 @@
         staffSyncNotice.hidden = !needsStaffRefresh;
         document.getElementById('view-admin').inert = needsStaffRefresh;
         document.getElementById('view-gestion').inert = needsStaffRefresh;
+      }
+
+      async function syncBusinessStatus() {
+        try {
+          const response = await fetch('/api/status');
+          if (!response.ok) return false;
+          const data = await response.json();
+          if (data?.businessStatus) {
+            ui.businessStatus = data.businessStatus;
+            if (!ui.reportDate && data.businessStatus.businessDate) {
+              ui.reportDate = data.businessStatus.businessDate;
+            }
+            if (ui.role === 'cliente') renderBusinessClosedUI();
+            else if (ui.role === 'gestion' && ui.gestionSubtab === 'caja') renderCajaShiftControls();
+          }
+          return true;
+        } catch {
+          return false;
+        }
       }
 
       async function syncStaff(requireSession = false) {
@@ -4403,7 +4934,14 @@
         state = staffArea === 'chef' ? { orders: data.orders } : data.state;
         revision = data.revision;
         staffETag = response.headers.get('ETag');
-        if (staffArea === 'admin') confirmedState = JSON.stringify({ state });
+        if (data.businessStatus) {
+          ui.businessStatus = data.businessStatus;
+          if (!ui.reportDate && data.businessStatus.businessDate) {
+            ui.reportDate = data.businessStatus.businessDate;
+          }
+        }
+        if ('activeShift' in data) ui.activeShift = data.activeShift;
+        if ('lastClosedShift' in data) ui.lastClosedShift = data.lastClosedShift;
         if (needsStaffRefresh) setStaffRecovery();
         staffReady = true;
         updateStaffNavigation();
@@ -4508,44 +5046,56 @@
       }
       staffSyncRetry.onclick = refreshAfterWrite;
 
-      function saveState() {
-        if (!staffReady || staffArea !== 'admin' || needsStaffRefresh) return Promise.resolve(false);
-        const snapshot = JSON.stringify({ state });
+      async function callStaffApi(path, { method = 'POST', body, ifMatch = false } = {}) {
+        if (!staffReady || staffArea !== 'admin' || needsStaffRefresh) return null;
         writesPending++;
         writeGeneration++;
         staffWrites = staffWrites.then(async () => {
-          if (!staffReady || needsStaffRefresh) return false;
+          if (!staffReady || needsStaffRefresh) return null;
+          const headers = {};
+          if (body !== undefined) headers['Content-Type'] = 'application/json';
+          if (ifMatch) headers['If-Match'] = revision || 'none';
           let response;
+          let payload = null;
           try {
-            response = await fetch('/api/state', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json', 'If-Match': revision || 'none' },
-              body: snapshot
+            response = await fetch(path, {
+              method,
+              headers,
+              body: body !== undefined ? JSON.stringify(body) : undefined
             });
             if (response.status === 401) {
               location.replace(staffLoginUrl(location.hash));
-              return false;
+              return null;
             }
-            if (!response.ok) throw new Error();
-            revision = (await response.json()).revision;
-            confirmedState = snapshot;
+            payload = await response.json().catch(() => null);
+            if (!response.ok) {
+              const err = new Error(payload?.error || (response.status === 409
+                ? 'Otro equipo actualizó el POS o la jornada ya cambió.'
+                : 'No se pudo completar la operación.'));
+              err.status = response.status;
+              throw err;
+            }
+            if (payload?.revision) revision = payload.revision;
             staffETag = null;
-            return true;
-          } catch {
-            const message = response?.status === 409
-              ? 'Otro equipo actualizó el POS. El cambio de este equipo no se guardó.'
-              : 'No se pudo confirmar el cambio. Revisa el estado antes de repetir la acción.';
-            setStaffRecovery(message);
-            if (confirmedState) state = JSON.parse(confirmedState).state;
-            renderActiveRole();
-            showToast(message, 'err');
-            return false;
+            return payload;
+          } catch (error) {
+            if (error?.status === 409 && ifMatch) {
+              setStaffRecovery(error.message);
+            }
+            showToast(error?.message || 'No se pudo confirmar el cambio.', 'err');
+            return null;
           }
-        }).finally(async () => {
+        }).finally(() => {
           writesPending--;
-          if (!writesPending && needsStaffRefresh) await refreshAfterWrite();
         });
-        return staffWrites;
+        const result = await staffWrites;
+        if (!writesPending && !needsStaffRefresh) {
+          await refreshAfterWrite();
+          if (ui.role === 'gestion' && ui.gestionSubtab === 'caja') {
+            await loadReport({ silent: true });
+          }
+        }
+        return result;
       }
 
       const finishedCustomerStatuses = new Set(['ENTREGADO', 'CANCELADO', 'RECHAZADO']);
@@ -4555,14 +5105,20 @@
         polling = true;
         try {
           const activeOrders = ui.receivedOrders.slice(0, 3).filter(order => !finishedCustomerStatuses.has(order.status));
+          const syncTask = staffReady && staffMenu
+            ? syncStaff()
+            : (ui.role === 'cliente' ? syncBusinessStatus() : Promise.resolve(false));
           const results = await Promise.allSettled([
-            staffReady && staffMenu ? syncStaff() : Promise.resolve(false),
+            syncTask,
             ...activeOrders.map(async order => {
               const response = await fetch('/api/orders/' + order.id);
               if (!response.ok) return false;
-              const { status } = await response.json();
-              if (!status || status === order.status) return false;
+              const { status, total } = await response.json();
+              if (!status) return false;
+              const nextTotal = typeof total === 'number' ? total : order.total;
+              if (status === order.status && nextTotal === order.total) return false;
               order.status = status;
+              order.total = nextTotal;
               return true;
             })
           ]);
