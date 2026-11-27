@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261126b">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261126d">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,30 +16,14 @@
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    .carta-controls { display: flex; flex-wrap: wrap; gap: 8px; }
-    .carta-controls button, .carta-cart-link {
-      min-height: 44px; padding: .55rem .85rem; border-radius: .65rem;
-      font-size: .875rem; font-weight: 700;
-    }
-    .carta-controls button { background: #f1f5f9; color: #1e293b; }
-    .carta-controls button[aria-pressed="true"] { background: #171717; color: #fff7e6; }
-    #carta-page-select { display: none; }
-    @media (max-width: 600px) {
-      #carta-pages { display: none; }
-      #carta-page-select { display: inline-block; }
-    }
-    .carta-cart-link { display: inline-flex; align-items: center; gap: .4rem; background: #fef3c7; color: #78350f; }
     .carta-sheet { position: relative; margin-inline: auto; }
     .carta-page-leaf { position: relative; width: 100%; aspect-ratio: 559 / 790; background: #121212; }
     .carta-page-leaf > img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .carta-spot {
       position: absolute; border: 1px solid transparent;
-      border-inline-start: 2px solid #fbbf24; border-radius: .3rem;
+      border-inline-start: 2px solid #e5b260; border-radius: .3rem;
     }
-    .carta-spot:hover { border-color: #fbbf24; background: rgb(251 191 36 / 14%); }
-    .carta-spot:focus-visible, .carta-controls button:focus-visible, .carta-cart-link:focus-visible {
-      outline: 3px solid #d97706; outline-offset: 2px;
-    }
+    .carta-spot:hover { border-color: #e5b260; background: rgb(229 178 96 / 14%); }
     .carta-spot:focus-visible { outline: 3px solid #fff; outline-offset: -2px; box-shadow: 0 0 0 2px #181311; z-index: 2; }
     #client-cart { scroll-margin-top: 7rem; }
     .font-mono-ticket {
@@ -80,7 +64,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css?v=20261126b">
+<link rel="stylesheet" href="./brand.css?v=20261126d">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -406,71 +390,115 @@
 
       <!-- Menu + Client Cart -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start client-workspace-grid">
-        <!-- Menu Catalog -->
+        <!-- Menu Catalog Shell -->
         <div class="lg:col-span-8 space-y-4 menu-catalog-col">
-          <section class="menu-browser rounded-2xl border space-y-3" aria-labelledby="carta-title">
-            <div class="menu-browser-head">
-              <div class="menu-browser-brand">
-                <h2 id="carta-title" class="menu-title">La carta</h2>
+          <section class="menu-browser rounded-2xl border" aria-labelledby="carta-title">
+            <header class="carta-header">
+              <div class="carta-header-brand">
+                <span id="carta-brand-icon" class="carta-brand-icon" aria-hidden="true"></span>
+                <h2 id="carta-title" class="carta-header-title">La carta</h2>
                 <span id="menu-order-context" class="menu-order-context" hidden></span>
               </div>
-              <div class="carta-controls menu-modes" role="group" aria-label="Formato de la carta">
-                <button type="button" data-menu-format="visual" aria-pressed="true">Carta libro</button>
-                <button type="button" data-menu-format="list" aria-pressed="false">Ver lista y buscar</button>
-                <div id="carta-layout-group" class="carta-layout-group" role="group" aria-label="Páginas visibles del libro" hidden>
-                  <button type="button" data-carta-layout="single" aria-pressed="false">1 página</button>
-                  <button type="button" data-carta-layout="spread" aria-pressed="true">2 páginas</button>
+              <div class="carta-header-actions">
+                <div class="carta-mode-switch" role="group" aria-label="Formato de la carta">
+                  <button type="button" data-menu-format="visual" aria-pressed="true">
+                    <i data-lucide="book-open" aria-hidden="true"></i>
+                    <span>Carta</span>
+                  </button>
+                  <button type="button" data-menu-format="list" aria-pressed="false">
+                    <i data-lucide="search" aria-hidden="true"></i>
+                    <span>Explorar</span>
+                  </button>
                 </div>
-              </div>
-              <span id="cart-announcement" class="sr-only" role="status"></span>
-              <button type="button" id="carta-cart-link" hidden class="carta-cart-link" aria-controls="client-cart" aria-expanded="false">Ver pedido (0)</button>
-            </div>
-            <div id="carta-visual" class="carta-visual-shell">
-              <div class="carta-book-toolbar">
-                <div id="carta-pages" class="carta-controls" role="navigation" aria-label="Páginas de la carta"></div>
-                <p class="carta-caption">Toca un plato para personalizarlo o pasa de página.</p>
-              </div>
-              <div class="carta-mobile-jump">
-                <label for="carta-page-select" class="sr-only">Ir a una página de la carta</label>
-                <select id="carta-page-select" aria-label="Categoría de la carta" class="w-full rounded-lg font-semibold"></select>
-              </div>
-              <div id="carta-book-workspace" class="carta-book-workspace">
-                <button type="button" id="carta-prev" class="carta-nav-btn carta-nav-prev" aria-label="Página anterior">
-                  <i data-lucide="chevron-left" class="w-5 h-5" aria-hidden="true"></i>
-                  <span>Anterior</span>
+                <button type="button" id="carta-cart-link" class="carta-order-btn" aria-controls="client-cart" aria-expanded="false">
+                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <span id="carta-cart-label">Pedido (0)</span>
                 </button>
-                <div id="carta-book-stage" class="carta-book-stage">
-                  <div id="carta-sheet" class="carta-sheet"></div>
-                  <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
-                </div>
-                <button type="button" id="carta-next" class="carta-nav-btn carta-nav-next" aria-label="Siguiente página">
-                  <span>Siguiente</span>
-                  <i data-lucide="chevron-right" class="w-5 h-5" aria-hidden="true"></i>
-                </button>
-                <div class="carta-book-indicator" aria-live="off">
-                  <div class="carta-book-meta">
-                    <span id="carta-page-counter" class="carta-page-counter">Página 1 de 5</span>
-                    <span id="carta-page-title" class="carta-page-name">Hamburguesas</span>
+              </div>
+            </header>
+
+            <span id="cart-announcement" class="sr-only" role="status"></span>
+
+            <div class="carta-desktop-shell">
+              <aside id="carta-sidebar" class="carta-sidebar" aria-label="Categorías de la carta">
+                <p class="carta-sidebar-title">Categorías</p>
+                <nav id="carta-sidebar-list" class="carta-sidebar-nav" aria-label="Categorías"></nav>
+              </aside>
+
+              <div class="carta-main-stage">
+                <div id="carta-visual" class="carta-visual-shell">
+                  <div id="carta-book-workspace" class="carta-book-workspace">
+                    <button type="button" id="carta-prev" class="carta-nav-btn carta-nav-prev" aria-label="Página anterior">
+                      <i data-lucide="chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <div id="carta-book-stage" class="carta-book-stage">
+                      <div id="carta-sheet" class="carta-sheet"></div>
+                      <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
+                    </div>
+                    <button type="button" id="carta-next" class="carta-nav-btn carta-nav-next" aria-label="Siguiente página">
+                      <i data-lucide="chevron-right" aria-hidden="true"></i>
+                    </button>
+                    <div class="carta-pagination-bar" aria-live="off">
+                      <span id="carta-page-counter" class="carta-page-counter">1 de 5</span>
+                      <p id="carta-drinks-note" class="carta-drinks-note" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
+                    </div>
                   </div>
-                  <div id="carta-book-dots" class="carta-book-dots" aria-hidden="true"></div>
-                  <p id="carta-drinks-note" class="carta-drinks-note" hidden>Consulta con el personal por las bebidas de 300 ml.</p>
+                  <p id="carta-book-status" class="sr-only" aria-live="polite"></p>
+                </div>
+
+                <div id="carta-list" hidden class="carta-explore-panel">
+                  <div class="carta-explore-controls">
+                    <div class="carta-search-field">
+                      <i data-lucide="search" aria-hidden="true"></i>
+                      <input id="client-search" type="search" enterkeyhint="search" aria-label="Buscar productos" placeholder="Buscar platos, combos, bebidas o cócteles..." />
+                    </div>
+                    <div id="client-categories" class="carta-explore-cats" role="group" aria-label="Filtrar lista por categoría"></div>
+                  </div>
+                  <div id="client-menu-grid" class="carta-explore-grid"></div>
                 </div>
               </div>
-              <p id="carta-book-status" class="sr-only" aria-live="polite"></p>
             </div>
           </section>
-          <div id="carta-list" hidden class="space-y-3">
-          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <div class="relative">
-              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-              <input id="client-search" type="search" enterkeyhint="search" aria-label="Buscar productos" placeholder="Buscar en la carta (ej. Burger Royal, Alitas, Salchipapa, Mojito)..." class="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" />
-            </div>
-            <div id="client-categories" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
-          </div>
-
-          <div id="client-menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-          </div>
         </div>
+
+        <!-- Mobile & Tablet Fixed Bottom Navigation -->
+        <nav id="carta-mobile-nav" class="carta-mobile-nav" aria-label="Navegación de la carta">
+          <button type="button" data-mobile-nav="visual" aria-pressed="true">
+            <span class="carta-nav-icon-wrap"><i data-lucide="book-open" aria-hidden="true"></i></span>
+            <span>Carta</span>
+          </button>
+          <button type="button" id="btn-mobile-categories" data-mobile-nav="categories" aria-pressed="false" aria-haspopup="dialog" aria-controls="carta-category-sheet" aria-expanded="false">
+            <span class="carta-nav-icon-wrap"><i data-lucide="layout-grid" aria-hidden="true"></i></span>
+            <span>Categorías</span>
+          </button>
+          <button type="button" data-mobile-nav="list" aria-pressed="false">
+            <span class="carta-nav-icon-wrap"><i data-lucide="search" aria-hidden="true"></i></span>
+            <span>Explorar</span>
+          </button>
+          <button type="button" id="btn-mobile-cart" data-mobile-nav="cart" aria-pressed="false" aria-controls="client-cart" aria-expanded="false">
+            <span class="carta-nav-icon-wrap">
+              <i data-lucide="shopping-bag" aria-hidden="true"></i>
+              <span id="mobile-nav-cart-badge" class="carta-nav-badge" data-has-items="false">0</span>
+            </span>
+            <span>Pedido</span>
+          </button>
+        </nav>
+
+        <!-- Category Bottom Sheet (Mobile & Tablet) -->
+        <div id="carta-sheet-backdrop" class="carta-sheet-backdrop" hidden></div>
+        <section id="carta-category-sheet" class="carta-category-sheet" role="dialog" aria-modal="true" aria-labelledby="category-sheet-title" hidden>
+          <div class="carta-sheet-grabber" aria-hidden="true"><span></span></div>
+          <header class="carta-sheet-header">
+            <div class="carta-sheet-title-wrap">
+              <i data-lucide="layout-grid" aria-hidden="true"></i>
+              <h2 id="category-sheet-title">Categorías</h2>
+            </div>
+            <button type="button" id="btn-close-category-sheet" class="carta-sheet-close" aria-label="Cerrar categorías">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div id="carta-sheet-list" class="carta-sheet-list" role="navigation" aria-label="Categorías de la carta"></div>
+        </section>
 
         <!-- Client Cart Backdrop & Checkout Drawer / Sidebar -->
         <div id="cart-drawer-backdrop" class="cart-drawer-backdrop" hidden></div>
@@ -1361,15 +1389,24 @@
   </dialog>
 
   <script type="module">
-    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261126b';
+    import { MENU, EXTRAS, WING_FLAVORS } from './catalog.js?v=20261126d';
     import { runBixolon, thermalReceiptText } from './bixolon.js';
     import { formatPrepCompletion, orderStations, prepHistory, preparationStartedAt, stationReady } from './preparation.js';
     import { priceOrder, isOrderCharge } from './order-pricing.js';
     import { receiptLogo } from './receipt-logo.js';
     import { receiptPdf } from './receipt-pdf.js';
-    import { menuPages, drinkOptions } from './visual-menu.js?v=20261126b';
+    import { menuPages, drinkOptions } from './visual-menu.js?v=20261126d';
     import { preparationEntry, staffLoginUrl } from './staff-entry.js';
     import { createPosSounds } from './pos-sounds.js';
+    import {
+      CARTA_CATEGORIES,
+      burgerIconSvg,
+      renderCategoryNav,
+      syncCategoryNavState,
+      canFitBookSpread,
+      buildMenuPageLeaf,
+      bindBottomSheetSwipe
+    } from './carta-components.js?v=20261126d';
 
     (function () {
       'use strict';
@@ -1977,16 +2014,54 @@
       let staffMenu = false;
       let prepReturnRole = 'modulos';
       let cartDrawerOpen = false;
+      let categorySheetOpen = false;
       let lastCartTrigger = null;
+      let lastSheetTrigger = null;
 
-      function syncPublicBackgroundInert(isOpen) {
+      function syncPublicBackgroundInert() {
         const isPublic = document.body.hasAttribute('data-public-menu');
-        const active = isPublic && isOpen;
+        const cartActive = isPublic && cartDrawerOpen;
+        const sheetActive = isPublic && categorySheetOpen;
         const catalogCol = document.querySelector('.menu-catalog-col');
         const trackerWrap = document.getElementById('client-tracker-wrap');
-        if (catalogCol) catalogCol.inert = active;
-        if (trackerWrap) trackerWrap.inert = active;
-        document.body.toggleAttribute('data-cart-open', active);
+        const mobileNav = document.getElementById('carta-mobile-nav');
+        const closedBanner = document.getElementById('business-closed-banner');
+        const staffHero = document.getElementById('staff-menu-hero');
+        const hasOverlay = cartActive || sheetActive;
+        if (catalogCol) catalogCol.inert = hasOverlay;
+        if (trackerWrap) trackerWrap.inert = hasOverlay;
+        if (mobileNav) mobileNav.inert = hasOverlay;
+        if (closedBanner) closedBanner.inert = hasOverlay;
+        if (staffHero) staffHero.inert = hasOverlay;
+        document.body.toggleAttribute('data-cart-open', cartActive);
+        document.body.toggleAttribute('data-category-sheet-open', sheetActive);
+      }
+
+      function openCategorySheet(triggerEl = null) {
+        if (window.innerWidth >= 1024) return;
+        if (cartDrawerOpen) closeCartDrawer({ restoreFocus: false });
+        lastSheetTrigger = triggerEl || document.getElementById('btn-mobile-categories');
+        categorySheetOpen = true;
+        document.getElementById('carta-sheet-backdrop').hidden = false;
+        document.getElementById('carta-category-sheet').hidden = false;
+        syncPublicBackgroundInert();
+        syncNavChromeUI();
+        requestAnimationFrame(() => {
+          const activeItem = document.querySelector('#carta-sheet-list [aria-pressed="true"]');
+          (activeItem || document.getElementById('btn-close-category-sheet'))?.focus();
+        });
+      }
+
+      function closeCategorySheet({ restoreFocus = true } = {}) {
+        if (!categorySheetOpen) return;
+        categorySheetOpen = false;
+        document.getElementById('carta-sheet-backdrop').hidden = true;
+        document.getElementById('carta-category-sheet').hidden = true;
+        syncPublicBackgroundInert();
+        syncNavChromeUI();
+        if (restoreFocus && lastSheetTrigger instanceof HTMLElement && lastSheetTrigger.isConnected) {
+          lastSheetTrigger.focus();
+        }
       }
 
       function openCartDrawer(triggerEl = null) {
@@ -1994,6 +2069,7 @@
           focusClientCart();
           return;
         }
+        if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
         lastCartTrigger = triggerEl || document.activeElement;
         cartDrawerOpen = true;
         renderClientCart();
@@ -2017,7 +2093,10 @@
         document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry));
         if (!isPublic) {
           cartDrawerOpen = false;
-          syncPublicBackgroundInert(false);
+          categorySheetOpen = false;
+          document.getElementById('carta-sheet-backdrop').hidden = true;
+          document.getElementById('carta-category-sheet').hidden = true;
+          syncPublicBackgroundInert();
         }
       }
 
@@ -2176,12 +2255,10 @@
           trackerWrap.classList.add('hidden');
         }
 
-        // Categories
+        // Categories (Explorar list filter)
         const cats = ['Todos', ...new Set(MENU.map(m => m.cat))];
         document.getElementById('client-categories').innerHTML = cats.map(c => `
-          <button type="button" data-client-cat="${c}" class="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-            ui.clientCategory === c ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }">${c}</button>
+          <button type="button" data-client-cat="${c}" class="carta-explore-chip" aria-pressed="${ui.clientCategory === c}">${c}</button>
         `).join('');
 
         // Filtered Menu
@@ -2192,23 +2269,23 @@
           return !m.retired && mCat && mQ;
         });
 
-        document.getElementById('client-menu-grid').innerHTML = items.map(m => `
-          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between gap-3">
-            <div>
-              <div class="flex items-start justify-between gap-2">
-                <h3 class="font-extrabold text-sm text-slate-900 leading-snug">${m.name}</h3>
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 ${m.station === 'COCINA' ? 'bg-orange-50 text-orange-700' : 'bg-sky-50 text-sky-700'}">${m.station}</span>
-              </div>
-              <p class="text-xs text-slate-500 mt-1 leading-relaxed">${m.desc}</p>
-            </div>
-            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span class="text-base font-extrabold text-slate-900">${money(m.price)}</span>
-              <button type="button" data-open-cust="${m.id}" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold transition-colors">
-                + Agregar
-              </button>
-            </div>
-          </div>
-        `).join('');
+        document.getElementById('client-menu-grid').innerHTML = items.length
+          ? items.map(m => `
+              <article class="carta-product-card">
+                <div>
+                  <div class="carta-product-card-head">
+                    <h3>${m.name}</h3>
+                    <span class="carta-station-tag ${m.station === 'COCINA' ? 'is-kitchen' : 'is-bar'}">${m.station}</span>
+                  </div>
+                  <p class="carta-product-card-desc">${m.desc}</p>
+                </div>
+                <div class="carta-product-card-foot">
+                  <span class="carta-product-card-price">${money(m.price)}</span>
+                  <button type="button" data-open-cust="${m.id}" class="carta-product-add">+ Agregar</button>
+                </div>
+              </article>
+            `).join('')
+          : '<p class="carta-explore-empty">No encontramos platos que coincidan con tu búsqueda.</p>';
 
         renderClientCart();
         requestAnimationFrame(() => syncBookLayout());
@@ -2294,7 +2371,6 @@
             cartEl.removeAttribute('role');
             cartEl.removeAttribute('aria-modal');
           }
-          syncPublicBackgroundInert(cartDrawerOpen);
         } else {
           cartDrawerOpen = false;
           backdrop.hidden = true;
@@ -2302,21 +2378,31 @@
           cartEl.hidden = !showInlineCart;
           cartEl.removeAttribute('role');
           cartEl.removeAttribute('aria-modal');
-          syncPublicBackgroundInert(false);
         }
+        syncPublicBackgroundInert();
         document.getElementById('btn-client-clear').hidden = !units;
         document.getElementById('client-checkout').hidden = !units;
+
         const cartLink = document.getElementById('carta-cart-link');
+        const cartLabel = document.getElementById('carta-cart-label');
+        const mobileCartBtn = document.getElementById('btn-mobile-cart');
+        const mobileBadge = document.getElementById('mobile-nav-cart-badge');
         cartLink.hidden = isPublic ? false : !showInlineCart;
         cartLink.dataset.hasItems = String(units > 0);
         cartLink.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
-        cartLink.textContent = units > 0 ? `Ver pedido (${units}) · ${money(total)}` : 'Ver pedido (0)';
-        document.getElementById('client-cart-total').textContent = money(total);
-        const backCartLink = document.querySelector('.carta-back-cart-link');
-        if (backCartLink) {
-          backCartLink.hidden = !units;
-          backCartLink.textContent = `Ir a tu pedido (${units}) · ${money(total)}`;
+        cartLink.setAttribute('aria-label', units > 0 ? `Pedido (${units} productos, ${money(total)})` : 'Pedido (vacío)');
+        if (cartLabel) cartLabel.textContent = `Pedido (${units})`;
+        if (mobileBadge) {
+          mobileBadge.textContent = String(units);
+          mobileBadge.dataset.hasItems = String(units > 0);
         }
+        if (mobileCartBtn) {
+          mobileCartBtn.dataset.hasItems = String(units > 0);
+          mobileCartBtn.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
+          mobileCartBtn.setAttribute('aria-label', units > 0 ? `Pedido (${units} productos, ${money(total)})` : 'Pedido (vacío)');
+        }
+        document.getElementById('client-cart-total').textContent = money(total);
+        syncNavChromeUI();
         renderBusinessClosedUI();
       }
 
@@ -3026,40 +3112,46 @@
       }
 
       const cartaVisual = document.getElementById('carta-visual');
-      const cartaPages = document.getElementById('carta-pages');
+      const cartaListEl = document.getElementById('carta-list');
       const cartaBookWorkspace = document.getElementById('carta-book-workspace');
       const cartaBookStage = document.getElementById('carta-book-stage');
       const cartaSheet = document.getElementById('carta-sheet');
       const cartaBookFlip = document.getElementById('carta-book-flip');
-      const pageSelect = document.getElementById('carta-page-select');
       const cartaPrev = document.getElementById('carta-prev');
       const cartaNext = document.getElementById('carta-next');
       const cartaPageCounter = document.getElementById('carta-page-counter');
-      const cartaPageTitle = document.getElementById('carta-page-title');
-      const cartaBookDots = document.getElementById('carta-book-dots');
       const cartaBookStatus = document.getElementById('carta-book-status');
-      const cartaLayoutGroup = document.getElementById('carta-layout-group');
-      const cartaLayoutButtons = document.querySelectorAll('[data-carta-layout]');
+      const cartaSidebarList = document.getElementById('carta-sidebar-list');
+      const cartaSheetEl = document.getElementById('carta-category-sheet');
+      const cartaSheetList = document.getElementById('carta-sheet-list');
       const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      const desktopSpreadQuery = window.matchMedia('(min-width: 1024px)');
       const menuById = new Map(MENU.map(item => [item.id, item]));
       const preloadedPages = new Set();
 
       let currentCartaPage = 0;
-      let cartaLayoutPref = 'auto'; // 'auto' | 'single' | 'spread'
-      let lastBookView = { spread: false, left: null, right: null };
+      let lastBookView = { showTwoPages: false, left: null, right: null };
       let bookFlipTimer = null;
       let suppressSpotClickUntil = 0;
 
-      menuPages.forEach((page, index) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = `${index + 1}. ${page.title}`;
-        button.addEventListener('click', () => showCartaPage(index, { animate: true, announce: true }));
-        cartaPages.append(button);
-        pageSelect.add(new Option(`${index + 1}. ${page.title}`, index));
-      });
-      pageSelect.addEventListener('change', () => showCartaPage(Number(pageSelect.value), { animate: true, announce: true }));
+      document.getElementById('carta-brand-icon').innerHTML = burgerIconSvg(24);
+      renderCategoryNav(cartaSidebarList, { variant: 'sidebar' });
+      renderCategoryNav(cartaSheetList, { variant: 'sheet' });
+
+      function syncNavChromeUI() {
+        const format = cartaVisual.hidden ? 'list' : 'visual';
+        document.querySelectorAll('[data-menu-format]').forEach(button => {
+          button.setAttribute('aria-pressed', String(button.dataset.menuFormat === format));
+        });
+        document.querySelectorAll('[data-mobile-nav]').forEach(button => {
+          const target = button.dataset.mobileNav;
+          let active = false;
+          if (target === 'categories') active = categorySheetOpen;
+          else if (target === 'cart') active = cartDrawerOpen;
+          else active = !categorySheetOpen && !cartDrawerOpen && target === format;
+          button.setAttribute('aria-pressed', String(active));
+        });
+        document.getElementById('btn-mobile-categories')?.setAttribute('aria-expanded', String(categorySheetOpen));
+      }
 
       function preloadPageImage(index) {
         if (index < 0 || index >= menuPages.length || preloadedPages.has(index)) return;
@@ -3068,113 +3160,37 @@
         preload.src = `./carta/carta-${index + 1}-720.webp`;
       }
 
-      function canFitSpread() {
+      function availableBookHeight() {
+        const isPublic = document.body.hasAttribute('data-public-menu');
+        const headerH = document.querySelector('.carta-header')?.getBoundingClientRect().height || 60;
+        const staffHeroH = isPublic
+          ? 0
+          : (document.getElementById('staff-menu-hero')?.getBoundingClientRect().height || 0);
+        const closedEl = document.getElementById('business-closed-banner');
+        const closedH = closedEl && !closedEl.hidden ? closedEl.getBoundingClientRect().height : 0;
+        const trackerEl = document.getElementById('client-tracker-wrap');
+        const trackerH = !isPublic && trackerEl && !trackerEl.classList.contains('hidden')
+          ? trackerEl.getBoundingClientRect().height + 14
+          : 0;
+        const mobileNavH = window.innerWidth < 1024 ? 72 : 0;
+        return Math.max(280, window.innerHeight - headerH - staffHeroH - closedH - trackerH - mobileNavH - 84);
+      }
+
+      function canSpreadLayout() {
         const width = cartaBookWorkspace.clientWidth;
-        const threshold = document.body.hasAttribute('data-public-menu') ? 900 : 780;
-        return desktopSpreadQuery.matches && width >= threshold;
-      }
-
-      function isSpreadActive() {
-        return canFitSpread() && cartaLayoutPref !== 'single';
-      }
-
-      function updateBookLayoutControls() {
-        const visualVisible = !cartaVisual.hidden;
-        const canSpread = canFitSpread();
-        cartaLayoutGroup.hidden = !visualVisible || !canSpread;
-        const spreadOn = isSpreadActive();
-        cartaLayoutButtons.forEach(btn => {
-          const pressed = (btn.dataset.cartaLayout === 'spread') === spreadOn;
-          btn.setAttribute('aria-pressed', String(pressed));
+        if (!width) return false;
+        const arrowsReserve = window.innerWidth >= 768 ? 124 : 0;
+        const maxBookH = availableBookHeight();
+        cartaVisual.style.setProperty('--carta-book-max-h', `${Math.round(maxBookH)}px`);
+        return canFitBookSpread({
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          stageContainerWidth: Math.max(0, width - arrowsReserve),
+          maxBookHeight: maxBookH
         });
-      }
-
-      function createMenuPageLeaf(index, spread, side) {
-        const page = menuPages[index];
-        const leaf = document.createElement('article');
-        leaf.className = `carta-page-leaf carta-page-leaf--${side}`;
-        leaf.dataset.pageIndex = String(index);
-        leaf.setAttribute('aria-label', `Página ${index + 1} de ${menuPages.length}: ${page.title}`);
-
-        const heading = document.createElement('h3');
-        heading.className = 'sr-only';
-        heading.textContent = `Página ${index + 1}: ${page.title}`;
-
-        const image = new Image(559, 790);
-        image.alt = `Carta de The Burgers Brother, página ${index + 1} de ${menuPages.length}: ${page.title}`;
-        image.draggable = false;
-        const path = `./carta/carta-${index + 1}`;
-        image.sizes = spread ? '(max-width: 1200px) 420px, 500px' : '(max-width: 600px) calc(100vw - 48px), 620px';
-        image.srcset = `${path}-720.webp 720w, ${path}-1120.webp 1120w`;
-        image.src = `${path}-720.webp`;
-        image.addEventListener('error', () => showMenuFormat('list'), { once: true });
-
-        const buttons = page.spots.map(({ id, left, right, top, bottom, showPrice }) => {
-          const item = menuById.get(id);
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'carta-spot';
-          button.dataset.openCust = id;
-          button.dataset.pageIndex = String(index);
-          if (showPrice) {
-            button.classList.add('carta-spot-priced');
-            const price = document.createElement('span');
-            price.textContent = money(item.price);
-            price.setAttribute('aria-hidden', 'true');
-            button.append(price);
-          }
-          button.setAttribute('aria-label', `${item.name}, ${money(item.price)}. Personalizar y agregar`);
-          button.style.left = `${left / 559 * 100}%`;
-          button.style.top = `${top / 790 * 100}%`;
-          button.style.width = `${(right - left) / 559 * 100}%`;
-          button.style.height = `${(bottom - top) / 790 * 100}%`;
-          return button;
-        });
-
-        const pageBadge = document.createElement('span');
-        pageBadge.className = 'carta-leaf-number';
-        pageBadge.setAttribute('aria-hidden', 'true');
-        pageBadge.textContent = `${index + 1}`;
-
-        leaf.append(heading, image, ...buttons, pageBadge);
-        return leaf;
-      }
-
-      function createBackLeaf() {
-        const leaf = document.createElement('aside');
-        leaf.className = 'carta-page-leaf carta-page-leaf--right carta-back-leaf';
-        leaf.setAttribute('aria-label', 'Contraportada de la carta');
-        const units = ui.clientCart.reduce((sum, item) => sum + item.qty, 0);
-        const { total } = priceOrder(ui.clientCart, {
-          ...clientPackaging(),
-          tapers: clientTapers.checkValidity() ? clientPackaging().tapers : 0,
-          channel: ui.clientMode,
-          paymentMethod: ui.clientDelPay
-        });
-        leaf.innerHTML = `
-          <div class="carta-back-inner">
-            <img src="./logo-burgers-brother.webp" width="84" height="84" alt="" class="carta-back-logo">
-            <p class="carta-back-kicker">Fin de la carta</p>
-            <h3>THE BURGERS BROTHER</h3>
-            <p class="carta-back-copy">Toca cualquier plato en las páginas anteriores para elegir cremas, extras o sabores de alitas.</p>
-            <div class="carta-back-actions">
-              <button type="button" data-carta-go="0" class="carta-back-btn carta-back-btn-primary">Volver a la página 1</button>
-              <button type="button" data-carta-switch-list class="carta-back-btn">Ver lista y buscar</button>
-              <button type="button" class="carta-back-cart-link" ${units > 0 ? '' : 'hidden'}>Ir a tu pedido (${units}) · ${money(total)}</button>
-            </div>
-            <p class="carta-back-meta">Pedidos y Yape/Plin: <strong>958 656 930</strong><br>Arequipa · Perú</p>
-          </div>
-        `;
-        return leaf;
       }
 
       function createFlipFaceContent(pageIndex) {
-        if (pageIndex === null) {
-          const box = document.createElement('div');
-          box.className = 'carta-flip-backcover';
-          box.innerHTML = '<img src="./logo-burgers-brother.webp" alt=""><span>THE BURGERS BROTHER</span>';
-          return box;
-        }
         const img = new Image();
         img.src = `./carta/carta-${pageIndex + 1}-720.webp`;
         img.alt = '';
@@ -3185,12 +3201,12 @@
       function triggerBookFlip(prev, next) {
         clearTimeout(bookFlipTimer);
         cartaBookFlip.replaceChildren();
-        if (reducedMotionQuery.matches || prev.left === null || prev.spread !== next.spread || prev.left === next.left) return;
+        if (reducedMotionQuery.matches || prev.left === null || prev.showTwoPages !== next.showTwoPages || prev.left === next.left) return;
 
         const dir = next.left > prev.left ? 'next' : 'prev';
-        cartaBookFlip.dataset.bookMode = next.spread ? 'spread' : 'single';
+        cartaBookFlip.dataset.bookMode = next.showTwoPages ? 'spread' : 'single';
 
-        if (!next.spread) {
+        if (!next.showTwoPages) {
           const sheet = document.createElement('div');
           sheet.className = `carta-flip-sheet carta-flip-sheet--${dir}`;
           const front = document.createElement('div');
@@ -3220,69 +3236,63 @@
           leaf.addEventListener('animationend', () => cartaBookFlip.replaceChildren(), { once: true });
         }
 
-        bookFlipTimer = setTimeout(() => cartaBookFlip.replaceChildren(), 520);
+        bookFlipTimer = setTimeout(() => cartaBookFlip.replaceChildren(), 460);
       }
 
       function showCartaPage(index, { animate = false, announce = false } = {}) {
         const clamped = Math.max(0, Math.min(menuPages.length - 1, index));
-        const spread = isSpreadActive();
-        const left = spread ? Math.floor(clamped / 2) * 2 : clamped;
-        const right = spread && left + 1 < menuPages.length ? left + 1 : null;
+        const canSpread = canSpreadLayout();
+        const left = canSpread ? Math.floor(clamped / 2) * 2 : clamped;
+        const right = canSpread && left + 1 < menuPages.length ? left + 1 : null;
+        const showTwoPages = canSpread && right !== null;
         const prev = { ...lastBookView };
 
         currentCartaPage = clamped;
-        lastBookView = { spread, left, right };
-        updateBookLayoutControls();
+        lastBookView = { showTwoPages, left, right };
 
-        pageSelect.value = String(left);
-        Array.from(cartaPages.children).forEach((button, position) => {
-          const active = position === left || (spread && position === right);
-          button.setAttribute('aria-pressed', String(active));
-          button.setAttribute('aria-current', active ? 'page' : 'false');
-        });
+        syncCategoryNavState(clamped, showTwoPages ? left : null, showTwoPages ? right : null);
         document.getElementById('carta-drinks-note').hidden = !(left === 2 || right === 2);
 
-        const counterText = right !== null
-          ? `Páginas ${left + 1}–${right + 1} de ${menuPages.length}`
-          : `Página ${left + 1} de ${menuPages.length}`;
-        const titleText = right !== null
-          ? `${menuPages[left].title} · ${menuPages[right].title}`
-          : menuPages[left].title;
-
+        const counterText = showTwoPages
+          ? `${left + 1}–${right + 1} de ${menuPages.length}`
+          : `${left + 1} de ${menuPages.length}`;
         cartaPageCounter.textContent = counterText;
-        cartaPageTitle.textContent = titleText;
 
         const atStart = left === 0;
-        const atEnd = spread ? left + 2 >= menuPages.length : left >= menuPages.length - 1;
+        const atEnd = canSpread ? left + 2 >= menuPages.length : left >= menuPages.length - 1;
         cartaPrev.setAttribute('aria-disabled', String(atStart));
         cartaNext.setAttribute('aria-disabled', String(atEnd));
 
-        const prevIndex = Math.max(0, left - (spread ? 2 : 1));
-        const nextIndex = Math.min(menuPages.length - 1, left + (spread ? 2 : 1));
+        const prevIndex = Math.max(0, left - (canSpread ? 2 : 1));
+        const nextIndex = Math.min(menuPages.length - 1, left + (canSpread ? 2 : 1));
         cartaPrev.setAttribute('aria-label', atStart ? 'Página anterior (inicio de la carta)' : `Página anterior: ${menuPages[prevIndex].title}`);
         cartaNext.setAttribute('aria-label', atEnd ? 'Siguiente página (fin de la carta)' : `Siguiente página: ${menuPages[nextIndex].title}`);
 
-        cartaBookDots.replaceChildren(...menuPages.map((_, pos) => {
-          const dot = document.createElement('span');
-          const active = pos === left || (spread && pos === right);
-          dot.className = `carta-book-dot${active ? ' is-active' : ''}`;
-          return dot;
-        }));
-
-        cartaSheet.dataset.bookMode = spread ? 'spread' : 'single';
+        cartaSheet.dataset.bookMode = showTwoPages ? 'spread' : 'single';
         cartaSheet.dataset.remaining = String(Math.max(0, menuPages.length - 1 - (right ?? left)));
 
-        if (spread) {
+        const buildLeaf = (idx, spread, side) => buildMenuPageLeaf({
+          page: menuPages[idx],
+          index: idx,
+          totalPages: menuPages.length,
+          spread,
+          side,
+          menuById,
+          formatMoney: money,
+          onImageError: () => showMenuFormat('list')
+        });
+
+        if (showTwoPages) {
           const spine = document.createElement('div');
           spine.className = 'carta-book-spine';
           spine.setAttribute('aria-hidden', 'true');
           cartaSheet.replaceChildren(
-            createMenuPageLeaf(left, true, 'left'),
+            buildLeaf(left, true, 'left'),
             spine,
-            right !== null ? createMenuPageLeaf(right, true, 'right') : createBackLeaf()
+            buildLeaf(right, true, 'right')
           );
         } else {
-          cartaSheet.replaceChildren(createMenuPageLeaf(left, false, 'single'));
+          cartaSheet.replaceChildren(buildLeaf(left, false, 'single'));
         }
 
         if (animate) triggerBookFlip(prev, lastBookView);
@@ -3291,7 +3301,10 @@
           cartaBookFlip.replaceChildren();
         }
 
-        if (announce) cartaBookStatus.textContent = `${counterText}: ${titleText}`;
+        if (announce) {
+          const titleText = showTwoPages ? `${menuPages[left].title} · ${menuPages[right].title}` : menuPages[left].title;
+          cartaBookStatus.textContent = `Página ${counterText}: ${titleText}`;
+        }
 
         preloadPageImage(left - 1);
         preloadPageImage((right ?? left) + 1);
@@ -3299,20 +3312,24 @@
       }
 
       function stepCartaBook(delta) {
-        const spread = isSpreadActive();
-        const step = spread ? delta * 2 : delta;
-        const base = spread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
+        const canSpread = canSpreadLayout();
+        const step = canSpread ? delta * 2 : delta;
+        const base = canSpread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
         const target = base + step;
         if (target < 0 || target >= menuPages.length) return;
         showCartaPage(target, { animate: true, announce: true });
       }
 
       function syncBookLayout() {
-        updateBookLayoutControls();
+        if (window.innerWidth >= 1024 && categorySheetOpen) {
+          closeCategorySheet({ restoreFocus: false });
+        }
         if (cartaVisual.hidden || cartaBookWorkspace.clientWidth === 0) return;
-        const spread = isSpreadActive();
-        const expectedLeft = spread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
-        if (spread !== lastBookView.spread || expectedLeft !== lastBookView.left) {
+        const canSpread = canSpreadLayout();
+        const expectedLeft = canSpread ? Math.floor(currentCartaPage / 2) * 2 : currentCartaPage;
+        const expectedRight = canSpread && expectedLeft + 1 < menuPages.length ? expectedLeft + 1 : null;
+        const expectedShowTwo = canSpread && expectedRight !== null;
+        if (expectedShowTwo !== lastBookView.showTwoPages || expectedLeft !== lastBookView.left) {
           showCartaPage(currentCartaPage, { animate: false, announce: false });
         }
       }
@@ -3322,13 +3339,6 @@
       });
       cartaNext.addEventListener('click', () => {
         if (cartaNext.getAttribute('aria-disabled') !== 'true') stepCartaBook(1);
-      });
-
-      cartaLayoutButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          cartaLayoutPref = button.dataset.cartaLayout;
-          showCartaPage(currentCartaPage, { animate: false, announce: true });
-        });
       });
 
       document.querySelector('.menu-browser').addEventListener('keydown', event => {
@@ -3341,32 +3351,53 @@
         } else if (event.key === 'ArrowRight') {
           event.preventDefault();
           stepCartaBook(1);
-        } else if (event.key === 'Home' && event.target.closest('#carta-pages, .carta-book-workspace')) {
+        } else if (event.key === 'Home' && event.target.closest('.carta-sidebar, .carta-book-workspace')) {
           event.preventDefault();
           showCartaPage(0, { animate: true, announce: true });
-        } else if (event.key === 'End' && event.target.closest('#carta-pages, .carta-book-workspace')) {
+        } else if (event.key === 'End' && event.target.closest('.carta-sidebar, .carta-book-workspace')) {
           event.preventDefault();
           showCartaPage(menuPages.length - 1, { animate: true, announce: true });
         }
       });
 
       let touchSwipeStart = null;
+      const activeTouchIds = new Set();
+      const isPinchZoomed = () => (window.visualViewport?.scale ?? 1) > 1.05;
+
       cartaBookStage.addEventListener('pointerdown', event => {
-        if (event.pointerType !== 'touch') return;
-        touchSwipeStart = { id: event.pointerId, x: event.clientX, y: event.clientY, time: Date.now() };
+        if (event.pointerType === 'touch') {
+          activeTouchIds.add(event.pointerId);
+          if (activeTouchIds.size > 1 || isPinchZoomed()) {
+            touchSwipeStart = null;
+            return;
+          }
+        } else if (event.pointerType === 'mouse' && event.button !== 0) {
+          return;
+        }
+        touchSwipeStart = { id: event.pointerId, type: event.pointerType, x: event.clientX, y: event.clientY, time: Date.now() };
       });
-      cartaBookStage.addEventListener('pointerup', event => {
+      cartaBookStage.addEventListener('pointermove', event => {
+        if (event.pointerType === 'touch' && (activeTouchIds.size > 1 || isPinchZoomed())) {
+          touchSwipeStart = null;
+        }
+      });
+      const endCartaSwipe = event => {
+        if (event.pointerType === 'touch') activeTouchIds.delete(event.pointerId);
         if (!touchSwipeStart || event.pointerId !== touchSwipeStart.id) return;
         const dx = event.clientX - touchSwipeStart.x;
         const dy = event.clientY - touchSwipeStart.y;
         const dt = Date.now() - touchSwipeStart.time;
         touchSwipeStart = null;
-        if (dt < 700 && Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+        if (activeTouchIds.size === 0 && !isPinchZoomed() && dt < 700 && Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.35) {
           suppressSpotClickUntil = Date.now() + 350;
           stepCartaBook(dx < 0 ? 1 : -1);
         }
+      };
+      cartaBookStage.addEventListener('pointerup', endCartaSwipe);
+      cartaBookStage.addEventListener('pointercancel', event => {
+        if (event.pointerType === 'touch') activeTouchIds.delete(event.pointerId);
+        touchSwipeStart = null;
       });
-      cartaBookStage.addEventListener('pointercancel', () => { touchSwipeStart = null; });
       cartaBookStage.addEventListener('click', event => {
         if (Date.now() < suppressSpotClickUntil) {
           event.preventDefault();
@@ -3375,24 +3406,60 @@
       }, true);
 
       if ('ResizeObserver' in window) {
-        new ResizeObserver(() => syncBookLayout()).observe(cartaBookWorkspace);
-      } else {
-        window.addEventListener('resize', syncBookLayout);
+        let resizeRaf = 0;
+        new ResizeObserver(() => {
+          if (resizeRaf) cancelAnimationFrame(resizeRaf);
+          resizeRaf = requestAnimationFrame(() => {
+            resizeRaf = 0;
+            syncBookLayout();
+          });
+        }).observe(cartaBookWorkspace);
       }
-      desktopSpreadQuery.addEventListener?.('change', syncBookLayout);
+      window.addEventListener('resize', () => syncBookLayout());
 
       const formatButtons = document.querySelectorAll('[data-menu-format]');
-      function showMenuFormat(format) {
+      function showMenuFormat(format, { focusSearch = false } = {}) {
         cartaVisual.hidden = format !== 'visual';
-        document.getElementById('carta-list').hidden = format !== 'list';
-        formatButtons.forEach(button => {
-          button.setAttribute('aria-pressed', String(button.dataset.menuFormat === format));
-        });
-        syncBookLayout();
+        cartaListEl.hidden = format !== 'list';
+        syncNavChromeUI();
+        if (format === 'visual') {
+          requestAnimationFrame(() => syncBookLayout());
+        } else if (focusSearch) {
+          requestAnimationFrame(() => document.getElementById('client-search')?.focus({ preventScroll: true }));
+        }
       }
       formatButtons.forEach(button => {
-        button.addEventListener('click', () => showMenuFormat(button.dataset.menuFormat));
+        button.addEventListener('click', () => {
+          showMenuFormat(button.dataset.menuFormat, { focusSearch: button.dataset.menuFormat === 'list' });
+        });
       });
+
+      document.getElementById('carta-mobile-nav')?.addEventListener('click', event => {
+        const navBtn = event.target.closest('[data-mobile-nav]');
+        if (!navBtn) return;
+        const target = navBtn.dataset.mobileNav;
+        if (target === 'visual') {
+          if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
+          if (cartDrawerOpen) closeCartDrawer({ restoreFocus: false });
+          showMenuFormat('visual');
+        } else if (target === 'categories') {
+          if (categorySheetOpen) closeCategorySheet();
+          else openCategorySheet(navBtn);
+        } else if (target === 'list') {
+          if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
+          if (cartDrawerOpen) closeCartDrawer({ restoreFocus: false });
+          showMenuFormat('list', { focusSearch: true });
+        } else if (target === 'cart') {
+          if (cartDrawerOpen) closeCartDrawer();
+          else openCartDrawer(navBtn);
+        }
+      });
+
+      document.getElementById('btn-close-category-sheet')?.addEventListener('click', () => closeCategorySheet());
+      document.getElementById('carta-sheet-backdrop')?.addEventListener('click', () => closeCategorySheet());
+      bindBottomSheetSwipe(cartaSheetEl, cartaSheetList, () => closeCategorySheet({ restoreFocus: true }));
+
+      showMenuFormat('visual');
       showCartaPage(0, { animate: false, announce: false });
 
       // ==================== CUSTOMIZE ITEM MODAL ====================
@@ -3515,16 +3582,16 @@
           return;
         }
 
-        const goPage = e.target.closest('[data-carta-go]');
-        if (goPage) {
-          showCartaPage(Number(goPage.dataset.cartaGo), { animate: true, announce: true });
-          return;
-        }
-
-        const switchList = e.target.closest('[data-carta-switch-list]');
-        if (switchList) {
-          showMenuFormat('list');
-          document.getElementById('client-search')?.focus();
+        const catNav = e.target.closest('[data-carta-category-page]');
+        if (catNav) {
+          const targetPage = Number(catNav.dataset.cartaCategoryPage);
+          const fromSheet = Boolean(catNav.closest('#carta-category-sheet'));
+          if (categorySheetOpen) closeCategorySheet({ restoreFocus: false });
+          if (cartaVisual.hidden) showMenuFormat('visual');
+          showCartaPage(targetPage, { animate: true, announce: true });
+          if (fromSheet) {
+            document.querySelector('#carta-book-stage .carta-spot')?.focus({ preventScroll: true });
+          }
           return;
         }
 
@@ -4104,12 +4171,14 @@
         ui.clientCart.push(item);
         customizeDialog.close();
         renderClientCart();
-        const cartLink = document.getElementById('carta-cart-link');
-        cartLink.classList.remove('is-updated');
-        void cartLink.offsetWidth;
-        cartLink.classList.add('is-updated');
+        for (const el of [document.getElementById('carta-cart-link'), document.getElementById('btn-mobile-cart')]) {
+          if (!el) continue;
+          el.classList.remove('is-updated');
+          void el.offsetWidth;
+          el.classList.add('is-updated');
+        }
         document.getElementById('cart-announcement').textContent = m.name + ' agregado. ' +
-          cartLink.textContent;
+          (document.getElementById('carta-cart-label')?.textContent || 'Pedido');
       });
 
       const clientCheckout = document.getElementById('client-checkout');
@@ -4805,22 +4874,18 @@
         document.documentElement.removeAttribute('data-staff-loading');
         staffMenu = false;
         syncBusinessStatus();
-        if (!h) {
-          ui.clientMode = 'DELIVERY';
-          switchRole('cliente', { updateHash: false });
-          return;
-        }
-        if (/^[1-6]$/.test(params.get('mesa') || '')) {
-          const m = `Mesa ${params.get('mesa')}`;
+        const routeParams = h ? params : new URLSearchParams(window.location.search);
+        if (/^[1-6]$/.test(routeParams.get('mesa') || '')) {
+          const m = `Mesa ${routeParams.get('mesa')}`;
           ui.clientMode = 'MESA';
           ui.clientMesa = m;
           const sel = document.getElementById('client-mesa-select');
           if (sel && Array.from(sel.options).some(o => o.value === m)) sel.value = m;
           switchRole('cliente', { updateHash: false });
-        } else if (params.has('delivery')) {
+        } else if (routeParams.has('delivery')) {
           ui.clientMode = 'DELIVERY';
           switchRole('cliente', { updateHash: false });
-        } else if (params.has('chef')) {
+        } else if (h && params.has('chef')) {
           showToast('El QR no contiene un código de pedido válido.', 'err');
           ui.clientMode = 'DELIVERY';
           switchRole('cliente', { updateHash: false });
@@ -4828,14 +4893,6 @@
           ui.clientMode = 'DELIVERY';
           switchRole('cliente', { updateHash: false });
         }
-      }
-
-      if ('IntersectionObserver' in window) {
-        const cart = document.getElementById('client-cart');
-        const cartObserver = new IntersectionObserver(([entry]) => {
-          document.body.toggleAttribute('data-cart-in-view', entry.isIntersecting);
-        }, { rootMargin: '0px 0px -80px 0px' });
-        cartObserver.observe(cart);
       }
 
       function focusClientCart() {
@@ -4859,18 +4916,18 @@
       });
       document.getElementById('btn-close-cart-drawer').addEventListener('click', () => closeCartDrawer());
       document.getElementById('cart-drawer-backdrop').addEventListener('click', () => closeCartDrawer());
-      document.getElementById('carta-sheet').addEventListener('click', event => {
-        const backBtn = event.target.closest('.carta-back-cart-link');
-        if (!backBtn) return;
-        event.preventDefault();
-        if (document.body.hasAttribute('data-public-menu')) openCartDrawer(backBtn);
-        else focusClientCart();
-      });
       document.addEventListener('keydown', event => {
-        if (event.key !== 'Escape' || !cartDrawerOpen) return;
+        if (event.key !== 'Escape') return;
         if (document.querySelector('dialog[open], [id^="modal-"].fixed:not(.hidden)')) return;
-        event.preventDefault();
-        closeCartDrawer({ restoreFocus: true });
+        if (categorySheetOpen) {
+          event.preventDefault();
+          closeCategorySheet({ restoreFocus: true });
+          return;
+        }
+        if (cartDrawerOpen) {
+          event.preventDefault();
+          closeCartDrawer({ restoreFocus: true });
+        }
       });
       window.addEventListener('hashchange', () => applyHashRoute(window.location.hash));
       staffLoadingRetry.onclick = () => applyHashRoute(window.location.hash);
