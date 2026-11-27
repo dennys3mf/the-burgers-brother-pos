@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <link rel="icon" type="image/png" href="./favicon.png">
+  <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
   <link rel="stylesheet" href="./vendor/tailwind.css">
   <script defer src="./vendor/lucide.min.js"></script>
@@ -1545,8 +1546,23 @@
         return Math.round(value * 1000) / 1000;
       }
 
+      const CANONICAL_SITE_ORIGIN = 'https://theburgersbrother.com';
+      const CANONICAL_SITE_HOSTS = new Set([
+        'theburgersbrother.com',
+        'www.theburgersbrother.com',
+        'the-burgers-brother-pos.pages.dev'
+      ]);
+
+      function publicOrigin(loc = window.location) {
+        return CANONICAL_SITE_HOSTS.has(loc.hostname) ? CANONICAL_SITE_ORIGIN : loc.origin;
+      }
+
+      function publicPath(loc = window.location) {
+        return loc.pathname.startsWith('/personal') ? '/' : loc.pathname;
+      }
+
       function serviceTicketUrl(order) {
-        const url = new URL(location.pathname, location.origin);
+        const url = new URL(publicPath(), publicOrigin());
         url.hash = new URLSearchParams({ chef: order.code }).toString();
         return url.href;
       }
@@ -3896,8 +3912,7 @@
         try {
           const loc = window.location;
           if (loc && (loc.protocol === 'https:' || loc.protocol === 'http:') && !loc.hostname.includes('googleusercontent') && loc.hostname !== 'about') {
-            const path = loc.pathname.startsWith('/personal') ? '/' : loc.pathname;
-            return `${loc.origin}${path}`;
+            return `${publicOrigin(loc)}${publicPath(loc)}`;
           }
         } catch (e) {}
         return '';
