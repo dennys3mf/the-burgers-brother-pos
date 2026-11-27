@@ -46,9 +46,10 @@ export const MENU = [
   { id: 'm23', name: 'Salchipapa Especial', cat: 'Salchipapas y Broster', station: 'COCINA', price: 23.00, desc: 'Papas nativas, salchicha ahumada, salchicha arequipeña, huevo y pollo desmenuzado.', recipe: [{ id: 'ing_papas', qty: 1 }, { id: 'ing_salchicha', qty: 2 }, { id: 'ing_huevo', qty: 1 }, { id: 'ing_pollo', qty: 1 }] },
 
   // Page 3: Bebidas, Jarras, Infusiones y Frappes
-  { id: 'm24', name: 'Inka Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
-  { id: 'm25', name: 'Coca Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
-  { id: 'm26', name: 'Fanta / Sprite 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml (indicar sabor en nota).', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+  { id: 'm24', retired: true, name: 'Inka Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+  { id: 'm25', retired: true, name: 'Coca Cola 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+  { id: 'm26', retired: true, name: 'Fanta / Sprite 600ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Botella personal 600 ml (indicar sabor en nota).', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
+  { id: 'm45', name: 'Bebida 600 ml', cat: 'Bebidas y Frappes', station: 'BARRA', price: 5.00, desc: 'Elige Inka Cola, Coca Cola, Fanta o Sprite (600 ml).', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
   { id: 'm27', name: 'Agua Botella', cat: 'Bebidas y Frappes', station: 'BARRA', price: 3.00, desc: 'Agua sin gas botella personal.', recipe: [{ id: 'ing_gaseosa', qty: 1 }] },
   { id: 'm28', name: 'Jarra 1L (Maracuyá / Limonada / Chicha)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 12.00, desc: 'Jarra 1 litro (Maracuyá, Limonada, Emoliente, Linaza o Chicha).', recipe: [{ id: 'ing_pulpa', qty: 1 }] },
   { id: 'm29', name: 'Infusión (Maracuyá / Mango / Cherry / Emoliente)', cat: 'Bebidas y Frappes', station: 'BARRA', price: 7.00, desc: 'Infusión artesanal caliente o fría.', recipe: [{ id: 'ing_pulpa', qty: 1 }] },

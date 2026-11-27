@@ -25,7 +25,7 @@ export const menuPages = [
     title: 'Bebidas',
     spots: [
       ...column(20, 181, [
-        ['m24', 101, 123], ['m25', 124, 146], ['m26', 147, 193],
+        ['m45', 70, 196],
         ['m28', 232, 412], ['m29', 431, 614]
       ]),
       ...column(309, 385, [['m27', 346, 383]]),
@@ -52,7 +52,7 @@ export const menuPages = [
 ];
 
 export const drinkOptions = {
-  m26: ['Fanta', 'Sprite'],
+  m45: ['Inka Cola', 'Coca Cola', 'Fanta', 'Sprite'],
   m28: ['Maracuyá', 'Limonada', 'Emoliente', 'Linaza', 'Chicha'],
   m29: ['Maracuyá', 'Mango', 'Cherry', 'Caramelo', 'Emoliente', 'Linaza'],
   m30: ['Oreo', 'Fresa', 'Café'],
