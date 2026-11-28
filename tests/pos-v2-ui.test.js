@@ -268,6 +268,41 @@ test('Nuevo pedido dedicated Split View isolates light POS presentation, single 
   assert.match(htmlSrc, /function syncDeliveryGpsViews\(\)\s*\{\s*syncDeliveryLocationUI\(\);\s*syncNpDeliveryLocationUI\(\);/s);
 });
 
+test('staff login uses Phosphor icons, two-line accessible profile selector, and zero yellow top stripe', () => {
+  const loginHtml = readFileSync(new URL('../public/personal/index.html', import.meta.url), 'utf8');
+  const loginJs = readFileSync(new URL('../public/personal/login.js', import.meta.url), 'utf8');
+  const phosphorSrc = readFileSync(new URL('../public/personal/phosphor-icons.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../public/brand.css', import.meta.url), 'utf8');
+
+  assert.match(loginHtml, /Acceso al POS/);
+  assert.match(loginHtml, /Perfil de acceso/);
+  assert.match(loginHtml, /Clave de acceso/);
+  assert.match(loginHtml, /placeholder="Ingresa tu clave"/);
+  assert.match(loginHtml, /Volver a la carta digital/);
+  assert.match(loginHtml, /logo-burgers-brother\.webp"\s+width="88"\s+height="88"/);
+  assert.ok(!loginHtml.includes('lucide') && !loginJs.includes('lucide'));
+
+  for (const iconName of [
+    'identification-badge-duotone',
+    'chef-hat-duotone',
+    'lock-simple',
+    'eye',
+    'eye-slash',
+    'caret-down',
+    'sign-in',
+    'arrow-left',
+    'warning-circle',
+    'spinner-gap'
+  ]) {
+    assert.ok(phosphorSrc.includes(`"${iconName}"`), `missing Phosphor icon ${iconName}`);
+  }
+  assert.match(loginJs, /Administración/);
+  assert.match(loginJs, /Cocina/);
+  assert.match(loginJs, /Nicol/);
+  assert.ok(!loginJs.includes('Administración · Nicol'));
+  assert.ok(!css.match(/\.staff-login-card\s*\{[^}]*border-top\s*:/s));
+});
+
 test('system sound defaults to enabled, persists mute override cleanly, and handles AudioContext states safely', async () => {
   const htmlSrc = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(htmlSrc, /SOUND_PREF_KEY\s*=\s*'pos-sound-enabled'/);

@@ -4,6 +4,15 @@ Fecha: `2026-11-27`
 
 ---
 
+## [2.2.0] — Rediseño Pantalla de Inicio de Sesión (`/personal/`)
+
+### Cambiado
+- **Tarjeta centrada minimalista (`public/personal/index.html`, `public/brand.css`):** diseño `<= 440px`, borde uniforme `1px solid #DDCFBE` sin franja amarilla superior ni gradientes decorativos, fondo `#F3EDE3` y superficie `#FFFBF5` con tipografía `Inter`.
+- **Encabezado horizontal con logotipo original (`88×88px`):** logotipo circular intacto, separador vertical fino, marca `THE BURGERS BROTHER` y título `Acceso al POS`.
+- **Selector de perfil personalizado accesible y campo de contraseña (`public/personal/login.js`, `public/personal/phosphor-icons.js`):** selector con teclado/ARIA completo (`Administración` / `Nicol` con `IdentificationBadge` Duotone y `Cocina` con `ChefHat` Duotone), campo `56px` con `LockSimple` + conmutador de visibilidad `Eye`/`EyeSlash`, botón principal `Iniciar sesión` (`56px`, `#E5B260`) con estado `SpinnerGap` sin cambio de tamaño y enlace secundario `Volver a la carta digital` (`ArrowLeft`), utilizando exclusivamente Phosphor Icons generados desde `@phosphor-icons/core` vía `scripts/build-assets.mjs`.
+
+---
+
 ## [2.1.0] — Separación Operativa POS Split View en Módulo Nuevo pedido
 
 ### Cambiado
