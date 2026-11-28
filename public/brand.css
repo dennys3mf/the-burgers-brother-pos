@@ -2970,13 +2970,13 @@ html[data-staff-loading] #staff-loading {
   height: 88px;
   border-radius: 50%;
   object-fit: cover;
-  clip-path: circle(48% at 50% 50%);
   flex: none;
   background: var(--login-surface);
+  /* No clip-path: the logo artwork already includes its own black circle border */
 }
 .staff-login-head-sep {
   width: 1px;
-  height: 52px;
+  height: 56px;
   background: var(--login-border);
   flex: none;
 }
@@ -2984,21 +2984,21 @@ html[data-staff-loading] #staff-loading {
   min-width: 0;
 }
 .staff-login-eyebrow {
-  margin: 0 0 3px;
+  margin: 0 0 4px;
   color: var(--login-brand-accent);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 .staff-login-heading h1 {
   margin: 0;
   color: var(--login-text);
-  font-size: 27px;
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
 }
 
 .staff-active-session {

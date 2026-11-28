@@ -1,5 +1,5 @@
 import { preparationEntry } from '../staff-entry.js';
-import { phosphorIconSvg } from './phosphor-icons.js?v=20261127k';
+import { phosphorIconSvg } from './phosphor-icons.js?v=20261127m';
 
 const PROFILES = [
   { value: 'admin', title: 'Administración', user: 'Nicol', icon: 'identification-badge-duotone' },
