@@ -65,6 +65,7 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
 <link rel="stylesheet" href="./brand.css?v=20261127j">
+<link rel="stylesheet" href="./menu-black-gold.css?v=20261128a">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -214,16 +215,16 @@
                 <div class="carta-header-actions">
                   <div class="carta-mode-switch" role="group" aria-label="Formato de la carta">
                     <button type="button" data-menu-format="visual" aria-pressed="true">
-                      <i data-lucide="book-open" aria-hidden="true"></i>
+                      <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M231.65,194.19,198.46,36.38a16,16,0,0,0-19.3-12.39l-29.75,7.46A16,16,0,0,0,138,51.07V40a16,16,0,0,0-16-16H56A16,16,0,0,0,40,40V216a8,8,0,0,0,8,8H208a8,8,0,0,0,0-16H176V95l22.08-5.54,32,152.09a8,8,0,0,0,9.73,6.08,8.14,8.14,0,0,0,5.84-10.31ZM56,40h66V200H56ZM160,200V56l22-5.52V200Z"/></svg>
                       <span>Carta</span>
                     </button>
                     <button type="button" data-menu-format="list" aria-pressed="false">
-                      <i data-lucide="search" aria-hidden="true"></i>
+                      <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,218.34l-50.07-50.07a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.31ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
                       <span>Explorar</span>
                     </button>
                   </div>
                   <button type="button" id="carta-cart-link" class="carta-order-btn" aria-controls="client-cart" aria-expanded="false">
-                    <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                    <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M222.14,58.87A8,8,0,0,0,216,56H54.68L49.79,29.14A16,16,0,0,0,34.05,16H16a8,8,0,0,0,0,16H34.05l32.51,168.86A24,24,0,1,0,98.24,208H160a24,24,0,1,0,23.65-20H98.24a8,8,0,0,1-7.87-6.57L87.48,168H208a16,16,0,0,0,15.72-13.14l16-96A8,8,0,0,0,222.14,58.87ZM80,208a8,8,0,1,1-8-8A8,8,0,0,1,80,208Zm96,0a8,8,0,1,1-8-8A8,8,0,0,1,176,208Z"/></svg>
                     <span id="carta-cart-label">Pedido (0)</span>
                   </button>
                 </div>
@@ -243,14 +244,14 @@
                   <div id="pos-staff-cat-quickbar" class="pos-shell-chrome pos-staff-cat-quickbar" role="navigation" aria-label="Ir a categoría en carta" hidden></div>
                   <div id="carta-book-workspace" class="carta-book-workspace">
                     <button type="button" id="carta-prev" class="carta-nav-btn carta-nav-prev" aria-label="Página anterior">
-                      <i data-lucide="chevron-left" aria-hidden="true"></i>
+                      <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/></svg>
                     </button>
                     <div id="carta-book-stage" class="carta-book-stage">
                       <div id="carta-sheet" class="carta-sheet"></div>
                       <div id="carta-book-flip" class="carta-book-flip" aria-hidden="true"></div>
                     </div>
                     <button type="button" id="carta-next" class="carta-nav-btn carta-nav-next" aria-label="Siguiente página">
-                      <i data-lucide="chevron-right" aria-hidden="true"></i>
+                      <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg>
                     </button>
                     <div class="carta-pagination-bar" aria-live="off">
                       <span id="carta-page-counter" class="carta-page-counter">1 de 5</span>
@@ -263,7 +264,7 @@
                 <div id="carta-list" hidden class="carta-explore-panel">
                   <div class="carta-explore-controls">
                     <div class="carta-search-field">
-                      <i data-lucide="search" aria-hidden="true"></i>
+                      <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,218.34l-50.07-50.07a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.31ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
                       <input id="client-search" type="search" enterkeyhint="search" aria-label="Buscar productos" placeholder="Buscar platos, combos, bebidas o cócteles..." />
                     </div>
                     <div id="client-categories" class="carta-explore-cats" role="group" aria-label="Filtrar lista por categoría"></div>
@@ -278,20 +279,26 @@
         <!-- Mobile & Tablet Fixed Bottom Navigation -->
         <nav id="carta-mobile-nav" class="carta-mobile-nav" aria-label="Navegación de la carta">
           <button type="button" data-mobile-nav="visual" aria-pressed="true">
-            <span class="carta-nav-icon-wrap"><i data-lucide="book-open" aria-hidden="true"></i></span>
+            <span class="carta-nav-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.6A16.08,16.08,0,0,0,121.6,47.14l-.36,1.86L65.37,37.14h0A16,16,0,0,0,46.26,49.63L24.42,165.46a16,16,0,0,0,12.49,18.88l .49.1V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V208h.06l.49-.1A16,16,0,0,0,231.65,194.55ZM136,195.58V208H88V182.22l48,13.36ZM224,208a0,0,0,0,1,0,0V196.42l-83.35-23.17A8,8,0,0,0,128,181.17V216H53.38a0,0,0,0,1-.38,0V208H208a0,0,0,0,1,0,0Z" opacity="0.2"/><path d="M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.6A16.08,16.08,0,0,0,121.6,47.14l-.36,1.86L65.37,37.14h0A16,16,0,0,0,46.26,49.63L24.42,165.46a16,16,0,0,0,12.49,18.88l.49.1V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V208h.06l.49-.1A16,16,0,0,0,231.65,194.55ZM53.38,208H56V195.42l-2.1-.46a0,0,0,0,1,0,0ZM208,224H56V208H208Zm7.49-20.11-3.49.77V208h2.6a0,0,0,0,1-.38,0Zm-3.49-15.24L136,169.17V47.14a0,0,0,0,1,0,0l46.82-10.24a0,0,0,0,1,0,0ZM38.26,166.08l21.84-115.83a0,0,0,0,1,0,0L120,62.4V181.17L40.1,159.42a0,0,0,0,1-.62-.25Z"/></svg>
+            </span>
             <span>Carta</span>
           </button>
           <button type="button" id="btn-mobile-categories" data-mobile-nav="categories" aria-pressed="false" aria-haspopup="dialog" aria-controls="carta-category-sheet" aria-expanded="false">
-            <span class="carta-nav-icon-wrap"><i data-lucide="layout-grid" aria-hidden="true"></i></span>
+            <span class="carta-nav-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48ZM104,136H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z"/></svg>
+            </span>
             <span>Categorías</span>
           </button>
           <button type="button" data-mobile-nav="list" aria-pressed="false">
-            <span class="carta-nav-icon-wrap"><i data-lucide="search" aria-hidden="true"></i></span>
+            <span class="carta-nav-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M229.66,218.34l-50.07-50.07a88,88,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.31ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>
+            </span>
             <span>Explorar</span>
           </button>
           <button type="button" id="btn-mobile-cart" data-mobile-nav="cart" aria-pressed="false" aria-controls="client-cart" aria-expanded="false">
             <span class="carta-nav-icon-wrap">
-              <i data-lucide="shopping-bag" aria-hidden="true"></i>
+              <svg width="22" height="22" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M216,72H180V56a52,52,0,0,0-104,0V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM92,56a36,36,0,0,1,72,0V72H92ZM216,200H40V88H216V200Z"/></svg>
               <span id="mobile-nav-cart-badge" class="carta-nav-badge" data-has-items="false">0</span>
             </span>
             <span>Pedido</span>
@@ -304,11 +311,11 @@
           <div class="carta-sheet-grabber" aria-hidden="true"><span></span></div>
           <header class="carta-sheet-header">
             <div class="carta-sheet-title-wrap">
-              <i data-lucide="layout-grid" aria-hidden="true"></i>
+              <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48ZM104,136H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z"/></svg>
               <h2 id="category-sheet-title">Categorías</h2>
             </div>
             <button type="button" id="btn-close-category-sheet" class="carta-sheet-close" aria-label="Cerrar categorías">
-              <i data-lucide="x" aria-hidden="true"></i>
+              <svg width="18" height="18" viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
             </button>
           </header>
           <div id="carta-sheet-list" class="carta-sheet-list" role="navigation" aria-label="Categorías de la carta"></div>
@@ -324,11 +331,11 @@
             </div>
             <div class="checkout-header-actions">
               <button type="button" id="btn-client-clear" class="checkout-clear" aria-label="Vaciar todo el pedido">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+                <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192Z"/></svg>
                 <span>Vaciar</span>
               </button>
               <button type="button" id="btn-close-cart-drawer" class="checkout-close" hidden aria-label="Cerrar tu pedido">
-                <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+                <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg>
               </button>
             </div>
           </header>
@@ -345,11 +352,11 @@
             <div class="checkout-fields">
               <div id="client-remote-mode" class="checkout-remote-modes" hidden role="group" aria-label="Tipo de pedido web">
                 <button type="button" id="btn-remote-delivery" data-remote-mode="DELIVERY" class="checkout-remote-btn" aria-pressed="true">
-                  <i data-lucide="bike" aria-hidden="true"></i>
+                  <svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M240,112a16,16,0,0,0-16-16H213.84l-9.52-28.57A16,16,0,0,0,189.14,56H164V40a8,8,0,0,0-8-8H80a8,8,0,0,0,0,16h68V56H66.86a16,16,0,0,0-15.18,10.86L42.16,96H32a16,16,0,0,0-16,16v56a16,16,0,0,0,16,16H42.37A32,32,0,0,0,104,184h48a32,32,0,0,0,61.63-16H224a16,16,0,0,0,16-16Zm-160,56a16,16,0,1,1-16-16A16,16,0,0,1,80,168Zm96,0a16,16,0,1,1-16-16A16,16,0,0,1,176,168Zm48-32H215.3a32,32,0,0,0-62.6,0H104.3a32,32,0,0,0-62.6,0H32V112H224Z"/></svg>
                   <span>Delivery</span>
                 </button>
                 <button type="button" id="btn-remote-recojo" data-remote-mode="RECOJO" class="checkout-remote-btn" aria-pressed="false">
-                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M222.14,58.87A8,8,0,0,0,216,56H54.68L49.79,29.14A16,16,0,0,0,34.05,16H16a8,8,0,0,0,0,16H34.05l32.51,168.86A24,24,0,1,0,98.24,208H160a24,24,0,1,0,23.65-20H98.24a8,8,0,0,1-7.87-6.57L87.48,168H208a16,16,0,0,0,15.72-13.14l16-96A8,8,0,0,0,222.14,58.87ZM80,208a8,8,0,1,1-8-8A8,8,0,0,1,80,208Zm96,0a8,8,0,1,1-8-8A8,8,0,0,1,176,208Z"/></svg>
                   <span>Para llevar (Recoger)</span>
                 </button>
               </div>
@@ -378,7 +385,7 @@
 
               <div id="client-recojo-fields" class="checkout-recojo-card" hidden>
                 <div class="checkout-recojo-head">
-                  <i data-lucide="shopping-bag" aria-hidden="true"></i>
+                  <svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M222.14,58.87A8,8,0,0,0,216,56H54.68L49.79,29.14A16,16,0,0,0,34.05,16H16a8,8,0,0,0,0,16H34.05l32.51,168.86A24,24,0,1,0,98.24,208H160a24,24,0,1,0,23.65-20H98.24a8,8,0,0,1-7.87-6.57L87.48,168H208a16,16,0,0,0,15.72-13.14l16-96A8,8,0,0,0,222.14,58.87ZM80,208a8,8,0,1,1-8-8A8,8,0,0,1,80,208Zm96,0a8,8,0,1,1-8-8A8,8,0,0,1,176,208Z"/></svg>
                   <div>
                     <p class="checkout-recojo-title">Recoges tu pedido en el local</p>
                     <p class="checkout-recojo-sub">No necesitas ingresar ubicación. Pagas al recoger.</p>
@@ -392,7 +399,7 @@
 
               <div id="client-delivery-fields" class="hidden">
                 <div class="checkout-delivery-head">
-                  <i data-lucide="bike" class="w-4 h-4" aria-hidden="true"></i>
+                  <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M240,112a16,16,0,0,0-16-16H213.84l-9.52-28.57A16,16,0,0,0,189.14,56H164V40a8,8,0,0,0-8-8H80a8,8,0,0,0,0,16h68V56H66.86a16,16,0,0,0-15.18,10.86L42.16,96H32a16,16,0,0,0-16,16v56a16,16,0,0,0,16,16H42.37A32,32,0,0,0,104,184h48a32,32,0,0,0,61.63-16H224a16,16,0,0,0,16-16Zm-160,56a16,16,0,1,1-16-16A16,16,0,0,1,80,168Zm96,0a16,16,0,1,1-16-16A16,16,0,0,1,176,168Zm48-32H215.3a32,32,0,0,0-62.6,0H104.3a32,32,0,0,0-62.6,0H32V112H224Z"/></svg>
                   <span>Datos de entrega y pago previo</span>
                 </div>
                 <div class="checkout-field">
@@ -407,11 +414,11 @@
                   <p class="checkout-location-prompt">¿Cómo quieres indicar tu ubicación?</p>
                   <div class="checkout-location-modes" role="group" aria-label="Método para indicar tu ubicación">
                     <button type="button" id="btn-loc-gps" data-del-loc-mode="gps" class="checkout-loc-btn" aria-pressed="false">
-                      <i data-lucide="locate-fixed" aria-hidden="true"></i>
+                      <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM92.69,104a8,8,0,0,1,8-8h70.62a8,8,0,0,1,5.94,13.36l-37.78,42H176a8,8,0,0,1,0,16H104.69a8,8,0,0,1-5.94-13.36l37.78-42H100.69A8,8,0,0,1,92.69,104Z"/></svg>
                       <span>Compartir ubicación exacta</span>
                     </button>
                     <button type="button" id="btn-loc-manual" data-del-loc-mode="manual" class="checkout-loc-btn" aria-pressed="false">
-                      <i data-lucide="map-pin" aria-hidden="true"></i>
+                      <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128,16a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,16Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,192Zm0-104a12,12,0,1,1,12-12A12,12,0,0,1,128,88Zm4,24v56a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0Z"/></svg>
                       <span>Ingresar manualmente</span>
                     </button>
                   </div>
@@ -421,7 +428,7 @@
                       <button type="button" id="btn-gps-retry" class="checkout-gps-action">Obtener GPS</button>
                     </div>
                     <a id="client-gps-preview" href="#" target="_blank" rel="noopener noreferrer" class="checkout-gps-link" hidden>
-                      <i data-lucide="external-link" aria-hidden="true"></i>
+                      <svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,104a8,8,0,0,1-8,8H176a8,8,0,0,1,0-16h23.31L128,24.69,56.69,96H80a8,8,0,0,1,0,16H40a8,8,0,0,1-8-8V64a8,8,0,0,1,16,0V87.31L117.66,17.66a8,8,0,0,1,11.31,0L216,104.69V64a8,8,0,0,1,16,0Zm-33.37,109.26A88.11,88.11,0,0,1,40,160a8,8,0,0,1,16,0,72.08,72.08,0,0,0,122.59,51.31A8,8,0,0,1,190.63,213.26Z"/></svg>
                       <span>Ver ubicación en Google Maps</span>
                     </a>
                     <div class="checkout-field">
@@ -474,7 +481,7 @@
               <p id="client-closed-notice" class="business-closed-inline" role="status" hidden></p>
               <p id="client-checkout-error" role="alert"></p>
               <button type="submit" id="btn-submit-client-order">
-                <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+                <svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,80.65a16,16,0,0,0-2.49,29.84L96,141.52V208a16,16,0,0,0,10.68,15.09A16.46,16.46,0,0,0,112,224a16,16,0,0,0,12.9-6.5l28.37-37.82,52,25.56A15.91,15.91,0,0,0,212,208a16,16,0,0,0,15.73-13.08l28-156.37A4,4,0,0,0,227.32,28.68ZM212,192l-56.47-27.74L126.18,202,112,176.56V147.46l81.5-81.5a8,8,0,0,0-11.31-11.31l-81.5,81.5H71.44L44,128l168-48Z"/></svg>
                 <span id="btn-submit-client-label">Enviar pedido</span>
               </button>
             </div>

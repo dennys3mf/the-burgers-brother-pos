@@ -1,0 +1,854 @@
+/* ==========================================================================
+   BLACK & GOLD THEME — Carta Digital Pública
+   Scoped exclusively to body[data-public-menu].
+   Does NOT affect POS admin (Cream & Brown).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Token overrides: replace Brown carta vars with Black & Gold values
+   -------------------------------------------------------------------------- */
+body[data-public-menu] {
+  --carta-bg:           #111111;
+  --carta-surface:      #1C1C1C;
+  --carta-surface-2:    #292929;
+  --carta-accent:       #EFB342;
+  --carta-accent-hover: #F5C263;
+  --carta-accent-press: #D99D2F;
+  --carta-text:         #F5EEDC;
+  --carta-text-muted:   #B5B0A5;
+  --carta-border:       #383838;
+  --carta-overlay:      rgba(0, 0, 0, 0.72);
+  --carta-error:        #C84B37;
+  --carta-success:      #4CAF78;
+  /* scrollbar */
+  scrollbar-color: #383838 #111111;
+}
+
+/* Background */
+body[data-public-menu] { background: #111111; }
+
+/* --------------------------------------------------------------------------
+   2. MenuHeader refinements
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-header {
+  background: #1C1C1C;
+  border-bottom: 1px solid #383838;
+}
+
+body[data-public-menu] .carta-header-title {
+  color: #F5EEDC;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: clamp(1.3rem, 2.8vw, 1.65rem);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+body[data-public-menu] .menu-order-context {
+  background: #292929;
+  border-color: #383838;
+  color: #EFB342;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* Tracker pill */
+body[data-public-menu] .carta-tracker-pill {
+  background: #292929;
+  border-color: rgba(239, 179, 66, 0.4);
+  color: #F5EEDC;
+}
+body[data-public-menu] .carta-tracker-pill:hover {
+  background: #383838;
+  border-color: #EFB342;
+}
+
+/* Mode switch (Carta / Explorar) */
+body[data-public-menu] .carta-mode-switch {
+  background: #111111;
+  border-color: #383838;
+}
+body[data-public-menu] .carta-mode-switch button {
+  color: #B5B0A5;
+}
+body[data-public-menu] .carta-mode-switch button:hover:not([aria-pressed="true"]) {
+  color: #F5EEDC;
+  background: rgba(255,255,255,.07);
+}
+body[data-public-menu] .carta-mode-switch button[aria-pressed="true"] {
+  background: #F5EEDC;
+  color: #111111;
+  font-weight: 800;
+}
+
+/* Order button (desktop header) */
+body[data-public-menu] .carta-order-btn {
+  background: #292929;
+  color: #F5EEDC;
+  border-color: #383838;
+}
+body[data-public-menu] .carta-order-btn[data-has-items="true"] {
+  background: #EFB342;
+  color: #111111;
+  border-color: transparent;
+}
+body[data-public-menu] .carta-order-btn:hover {
+  background: #F5C263;
+  color: #111111;
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   3. PDF Book viewer — Black & Gold border treatment
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-sheet {
+  background: #0A0A0A;
+  border-color: #383838;
+  box-shadow: 0 20px 44px rgba(0,0,0,.7);
+}
+body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="1"] {
+  box-shadow: 3px 3px 0 #2A2A2A, 5px 5px 0 #0A0A0A, 0 16px 32px rgba(0,0,0,.65);
+}
+body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="2"] {
+  box-shadow: 3px 3px 0 #2A2A2A, 5px 5px 0 #0A0A0A, 8px 7px 0 #242424, 10px 9px 0 #0A0A0A, 0 18px 36px rgba(0,0,0,.68);
+}
+body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="3"],
+body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="4"] {
+  box-shadow: 3px 3px 0 #2A2A2A, 5px 5px 0 #0A0A0A, 8px 7px 0 #202020, 10px 9px 0 #0A0A0A, 13px 11px 0 #1A1A1A, 0 20px 38px rgba(0,0,0,.72);
+}
+body[data-public-menu] .carta-sheet[data-book-mode="spread"] {
+  border-color: #2A2A2A;
+  box-shadow: inset 0 0 0 1px #383838, -4px 4px 0 #2A2A2A, 4px 4px 0 #2A2A2A, 0 20px 42px rgba(0,0,0,.72);
+}
+
+/* Mobile stacked-page shadows */
+@media screen and (max-width: 767px) {
+  body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="1"],
+  body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="2"],
+  body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="3"],
+  body[data-public-menu] .carta-sheet[data-book-mode="single"][data-remaining="4"] {
+    box-shadow: 2px 2px 0 #2A2A2A, 4px 4px 0 #0A0A0A, 0 12px 26px rgba(0,0,0,.62);
+  }
+}
+
+/* Page number badge */
+body[data-public-menu] .carta-leaf-number {
+  background: rgba(10, 10, 10, 0.88);
+  border-color: rgba(239, 179, 66, 0.5);
+  color: #EFB342;
+}
+
+/* --------------------------------------------------------------------------
+   4. Navigation buttons & pagination pill
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-nav-btn {
+  background: #1C1C1C;
+  color: #F5EEDC;
+  border-color: #383838;
+}
+body[data-public-menu] .carta-nav-btn:hover:not([aria-disabled="true"]) {
+  background: #292929;
+  border-color: #EFB342;
+  color: #EFB342;
+}
+body[data-public-menu] .carta-page-counter {
+  background: #1C1C1C;
+  border-color: #383838;
+  color: #B5B0A5;
+}
+body[data-public-menu] .carta-drinks-note {
+  background: rgba(239, 179, 66, .1);
+  border-color: rgba(239, 179, 66, .28);
+  color: #B5B0A5;
+}
+
+/* --------------------------------------------------------------------------
+   5. Hotspot spots — gold left border on dark PDF
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-spot {
+  border-inline-start-color: #EFB342;
+}
+body[data-public-menu] .carta-spot:hover {
+  border-color: #EFB342;
+  background: rgba(239, 179, 66, 0.12);
+}
+body[data-public-menu] .carta-spot:focus-visible {
+  outline-color: #EFB342;
+  box-shadow: 0 0 0 2px #111111;
+}
+
+/* --------------------------------------------------------------------------
+   6. Desktop Category Sidebar
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  body[data-public-menu] .carta-sidebar {
+    background: #1C1C1C;
+    border-right-color: #383838;
+  }
+  body[data-public-menu] .carta-sidebar-title {
+    color: #B5B0A5;
+    letter-spacing: .1em;
+  }
+  body[data-public-menu] .carta-sidebar-item {
+    color: #B5B0A5;
+  }
+  body[data-public-menu] .carta-sidebar-item:hover:not([aria-pressed="true"]) {
+    background: #292929;
+    color: #F5EEDC;
+    border-color: #383838;
+  }
+  body[data-public-menu] .carta-sidebar-item[aria-pressed="true"] {
+    background: #EFB342;
+    color: #111111;
+    font-weight: 750;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Explore panel: search field & category chips
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-explore-controls {
+  background: #1C1C1C;
+  border-color: #383838;
+  border-radius: .875rem;
+  padding: .75rem;
+}
+body[data-public-menu] .carta-search-field input {
+  background: #111111;
+  color: #F5EEDC;
+  border-color: #383838;
+  border-radius: .75rem;
+  min-height: 48px;
+  font-size: .95rem;
+}
+body[data-public-menu] .carta-search-field input:focus {
+  border-color: #EFB342;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(239, 179, 66, .2);
+}
+body[data-public-menu] .carta-search-field input::placeholder {
+  color: #B5B0A5;
+  opacity: .9;
+}
+body[data-public-menu] .carta-search-field svg,
+body[data-public-menu] .carta-search-field .ph {
+  color: #B5B0A5;
+}
+
+/* Category chips */
+body[data-public-menu] .carta-explore-chip {
+  background: #292929;
+  color: #B5B0A5;
+  border-color: #383838;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 700;
+  min-height: 38px;
+}
+body[data-public-menu] .carta-explore-chip:hover:not([aria-pressed="true"]) {
+  color: #F5EEDC;
+  border-color: #EFB342;
+  background: #333;
+}
+body[data-public-menu] .carta-explore-chip[aria-pressed="true"] {
+  background: #EFB342;
+  color: #111111;
+  border-color: transparent;
+  font-weight: 800;
+}
+
+/* Explore empty state */
+body[data-public-menu] .carta-explore-empty {
+  color: #B5B0A5;
+}
+
+/* Explore panel heading */
+body[data-public-menu] .carta-explore-section-title {
+  color: #EFB342;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .25rem 0 .5rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. Product Cards — Black & Gold
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-product-card {
+  background: #1C1C1C;
+  color: #F5EEDC;
+  border-color: #383838;
+  border-radius: .75rem;
+  padding: 1rem;
+}
+body[data-public-menu] .carta-product-card:hover {
+  border-color: #4A4A4A;
+}
+body[data-public-menu] .carta-product-card-head h3 {
+  color: #F5EEDC;
+  font-size: .97rem;
+}
+/* Remove station COCINA/BARRA tags — not relevant for clients */
+body[data-public-menu] .carta-station-tag {
+  display: none;
+}
+body[data-public-menu] .carta-product-card-desc {
+  color: #B5B0A5;
+  font-size: .82rem;
+}
+body[data-public-menu] .carta-product-card-foot {
+  border-top-color: #383838;
+  padding-top: .65rem;
+}
+body[data-public-menu] .carta-product-card-price {
+  color: #EFB342;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+body[data-public-menu] .carta-product-add {
+  background: #EFB342;
+  color: #111111;
+  border: none;
+  font-weight: 800;
+  min-height: 40px;
+  padding: .4rem .9rem;
+  border-radius: .625rem;
+  font-size: .84rem;
+  transition: background-color .15s ease;
+}
+body[data-public-menu] .carta-product-add:hover {
+  background: #F5C263;
+}
+body[data-public-menu] .carta-product-add:active {
+  background: #D99D2F;
+}
+/* Retired products */
+body[data-public-menu] .carta-product-card[data-retired="true"] {
+  opacity: .55;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Bottom Navigation Bar
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-mobile-nav {
+  background: #1C1C1C;
+  border-top-color: #2A2A2A;
+}
+body[data-public-menu] .carta-mobile-nav button {
+  color: #B5B0A5;
+}
+body[data-public-menu] .carta-mobile-nav button:hover {
+  color: #F5EEDC;
+}
+body[data-public-menu] .carta-mobile-nav button[aria-pressed="true"] {
+  color: #EFB342;
+  font-weight: 700;
+}
+body[data-public-menu] .carta-mobile-nav button:focus-visible {
+  outline: 2px solid #EFB342;
+  outline-offset: -2px;
+}
+body[data-public-menu] .carta-nav-badge {
+  background: #292929;
+  color: #F5EEDC;
+  border-color: #383838;
+}
+body[data-public-menu] .carta-nav-badge[data-has-items="true"] {
+  background: #EFB342;
+  color: #111111;
+  border-color: #1C1C1C;
+}
+
+/* --------------------------------------------------------------------------
+   10. Category Bottom Sheet
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-category-sheet {
+  background: #1C1C1C;
+  color: #F5EEDC;
+  border-top-color: #383838;
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+@media (min-width: 560px) {
+  body[data-public-menu] .carta-category-sheet {
+    border-inline-color: #383838;
+  }
+}
+body[data-public-menu] .carta-sheet-grabber span {
+  background: #383838;
+}
+body[data-public-menu] .carta-sheet-title-wrap svg,
+body[data-public-menu] .carta-sheet-title-wrap .ph {
+  color: #EFB342;
+}
+body[data-public-menu] .carta-sheet-title-wrap h2 {
+  color: #F5EEDC;
+  font-size: 1.3rem;
+}
+body[data-public-menu] .carta-sheet-close {
+  background: #292929;
+  border-color: #383838;
+  color: #B5B0A5;
+}
+body[data-public-menu] .carta-sheet-close:hover {
+  border-color: #EFB342;
+  color: #EFB342;
+}
+body[data-public-menu] .carta-sheet-item {
+  background: #111111;
+  border-color: #2A2A2A;
+  color: #F5EEDC;
+  min-height: 54px;
+  border-radius: .75rem;
+  font-size: .95rem;
+  font-weight: 600;
+}
+body[data-public-menu] .carta-sheet-item:hover:not([aria-pressed="true"]) {
+  border-color: #EFB342;
+  background: #1A1A1A;
+}
+body[data-public-menu] .carta-sheet-item[aria-pressed="true"] {
+  background: #EFB342;
+  color: #111111;
+  border-color: transparent;
+  font-weight: 750;
+}
+body[data-public-menu] .carta-sheet-backdrop {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+/* --------------------------------------------------------------------------
+   11. Cart drawer & Checkout — Black & Gold
+   -------------------------------------------------------------------------- */
+body[data-public-menu] #client-cart {
+  background: #1C1C1C;
+  border-left-color: #383838 !important;
+  border-top-color: #383838 !important;
+  box-shadow: -20px 0 50px rgba(0,0,0,.7);
+  color: #F5EEDC;
+}
+/* Mobile bottom sheet */
+@media screen and (max-width: 767px) {
+  body[data-public-menu] #client-cart:not([hidden]) {
+    border-top-color: #383838 !important;
+    box-shadow: 0 -16px 44px rgba(0,0,0,.7);
+  }
+}
+
+/* Cart drawer header */
+body[data-public-menu] #client-cart .checkout-header {
+  background: #111111;
+  color: #F5EEDC;
+  border-bottom: 1px solid #383838;
+}
+body[data-public-menu] #client-cart .cart-heading {
+  color: #F5EEDC;
+  font-size: 1.5rem;
+}
+body[data-public-menu] #client-cart .checkout-origin {
+  color: #EFB342;
+}
+body[data-public-menu] .checkout-clear {
+  background: #292929;
+  border-color: #383838;
+  color: #B5B0A5;
+  font-size: .8rem;
+}
+body[data-public-menu] .checkout-clear:hover {
+  background: rgba(200, 75, 55, .2);
+  border-color: #C84B37;
+  color: #F5EEDC;
+}
+body[data-public-menu] .checkout-close {
+  background: #292929;
+  border-color: #383838;
+  color: #B5B0A5;
+}
+body[data-public-menu] .checkout-close:hover {
+  background: #333;
+  border-color: #EFB342;
+  color: #EFB342;
+}
+
+/* Cart items */
+body[data-public-menu] #client-cart-items {
+  gap: .625rem;
+}
+body[data-public-menu] .checkout-empty {
+  background: #111111;
+  border: 1.5px dashed #383838;
+  border-radius: .875rem;
+  padding: 2rem 1rem;
+}
+body[data-public-menu] .checkout-empty p {
+  color: #F5EEDC;
+  font-size: 1rem;
+  font-weight: 700;
+}
+body[data-public-menu] .checkout-empty span {
+  color: #B5B0A5;
+  font-size: .84rem;
+}
+body[data-public-menu] .checkout-empty-browse {
+  background: #EFB342;
+  color: #111111;
+  font-weight: 800;
+  border-radius: .75rem;
+  min-height: 44px;
+  padding: .5rem 1.1rem;
+}
+body[data-public-menu] .checkout-empty-browse:hover {
+  background: #F5C263;
+}
+body[data-public-menu] .checkout-item {
+  background: #292929;
+  border-color: #383838;
+  border-radius: .75rem;
+  padding: .8rem .9rem;
+}
+body[data-public-menu] .checkout-item-title strong {
+  color: #F5EEDC;
+}
+body[data-public-menu] .checkout-item-unit {
+  color: #B5B0A5;
+}
+body[data-public-menu] .checkout-item-price {
+  color: #EFB342;
+  font-weight: 800;
+}
+body[data-public-menu] .checkout-item-meta {
+  color: #B5B0A5;
+}
+body[data-public-menu] .checkout-item-flavors {
+  color: #EFB342;
+}
+body[data-public-menu] .checkout-item-note {
+  background: rgba(239, 179, 66, .12);
+  color: #EFB342;
+  border-radius: .4rem;
+}
+body[data-public-menu] .checkout-stepper {
+  background: #111111;
+  border-color: #383838;
+  border-radius: .625rem;
+}
+body[data-public-menu] #client-cart [data-cc-inc],
+body[data-public-menu] #client-cart [data-cc-dec] {
+  color: #F5EEDC;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+body[data-public-menu] #client-cart [data-cc-inc]:hover,
+body[data-public-menu] #client-cart [data-cc-dec]:hover {
+  background: #292929;
+}
+body[data-public-menu] .checkout-qty-num {
+  color: #F5EEDC;
+}
+body[data-public-menu] .checkout-item-del {
+  color: #C84B37;
+}
+body[data-public-menu] .checkout-item-del:hover {
+  background: rgba(200, 75, 55, .15);
+}
+
+/* Checkout form */
+body[data-public-menu] .checkout-fields {
+  border-top-color: #383838;
+  gap: .75rem;
+}
+body[data-public-menu] .checkout-field label {
+  color: #B5B0A5;
+  font-size: .84rem;
+}
+body[data-public-menu] #client-checkout input:not([type="checkbox"]) {
+  background: #111111;
+  color: #F5EEDC;
+  border-color: #383838;
+  border-radius: .625rem;
+  min-height: 48px;
+  font-size: .95rem;
+}
+body[data-public-menu] #client-checkout input:not([type="checkbox"]):focus {
+  border-color: #EFB342;
+  box-shadow: 0 0 0 3px rgba(239, 179, 66, .18);
+  outline: none;
+}
+body[data-public-menu] #client-checkout input[aria-invalid="true"] {
+  border-color: #C84B37;
+  background: rgba(200, 75, 55, .08);
+}
+body[data-public-menu] #client-cart input::placeholder,
+body[data-public-menu] #client-cart textarea::placeholder {
+  color: #B5B0A5;
+}
+
+/* Remote mode selector (Delivery / Recojo) */
+body[data-public-menu] .checkout-remote-btn {
+  background: #292929;
+  border-color: #383838;
+  color: #B5B0A5;
+}
+body[data-public-menu] .checkout-remote-btn[aria-pressed="true"] {
+  background: #EFB342;
+  color: #111111;
+  border-color: transparent;
+  font-weight: 750;
+}
+body[data-public-menu] .checkout-remote-btn:hover:not([aria-pressed="true"]) {
+  color: #F5EEDC;
+  border-color: #EFB342;
+}
+
+/* Summary / Total */
+body[data-public-menu] .checkout-summary {
+  background: #111111;
+  border-top: 1px solid #383838;
+  padding: .9rem 1rem;
+}
+body[data-public-menu] #client-cart .checkout-summary {
+  background: #111111;
+  box-shadow: 0 -6px 18px rgba(0,0,0,.4);
+}
+body[data-public-menu] .checkout-total-row {
+  color: #F5EEDC;
+}
+body[data-public-menu] .checkout-total-amount {
+  color: #EFB342;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+body[data-public-menu] .checkout-submit {
+  background: #EFB342;
+  color: #111111;
+  font-weight: 800;
+  min-height: 52px;
+  border-radius: .75rem;
+  font-size: 1rem;
+  width: 100%;
+  transition: background-color .15s ease;
+}
+body[data-public-menu] .checkout-submit:hover {
+  background: #F5C263;
+}
+body[data-public-menu] .checkout-submit:active {
+  background: #D99D2F;
+}
+body[data-public-menu] .checkout-submit:disabled {
+  background: #292929;
+  color: #B5B0A5;
+  opacity: .7;
+}
+
+/* Delivery cost row */
+body[data-public-menu] .checkout-delivery-row {
+  color: #B5B0A5;
+  font-size: .84rem;
+}
+
+/* --------------------------------------------------------------------------
+   12. Customization modal (personalización) — Black & Gold
+   -------------------------------------------------------------------------- */
+body[data-public-menu] #modal-customize {
+  background: #1C1C1C;
+  color: #F5EEDC;
+  border: 1px solid #383838;
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 60px rgba(0,0,0,.8);
+  overflow: hidden;
+}
+body[data-public-menu] #modal-customize::backdrop {
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(4px);
+}
+/* Modal header */
+body[data-public-menu] .cust-modal-header {
+  background: #111111;
+  border-bottom: 1px solid #383838;
+  padding: 1rem 1.125rem;
+}
+body[data-public-menu] .cust-modal-title {
+  color: #F5EEDC;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+body[data-public-menu] .cust-modal-price {
+  color: #EFB342;
+  font-size: 1rem;
+  font-weight: 800;
+}
+body[data-public-menu] .cust-modal-desc {
+  color: #B5B0A5;
+  font-size: .84rem;
+}
+body[data-public-menu] .cust-modal-close {
+  background: #292929;
+  border-color: #383838;
+  color: #B5B0A5;
+}
+body[data-public-menu] .cust-modal-close:hover {
+  border-color: #EFB342;
+  color: #EFB342;
+}
+/* Customization options */
+body[data-public-menu] .cust-section-title {
+  color: #EFB342;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+body[data-public-menu] .cust-option {
+  background: #292929;
+  border-color: #383838;
+  color: #F5EEDC;
+  border-radius: .625rem;
+  min-height: 44px;
+}
+body[data-public-menu] .cust-option:hover:not([aria-pressed="true"]):not(:checked) {
+  border-color: #EFB342;
+}
+body[data-public-menu] .cust-option[aria-pressed="true"],
+body[data-public-menu] .cust-option:checked {
+  background: rgba(239, 179, 66, .15);
+  border-color: #EFB342;
+  color: #EFB342;
+}
+/* Quantity stepper */
+body[data-public-menu] .cust-qty-btn {
+  background: #292929;
+  border-color: #383838;
+  color: #F5EEDC;
+}
+body[data-public-menu] .cust-qty-btn:hover {
+  background: #EFB342;
+  color: #111111;
+}
+body[data-public-menu] .cust-qty-num {
+  color: #F5EEDC;
+  font-weight: 800;
+}
+/* Add to order button */
+body[data-public-menu] .cust-add-btn {
+  background: #EFB342;
+  color: #111111;
+  font-weight: 800;
+  min-height: 52px;
+  border-radius: .75rem;
+  font-size: 1rem;
+  width: 100%;
+}
+body[data-public-menu] .cust-add-btn:hover {
+  background: #F5C263;
+}
+body[data-public-menu] .cust-add-btn:disabled {
+  background: #292929;
+  color: #B5B0A5;
+}
+/* Notes textarea */
+body[data-public-menu] .cust-notes-area {
+  background: #111111;
+  color: #F5EEDC;
+  border-color: #383838;
+  border-radius: .625rem;
+}
+body[data-public-menu] .cust-notes-area:focus {
+  border-color: #EFB342;
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   13. Order Tracking / Status — Black & Gold
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .client-tracker-modal {
+  background: #1C1C1C;
+  color: #F5EEDC;
+  border: 1px solid #383838;
+}
+body[data-public-menu] .tracker-status-label {
+  color: #EFB342;
+  font-weight: 700;
+}
+body[data-public-menu] .tracker-step-done {
+  color: #4CAF78;
+}
+body[data-public-menu] .tracker-step-active {
+  color: #EFB342;
+}
+body[data-public-menu] .tracker-step-pending {
+  color: #B5B0A5;
+}
+
+/* --------------------------------------------------------------------------
+   14. Hero / intro section  → hide in public mode (already has inline hidden)
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .customer-hero {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   15. Focus ring  — gold for all interactive elements
+   -------------------------------------------------------------------------- */
+body[data-public-menu] :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #EFB342;
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   16. Scrollbars inside carta surfaces
+   -------------------------------------------------------------------------- */
+body[data-public-menu] *::-webkit-scrollbar { width: 5px; height: 5px; }
+body[data-public-menu] *::-webkit-scrollbar-track { background: #111111; }
+body[data-public-menu] *::-webkit-scrollbar-thumb { background: #383838; border-radius: 999px; }
+body[data-public-menu] *::-webkit-scrollbar-thumb:hover { background: #EFB342; }
+
+/* --------------------------------------------------------------------------
+   17. Toast notifications
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .toast {
+  background: #292929;
+  color: #F5EEDC;
+  border: 1px solid #383838;
+  border-radius: .75rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,.55);
+}
+body[data-public-menu] .toast-success {
+  border-left: 3px solid #4CAF78;
+}
+body[data-public-menu] .toast-error {
+  border-left: 3px solid #C84B37;
+}
+
+/* --------------------------------------------------------------------------
+   18. Carta tracker bar (inside cart)
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .checkout-tracker-bar {
+  background: rgba(239, 179, 66, .1);
+  border-bottom: 1px solid rgba(239, 179, 66, .25);
+}
+body[data-public-menu] .checkout-tracker-btn {
+  background: #EFB342;
+  color: #111111;
+  font-weight: 750;
+  border-radius: .5rem;
+  padding: .3rem .7rem;
+}
+
+/* --------------------------------------------------------------------------
+   19. Transition micro-interactions (prefers-reduced-motion safe)
+   -------------------------------------------------------------------------- */
+body[data-public-menu] .carta-sheet-item,
+body[data-public-menu] .carta-product-card,
+body[data-public-menu] .carta-product-add,
+body[data-public-menu] .carta-mobile-nav button,
+body[data-public-menu] .carta-nav-btn {
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-public-menu] * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
