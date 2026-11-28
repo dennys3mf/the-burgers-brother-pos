@@ -183,8 +183,10 @@ test('kardex filters and master-detail + QR grid + roles render safely without X
 test('public QR Carta defaults and strict App Shell isolation remain preserved in index.html and brand.css', () => {
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/brand.css', import.meta.url), 'utf8');
+  const publicCss = readFileSync(new URL('../public/carta-publica.css', import.meta.url), 'utf8');
   assert.match(html, /<body data-public-menu/);
   assert.match(css, /body:not\(\[data-staff-shell\]\)\s*\.pos-shell-chrome\s*\{\s*display:\s*none\s*!important;\s*\}/);
+  assert.match(publicCss, /body\[data-public-menu\]\s+\.carta-book-stage\s*\{[^}]*touch-action:\s*pan-x\s+pan-y\s+pinch-zoom;/s);
   assert.match(html, /id="business-closed-modal"/);
   assert.match(html, /id="client-tracker-modal"/);
   assert.match(html, /id="carta-mobile-nav"/);

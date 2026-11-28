@@ -121,6 +121,10 @@ body[data-public-menu] #carta-book-stage {
   width: 100%;
   max-width: none;
 }
+body[data-public-menu] .carta-book-stage {
+  /* Keep pinch zoom and let the browser pan the enlarged menu in either axis. */
+  touch-action: pan-x pan-y pinch-zoom;
+}
 body[data-public-menu] .carta-book-workspace .carta-sheet[data-book-mode="single"] {
   width: min(100%, 42rem, calc(var(--carta-book-max-h, 70dvh) * 559 / 790));
   max-width: 100%;
