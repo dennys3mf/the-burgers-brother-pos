@@ -275,8 +275,19 @@ test('staff login uses Phosphor icons, two-line accessible profile selector, and
   const loginJs = readFileSync(new URL('../public/personal/login.js', import.meta.url), 'utf8');
   const phosphorSrc = readFileSync(new URL('../public/personal/phosphor-icons.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/brand.css', import.meta.url), 'utf8');
+  const loginTokens = /\.staff-login-page\s*\{([^}]+)\}/s.exec(css)?.[1] || '';
 
   assert.match(loginHtml, /Acceso al POS/);
+  assert.match(loginHtml, /theme-color" content="#111111"/);
+  assert.match(loginTokens, /--login-bg:\s*#111111/);
+  assert.match(loginTokens, /--login-surface:\s*#1C1C1C/);
+  assert.match(loginTokens, /--login-primary:\s*#EFB342/);
+  assert.match(loginTokens, /--login-primary-ink:\s*#111111/);
+  assert.match(loginTokens, /--login-text:\s*#F5EEDC/);
+  assert.match(loginTokens, /--login-text-secondary:\s*#B5B0A5/);
+  assert.match(loginTokens, /--login-brand-accent:\s*#D98A32/);
+  assert.match(loginTokens, /--login-border:\s*#383838/);
+  assert.match(css, /\.staff-login-submit\s*\{[^}]*color:\s*var\(--login-primary-ink\)/s);
   assert.match(loginHtml, /Perfil de acceso/);
   assert.match(loginHtml, /Clave de acceso/);
   assert.match(loginHtml, /placeholder="Ingresa tu clave"/);
