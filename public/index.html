@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="canonical" href="https://theburgersbrother.com/" />
   <title>The Burgers Brother</title>
-  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127i">
+  <link rel="stylesheet" href="./vendor/tailwind.css?v=20261127j">
   <script defer src="./vendor/lucide.min.js"></script>
   <script defer src="./vendor/qrcode.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -64,7 +64,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
-<link rel="stylesheet" href="./brand.css?v=20261127i">
+<link rel="stylesheet" href="./brand.css?v=20261127j">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -2081,7 +2081,7 @@
         if (routeId === 'carta') {
           ui.npPreviewingPdf = ui.role === 'nuevo-pedido' || ui.npPreviewingPdf;
           ui.staffOrderEntry = false;
-          ui.clientMode = 'MESA';
+          if (!ui.npPreviewingPdf) ui.clientMode = 'MESA';
           ui.kdsFullscreen = false;
           staffMenu = true;
           showMenuFormat('visual');
@@ -2089,6 +2089,7 @@
           window.scrollTo(0, 0);
           return;
         }
+        ui.npPreviewingPdf = false;
         if (routeId === 'terminados') {
           prepFilter = 'ready';
           prepHistoryPage = 0;
@@ -3087,11 +3088,17 @@
         });
         npMounted = true;
 
+        const clearNpValidation = () => {
+          const errEl = document.getElementById('np-checkout-error');
+          if (errEl) errEl.textContent = '';
+          document.getElementById('np-checkout')?.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+        };
+
         root.addEventListener('click', event => {
           const modeBtn = event.target.closest('[data-np-mode]');
           if (modeBtn) {
             ui.clientMode = modeBtn.dataset.npMode;
-            document.getElementById('np-checkout-error').textContent = '';
+            clearNpValidation();
             renderNuevoPedido();
             return;
           }
@@ -3108,7 +3115,7 @@
           }
           if (event.target.closest('#np-cart-clear')) {
             ui.clientCart = [];
-            document.getElementById('np-checkout-error').textContent = '';
+            clearNpValidation();
             renderNuevoPedidoCart();
             if (window.lucide?.createIcons) lucide.createIcons();
             return;
@@ -3145,7 +3152,7 @@
             const mode = locBtn.dataset.npLocMode;
             if (!['gps', 'manual'].includes(mode)) return;
             ui.deliveryLocMode = mode;
-            document.getElementById('np-checkout-error').textContent = '';
+            clearNpValidation();
             syncNpDeliveryLocationUI();
             if (mode === 'gps' && !ui.deliveryGps && !ui.deliveryGpsBusy) requestDeliveryGps();
             else if (mode === 'manual') requestAnimationFrame(() => document.getElementById('np-address')?.focus({ preventScroll: true }));
@@ -3153,7 +3160,7 @@
           }
           if (event.target.closest('#np-btn-gps-retry')) {
             ui.deliveryLocMode = 'gps';
-            document.getElementById('np-checkout-error').textContent = '';
+            clearNpValidation();
             requestDeliveryGps();
             return;
           }
@@ -3186,10 +3193,7 @@
         document.getElementById('np-tapers')?.addEventListener('input', renderNuevoPedidoCart);
 
         const npForm = document.getElementById('np-checkout');
-        npForm?.addEventListener('input', () => {
-          document.getElementById('np-checkout-error').textContent = '';
-          npForm.querySelector('[aria-invalid]')?.removeAttribute('aria-invalid');
-        });
+        npForm?.addEventListener('input', clearNpValidation);
         npForm?.addEventListener('submit', async event => {
           event.preventDefault();
           await submitCheckoutOrder({
@@ -5104,17 +5108,22 @@
         renderCliente();
       });
 
+      function syncDeliveryGpsViews() {
+        syncDeliveryLocationUI();
+        syncNpDeliveryLocationUI();
+      }
+
       function requestDeliveryGps() {
         if (!('geolocation' in navigator)) {
           ui.deliveryGpsBusy = false;
           ui.deliveryGps = null;
           ui.deliveryGpsError = 'Este navegador no soporta geolocalización. Ingresa tu dirección manualmente.';
-          syncDeliveryLocationUI();
+          syncDeliveryGpsViews();
           return;
         }
         ui.deliveryGpsBusy = true;
         ui.deliveryGpsError = '';
-        syncDeliveryLocationUI();
+        syncDeliveryGpsViews();
         navigator.geolocation.getCurrentPosition(
           pos => {
             ui.deliveryGpsBusy = false;
@@ -5125,7 +5134,7 @@
             };
             ui.deliveryGpsError = '';
             clearCheckoutError();
-            syncDeliveryLocationUI();
+            syncDeliveryGpsViews();
           },
           err => {
             ui.deliveryGpsBusy = false;
@@ -5133,7 +5142,7 @@
             ui.deliveryGpsError = err?.code === 1
               ? 'Permiso de ubicación denegado. Reintenta o ingresa tu dirección manualmente.'
               : 'No pudimos obtener tu ubicación GPS. Reintenta o ingrésala manualmente.';
-            syncDeliveryLocationUI();
+            syncDeliveryGpsViews();
           },
           { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
         );

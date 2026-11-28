@@ -263,6 +263,9 @@ test('Nuevo pedido dedicated Split View isolates light POS presentation, single 
   ]);
   assert.match(filledCartHtml, /Editar personalización/);
   assert.match(filledCartHtml, /S\/ 36\.00/);
+
+  const htmlSrc = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(htmlSrc, /function syncDeliveryGpsViews\(\)\s*\{\s*syncDeliveryLocationUI\(\);\s*syncNpDeliveryLocationUI\(\);/s);
 });
 
 test('system sound defaults to enabled, persists mute override cleanly, and handles AudioContext states safely', async () => {

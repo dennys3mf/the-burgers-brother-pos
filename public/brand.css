@@ -5071,6 +5071,9 @@ body[data-staff-shell] #view-nuevo-pedido {
   min-height: 44px;
   padding: 0 14px;
 }
+.pos-np-modebar #np-open-pdf-btn {
+  min-height: 44px;
+}
 .pos-np-modebar .pos-mode-pill[aria-pressed="true"] {
   background: var(--pos-primary);
   color: var(--pos-text-primary);
@@ -5478,6 +5481,42 @@ body[data-staff-shell] #view-nuevo-pedido {
   border-radius: var(--pos-radius-md);
   padding: 0 12px;
   background: var(--pos-surface);
+  color: var(--pos-text-primary);
+}
+.pos-np-check-row:has(input:checked) {
+  border-color: #C79440;
+  background: var(--pos-surface-tint);
+}
+.pos-np-fields .checkout-tapers,
+.pos-np-fields .checkout-recojo-card {
+  background: var(--pos-bg);
+  border: 1px solid var(--pos-border);
+  border-radius: var(--pos-radius-md);
+}
+#np-checkout input#np-tapers {
+  width: 3.4rem;
+  min-height: 40px;
+  height: 40px;
+  text-align: center;
+  padding: 0 4px;
+  border: 1px solid var(--pos-border);
+  border-radius: var(--pos-radius-sm);
+  background: var(--pos-surface);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+#np-checkout input#np-tapers::-webkit-inner-spin-button,
+#np-checkout input#np-tapers::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pos-np-fields .checkout-taper-stepper button {
+  background: var(--pos-surface);
+  border-color: var(--pos-border);
+  color: var(--pos-text-primary);
+  box-shadow: none;
 }
 .pos-np-delivery-box {
   display: flex;
@@ -5487,6 +5526,46 @@ body[data-staff-shell] #view-nuevo-pedido {
   border-radius: var(--pos-radius-md);
   background: var(--pos-bg);
   border: 1px solid var(--pos-border);
+}
+.pos-np-delivery-box .checkout-delivery-head,
+.pos-np-delivery-box .checkout-payment legend,
+.pos-np-delivery-box .checkout-location-head {
+  color: var(--pos-text-primary);
+}
+.pos-np-delivery-box .checkout-payment {
+  border-top-color: var(--pos-border);
+}
+.pos-np-delivery-box .checkout-loc-btn,
+.pos-np-delivery-box .del-pay-btn {
+  border: 1px solid var(--pos-border);
+  background: var(--pos-surface);
+  color: var(--pos-text-primary);
+  box-shadow: none;
+}
+.pos-np-delivery-box .checkout-loc-btn[aria-pressed="true"],
+.pos-np-delivery-box .del-pay-btn[aria-pressed="true"] {
+  background: var(--pos-primary);
+  border-color: #C79440;
+  color: var(--pos-text-primary);
+  box-shadow: none;
+}
+.pos-np-delivery-box .checkout-loc-btn[aria-pressed="true"] svg,
+.pos-np-delivery-box .del-pay-btn[aria-pressed="true"] span {
+  color: var(--pos-text-primary);
+}
+.pos-np-delivery-box .checkout-gps-status {
+  border-color: var(--pos-border);
+  background: var(--pos-surface);
+  color: var(--pos-text-primary);
+}
+.pos-np-delivery-box .checkout-gps-action {
+  border-color: var(--pos-border);
+  background: var(--pos-surface-2);
+  color: var(--pos-text-primary);
+}
+.pos-np-checkout-form [aria-invalid="true"] {
+  border-color: var(--pos-error) !important;
+  background: var(--pos-error-bg) !important;
 }
 
 .pos-np-cart-foot {
@@ -5644,6 +5723,28 @@ body[data-staff-shell] #view-nuevo-pedido {
 }
 
 @media (max-width: 767px) {
+  .pos-np-modebar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .pos-np-modebar-left {
+    display: contents;
+  }
+  .pos-np-modebar .pos-mode-pills {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pos-np-modebar .pos-mode-pill {
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  .pos-np-modebar .pos-mesa-select {
+    flex: 1 1 auto;
+  }
+  #np-open-pdf-btn {
+    margin-left: auto;
+  }
   .pos-np-cat-tabs {
     display: none;
   }
