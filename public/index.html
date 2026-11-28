@@ -65,6 +65,8 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
   </style>
 <link rel="stylesheet" href="./brand.css?v=20261127j">
+<link rel="stylesheet" href="./carta-publica.css?v=20261127-black-gold">
+<link rel="stylesheet" href="./carta-publica-pedido.css?v=20261127-black-gold">
 </head>
 <body data-public-menu class="antialiased overflow-x-hidden">
 
@@ -234,7 +236,10 @@
 
             <div class="carta-desktop-shell">
               <aside id="carta-sidebar" class="carta-sidebar" aria-label="Categorías de la carta">
-                <p class="carta-sidebar-title">Categorías</p>
+                <div class="carta-sidebar-head">
+                  <p class="carta-sidebar-title">Categorías</p>
+                  <button type="button" id="public-sidebar-toggle" hidden aria-label="Contraer categorías" aria-controls="carta-sidebar-list" aria-expanded="true"></button>
+                </div>
                 <nav id="carta-sidebar-list" class="carta-sidebar-nav" aria-label="Categorías"></nav>
               </aside>
 
@@ -265,7 +270,9 @@
                     <div class="carta-search-field">
                       <i data-lucide="search" aria-hidden="true"></i>
                       <input id="client-search" type="search" enterkeyhint="search" aria-label="Buscar productos" placeholder="Buscar platos, combos, bebidas o cócteles..." />
+                      <button type="button" id="public-clear-search" hidden aria-label="Limpiar búsqueda"></button>
                     </div>
+                    <h3 id="public-explore-title" hidden tabindex="-1">Todos los productos</h3>
                     <div id="client-categories" class="carta-explore-cats" role="group" aria-label="Filtrar lista por categoría"></div>
                   </div>
                   <div id="client-menu-grid" class="carta-explore-grid"></div>
@@ -929,6 +936,7 @@
     <header class="product-customize-header">
       <div>
         <h3 id="cust-title">Personalizar</h3>
+        <p id="cust-base-price" class="customize-base-price" hidden></p>
         <p id="cust-desc"></p>
       </div>
       <button type="button" data-close-modal="modal-customize" aria-label="Cerrar personalización" class="product-customize-close" autofocus><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -990,6 +998,14 @@
           <input id="cust-note" type="text" placeholder="Ej. Sin cebolla, poco hielo…" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
         </div>
 
+      </div>
+      <div id="cust-quantity-row" class="customize-quantity" hidden>
+        <span id="cust-quantity-label">Cantidad</span>
+        <div role="group" aria-labelledby="cust-quantity-label">
+          <button type="button" data-cust-step="-1" aria-label="Reducir cantidad"></button>
+          <output id="cust-quantity" aria-live="polite">1</output>
+          <button type="button" data-cust-step="1" aria-label="Aumentar cantidad"></button>
+        </div>
       </div>
       <div class="product-customize-footer">
         <div class="customize-total">
@@ -1438,6 +1454,7 @@
       buildMenuPageLeaf,
       bindBottomSheetSwipe
     } from './carta-components.js?v=20261127c';
+    import { publicIcon, syncPublicCartIcon, syncPublicMenuIcons } from './carta-iconos-publicos.js?v=20261127-black-gold';
     import {
       POS_ROUTES,
       resolveActiveNavId,
@@ -2562,6 +2579,15 @@
       function updateMenuLayout(role) {
         const isPublic = role === 'cliente' && !staffMenu && !ui.staffOrderEntry;
         document.body.toggleAttribute('data-public-menu', isPublic);
+        syncPublicMenuIcons(isPublic);
+        document.getElementById('public-sidebar-toggle').hidden = !isPublic;
+        document.getElementById('public-explore-title').hidden = !isPublic;
+        document.getElementById('client-search').placeholder = isPublic
+          ? 'Buscar productos' : 'Buscar platos, combos, bebidas o cócteles...';
+        if (!isPublic) {
+          document.getElementById('public-clear-search').hidden = true;
+          document.querySelectorAll('[data-public-all-products]').forEach(button => { button.hidden = true; });
+        }
         document.body.toggleAttribute('data-staff-workspace', !isPublic && (staffMenu || ui.staffOrderEntry || role === 'nuevo-pedido'));
         if (role !== 'nuevo-pedido') {
           ui.npDrawerOpen = false;
@@ -3304,17 +3330,34 @@
         // Client live order tracker (popup dialog + header trigger, 0px layout impact on Carta)
         renderClientTracker();
 
-        // Categories (Explorar list filter)
-        const cats = ['Todos', ...new Set(MENU.map(m => m.cat))];
-        document.getElementById('client-categories').innerHTML = cats.map(c => `
-          <button type="button" data-client-cat="${c}" class="carta-explore-chip" aria-pressed="${ui.clientCategory === c}">${c}</button>
-        `).join('');
+        renderMenuExplore();
+        renderClientCart();
+        requestAnimationFrame(() => syncBookLayout());
+      }
 
-        // Filtered Menu
-        const q = ui.clientSearch.trim().toLowerCase();
+      function renderMenuExplore() {
+        const isPublic = document.body.hasAttribute('data-public-menu');
+        const categoryChips = document.getElementById('client-categories');
+        if (isPublic) {
+          categoryChips.hidden = true;
+          document.getElementById('public-explore-title').textContent =
+            CARTA_CATEGORIES.find(category => category.listCategory === ui.clientCategory)?.label || 'Todos los productos';
+          document.getElementById('public-clear-search').hidden = !ui.clientSearch;
+        } else {
+          categoryChips.hidden = false;
+          const cats = ['Todos', ...new Set(MENU.map(m => m.cat))];
+          categoryChips.innerHTML = cats.map(c => `
+            <button type="button" data-client-cat="${c}" class="carta-explore-chip" aria-pressed="${ui.clientCategory === c}">${c}</button>
+          `).join('');
+        }
+        const normalize = value => {
+          const lower = value.toLocaleLowerCase('es');
+          return isPublic ? lower.normalize('NFD').replace(/\p{M}/gu, '') : lower;
+        };
+        const q = normalize(ui.clientSearch.trim());
         const items = MENU.filter(m => {
           const mCat = ui.clientCategory === 'Todos' || m.cat === ui.clientCategory;
-          const mQ = !q || m.name.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q);
+          const mQ = !q || normalize(m.name).includes(q) || normalize(m.desc).includes(q);
           return !m.retired && mCat && mQ;
         });
 
@@ -3323,21 +3366,20 @@
               <article class="carta-product-card">
                 <div>
                   <div class="carta-product-card-head">
-                    <h3>${m.name}</h3>
-                    <span class="carta-station-tag ${m.station === 'COCINA' ? 'is-kitchen' : 'is-bar'}">${m.station}</span>
+                    <h3>${escapeHtml(m.name)}</h3>
+                    ${isPublic ? '' : `<span class="carta-station-tag ${m.station === 'COCINA' ? 'is-kitchen' : 'is-bar'}">${m.station}</span>`}
                   </div>
-                  <p class="carta-product-card-desc">${m.desc}</p>
+                  <p class="carta-product-card-desc">${escapeHtml(m.desc)}</p>
                 </div>
                 <div class="carta-product-card-foot">
                   <span class="carta-product-card-price">${money(m.price)}</span>
-                  <button type="button" data-open-cust="${m.id}" class="carta-product-add">+ Agregar</button>
+                  <button type="button" data-open-cust="${m.id}" class="carta-product-add"${isPublic ? ` aria-label="Agregar ${escapeHtml(m.name)}"` : ''}>${isPublic ? publicIcon('plus', { size: 18 }) : '+'} Agregar</button>
                 </div>
               </article>
             `).join('')
           : '<p class="carta-explore-empty">No encontramos platos que coincidan con tu búsqueda.</p>';
 
-        renderClientCart();
-        requestAnimationFrame(() => syncBookLayout());
+        if (isPublic) syncPublicCategoryState();
       }
 
       const escapeHtml = value => String(value ?? '')
@@ -3351,7 +3393,11 @@
         const isPublic = document.body.hasAttribute('data-public-menu');
         const wrap = document.getElementById('client-cart-items');
         if (ui.clientCart.length === 0) {
-          wrap.innerHTML = `<div class="checkout-empty"><p>Tu pedido está vacío.</p><span>Toca un plato de la carta para personalizarlo y añadirlo aquí.</span>${isPublic ? '<button type="button" data-close-cart-drawer class="checkout-empty-browse">Explorar la carta</button>' : ''}</div>`;
+          wrap.innerHTML = isPublic ? `<div class="checkout-empty">
+            ${publicIcon('shopping-bag-duotone', { size: 40, className: 'checkout-empty-icon' })}
+            <p>Tu pedido está vacío</p><span>Agrega tus platos favoritos.</span>
+            <button type="button" id="public-cart-explore" class="checkout-empty-browse">Explorar la carta</button>
+          </div>` : '<div class="checkout-empty"><p>Tu pedido está vacío.</p><span>Toca un plato de la carta para personalizarlo y añadirlo aquí.</span></div>';
         } else {
           wrap.innerHTML = ui.clientCart.map((it, idx) => {
             const safeName = escapeHtml(it.name);
@@ -3369,11 +3415,12 @@
               ${it.note ? `<p class="checkout-item-note">${escapeHtml(it.note)}</p>` : ''}
               <div class="checkout-item-actions">
                 <div class="checkout-stepper" role="group" aria-label="Cantidad de ${safeName}">
-                  <button type="button" data-cc-dec="${idx}" aria-label="Reducir cantidad de ${safeName}">−</button>
+                  <button type="button" data-cc-dec="${idx}" aria-label="Reducir cantidad de ${safeName}">${isPublic ? publicIcon('minus') : '−'}</button>
                   <span class="checkout-qty-num">${it.qty}</span>
-                  <button type="button" data-cc-inc="${idx}" aria-label="Aumentar cantidad de ${safeName}">+</button>
+                  <button type="button" data-cc-inc="${idx}" aria-label="Aumentar cantidad de ${safeName}"${isPublic && it.qty >= 99 ? ' disabled' : ''}>${isPublic ? publicIcon('plus') : '+'}</button>
                 </div>
-                <button type="button" data-cc-del="${idx}" class="checkout-item-del" aria-label="Quitar ${safeName}">Quitar</button>
+                ${isPublic ? `<button type="button" data-public-cart-edit="${idx}" class="public-cart-edit" aria-label="Editar ${safeName}">${publicIcon('pencil-simple')} Editar</button>` : ''}
+                <button type="button" data-cc-del="${idx}" class="checkout-item-del" aria-label="Quitar ${safeName}">${isPublic ? publicIcon('trash') : 'Quitar'}</button>
               </div>
             </div>
           `;
@@ -3465,11 +3512,13 @@
         cartLink.dataset.hasItems = String(units > 0);
         cartLink.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
         cartLink.setAttribute('aria-label', units > 0 ? `Pedido (${units} productos, ${money(total)})` : 'Pedido (vacío)');
-        if (cartLabel) cartLabel.textContent = `Pedido (${units})`;
+        if (cartLabel) cartLabel.textContent = isPublic && !units ? 'Pedido' : `Pedido (${units})`;
         if (mobileBadge) {
           mobileBadge.textContent = String(units);
+          mobileBadge.hidden = isPublic && !units;
           mobileBadge.dataset.hasItems = String(units > 0);
         }
+        if (isPublic) syncPublicCartIcon(units > 0);
         if (mobileCartBtn) {
           mobileCartBtn.dataset.hasItems = String(units > 0);
           mobileCartBtn.setAttribute('aria-expanded', isPublic ? String(cartDrawerOpen) : 'false');
@@ -4165,6 +4214,54 @@
       document.getElementById('carta-brand-icon').innerHTML = burgerIconSvg(24);
       renderCategoryNav(cartaSidebarList, { variant: 'sidebar' });
       renderCategoryNav(cartaSheetList, { variant: 'sheet' });
+      for (const [nav, type] of [[cartaSidebarList, 'sidebar'], [cartaSheetList, 'sheet']]) {
+        const all = document.createElement('button');
+        all.type = 'button';
+        all.className = `carta-${type}-item`;
+        all.dataset.publicAllProducts = '';
+        all.hidden = true;
+        all.innerHTML = `<span class="carta-cat-main">
+          <span class="carta-cat-icon">${publicIcon('squares-four-duotone', { size: 24 })}</span>
+          <span class="carta-cat-label">Todos los productos</span></span>
+          ${type === 'sheet' ? `<span class="carta-sheet-trail">${publicIcon('check', { className: 'carta-cat-check' })}</span>` : ''}`;
+        nav.prepend(all);
+      }
+
+      const sidebarToggle = document.getElementById('public-sidebar-toggle');
+      sidebarToggle.innerHTML = publicIcon('columns');
+      sidebarToggle.onclick = () => {
+        const compact = document.body.toggleAttribute('data-menu-sidebar-compact');
+        sidebarToggle.setAttribute('aria-expanded', String(!compact));
+        sidebarToggle.setAttribute('aria-label', compact ? 'Expandir categorías' : 'Contraer categorías');
+        requestAnimationFrame(syncBookLayout);
+      };
+      const clearPublicSearch = document.getElementById('public-clear-search');
+      clearPublicSearch.innerHTML = publicIcon('x');
+      clearPublicSearch.onclick = () => {
+        const search = document.getElementById('client-search');
+        search.value = '';
+        ui.clientSearch = '';
+        renderMenuExplore();
+        search.focus();
+      };
+
+      function syncPublicCategoryState() {
+        if (!document.body.hasAttribute('data-public-menu')) return;
+        const exploring = cartaVisual.hidden;
+        for (const nav of [cartaSidebarList, cartaSheetList]) {
+          const all = nav.querySelector('[data-public-all-products]');
+          all.hidden = !exploring;
+          all.setAttribute('aria-pressed', String(exploring && ui.clientCategory === 'Todos'));
+          if (!exploring) continue;
+          for (const button of nav.querySelectorAll('[data-carta-category-page]')) {
+            const entry = CARTA_CATEGORIES[Number(button.dataset.cartaCategoryPage)];
+            button.setAttribute('aria-pressed', String(entry.listCategory === ui.clientCategory));
+            button.removeAttribute('aria-current');
+            button.removeAttribute('data-in-spread');
+          }
+        }
+        if (!exploring) syncCategoryNavState(currentCartaPage, lastBookView.left, lastBookView.right);
+      }
 
       function syncNavChromeUI() {
         const format = cartaVisual.hidden ? 'list' : 'visual';
@@ -4180,6 +4277,8 @@
           button.setAttribute('aria-pressed', String(active));
         });
         document.getElementById('btn-mobile-categories')?.setAttribute('aria-expanded', String(categorySheetOpen));
+        const isPublic = document.body.hasAttribute('data-public-menu');
+        if (isPublic) syncPublicCategoryState();
       }
 
       function preloadPageImage(index) {
@@ -4196,13 +4295,14 @@
           ? 0
           : (document.getElementById('staff-menu-hero')?.getBoundingClientRect().height || 0);
         const mobileNavH = window.innerWidth < 1024 ? 72 : 0;
+        if (isPublic) return Math.max(280, window.innerHeight - headerH - mobileNavH - 76);
         return Math.max(280, window.innerHeight - headerH - staffHeroH - mobileNavH - 84);
       }
 
       function canSpreadLayout() {
         const width = cartaBookWorkspace.clientWidth;
         if (!width) return false;
-        const arrowsReserve = window.innerWidth >= 768 ? 124 : 0;
+        const arrowsReserve = !document.body.hasAttribute('data-public-menu') && window.innerWidth >= 768 ? 124 : 0;
         const maxBookH = availableBookHeight();
         cartaVisual.style.setProperty('--carta-book-max-h', `${Math.round(maxBookH)}px`);
         return canFitBookSpread({
@@ -4447,7 +4547,7 @@
         syncNavChromeUI();
         if (format === 'visual') {
           requestAnimationFrame(() => syncBookLayout());
-        } else if (focusSearch) {
+        } else if (focusSearch && (!document.body.hasAttribute('data-public-menu') || window.innerWidth >= 1024)) {
           requestAnimationFrame(() => document.getElementById('client-search')?.focus({ preventScroll: true }));
         }
       }
@@ -4491,6 +4591,20 @@
       const creamBoxes = [...creamPicker.querySelectorAll('input')];
       const drinkSelect = document.getElementById('cust-drink');
       const customizeError = document.getElementById('cust-error');
+      const quantityRow = document.getElementById('cust-quantity-row');
+      const quantityDisplay = document.getElementById('cust-quantity');
+      const basePriceDisplay = document.getElementById('cust-base-price');
+      let customizeQuantity = 1;
+      for (const button of quantityRow.querySelectorAll('[data-cust-step]')) {
+        button.innerHTML = publicIcon(Number(button.dataset.custStep) < 0 ? 'minus' : 'plus');
+      }
+      quantityRow.addEventListener('click', event => {
+        const button = event.target.closest('[data-cust-step]');
+        if (!button) return;
+        customizeQuantity = Math.max(1, Math.min(99, customizeQuantity + Number(button.dataset.custStep)));
+        const product = menuById.get(document.getElementById('cust-prod-id').value);
+        if (product) updateCustPrice(product.price);
+      });
       let custSelectedFlavors = [];
       let custSelectedExtras = [];
 
@@ -4502,6 +4616,11 @@
         customizeForEdit = forEdit;
         customizeCartEditIdx = Number.isInteger(editCartIdx) && editCartIdx >= 0 ? editCartIdx : null;
         const existingEntry = customizeCartEditIdx !== null ? ui.clientCart[customizeCartEditIdx] : null;
+        const isPublic = document.body.hasAttribute('data-public-menu') && !forEdit;
+        customizeQuantity = existingEntry?.qty || 1;
+        quantityRow.hidden = !isPublic;
+        basePriceDisplay.hidden = !isPublic;
+        basePriceDisplay.textContent = money(m.price);
         document.getElementById('customize-submit-label').textContent = customizeCartEditIdx !== null
           ? 'Guardar cambios'
           : (forEdit ? 'Agregar a la comanda' : 'Agregar al pedido');
@@ -4561,6 +4680,7 @@
         if (!eWrap.hidden) renderExtraButtons();
 
         updateCustPrice(m.price);
+        if (isPublic) syncPublicMenuIcons(true);
         lucide.createIcons();
         customizeDialog.showModal();
         customizeDialog.querySelector('.product-customize-body').scrollTop = 0;
@@ -4590,7 +4710,11 @@
 
       function updateCustPrice(basePrice) {
         const extraSum = custSelectedExtras.reduce((s, e) => s + e.price, 0);
-        document.getElementById('cust-price-preview').textContent = money(basePrice + extraSum);
+        const qty = quantityRow.hidden ? 1 : customizeQuantity;
+        quantityDisplay.value = String(qty);
+        quantityRow.querySelector('[data-cust-step="-1"]').disabled = qty <= 1;
+        quantityRow.querySelector('[data-cust-step="1"]').disabled = qty >= 99;
+        document.getElementById('cust-price-preview').textContent = money((basePrice + extraSum) * qty);
       }
 
       function openModal(id) {
@@ -4636,6 +4760,14 @@
         }
 
         const catNav = e.target.closest('[data-carta-category-page]');
+        const allProducts = e.target.closest('[data-public-all-products]');
+        if ((catNav || allProducts) && cartaVisual.hidden && document.body.hasAttribute('data-public-menu')) {
+          const pos = catNav ? Number(catNav.dataset.cartaCategoryPage) : -1;
+          ui.clientCategory = CARTA_CATEGORIES[pos]?.listCategory || 'Todos';
+          if (categorySheetOpen) closeCategorySheet();
+          renderMenuExplore();
+          return;
+        }
         if (catNav) {
           const targetPage = Number(catNav.dataset.cartaCategoryPage);
           const fromSheet = Boolean(catNav.closest('#carta-category-sheet'));
@@ -4645,6 +4777,13 @@
           if (fromSheet) {
             document.querySelector('#carta-book-stage .carta-spot')?.focus({ preventScroll: true });
           }
+          return;
+        }
+
+        if (e.target.closest('#public-cart-explore')) {
+          closeCartDrawer({ restoreFocus: false });
+          showMenuFormat('list');
+          document.getElementById('public-explore-title').focus({ preventScroll: true });
           return;
         }
 
@@ -4700,6 +4839,11 @@
         if (inc) {
           ui.clientCart[Number(inc.dataset.ccInc)].qty += 1;
           renderClientCart();
+          if (document.body.hasAttribute('data-public-menu')) {
+            const next = document.querySelector(`#client-cart [data-cc-inc="${inc.dataset.ccInc}"]:not(:disabled)`)
+              || document.querySelector(`#client-cart [data-cc-dec="${inc.dataset.ccInc}"]`);
+            next?.focus({ preventScroll: true });
+          }
           if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
           return;
         }
@@ -4709,6 +4853,9 @@
           ui.clientCart[idx].qty -= 1;
           if (ui.clientCart[idx].qty <= 0) ui.clientCart.splice(idx, 1);
           renderClientCart();
+          if (document.body.hasAttribute('data-public-menu')) {
+            (document.querySelector(`#client-cart [data-cc-dec="${idx}"]`) || document.getElementById('btn-close-cart-drawer')).focus({ preventScroll: true });
+          }
           if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
           return;
         }
@@ -4716,7 +4863,20 @@
         if (del) {
           ui.clientCart.splice(Number(del.dataset.ccDel), 1);
           renderClientCart();
+          if (document.body.hasAttribute('data-public-menu')) {
+            const next = document.querySelector(`#client-cart [data-cc-del="${del.dataset.ccDel}"]`)
+              || document.querySelector('#client-cart [data-cc-del]:last-of-type')
+              || document.getElementById('public-cart-explore');
+            next?.focus({ preventScroll: true });
+          }
           if (ui.role === 'nuevo-pedido') { renderNuevoPedidoCart(); lucide.createIcons(); }
+          return;
+        }
+        const publicCartEdit = e.target.closest('[data-public-cart-edit]');
+        if (publicCartEdit && document.body.hasAttribute('data-public-menu')) {
+          const index = Number(publicCartEdit.dataset.publicCartEdit);
+          const item = ui.clientCart[index];
+          if (item) openCustomizeModal(item.menuId, false, index);
           return;
         }
 
@@ -5173,7 +5333,7 @@
         ui.clientMesa = e.target.value;
         renderCliente();
       });
-      document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderCliente(); });
+      document.getElementById('client-search').addEventListener('input', (e) => { ui.clientSearch = e.target.value; renderMenuExplore(); });
       document.getElementById('btn-client-clear').addEventListener('click', () => { ui.clientCart = []; clearCheckoutError(); renderClientCart(); });
 
       function makeQrSvgString(text, cellSize = 4, margin = 2) {
@@ -5463,7 +5623,7 @@
           menuId: m.id,
           name: m.name,
           station: m.station,
-          qty: 1,
+          qty: quantityRow.hidden ? 1 : customizeQuantity,
           basePrice: m.price,
           unitPrice: m.price + extraSum,
           extras: [...custSelectedExtras],
@@ -5488,13 +5648,16 @@
         const editIdx = customizeCartEditIdx;
         customizeCartEditIdx = null;
         if (editIdx !== null && ui.clientCart[editIdx]) {
-          item.qty = ui.clientCart[editIdx].qty || 1;
+          if (quantityRow.hidden) item.qty = ui.clientCart[editIdx].qty || 1;
           ui.clientCart[editIdx] = item;
         } else {
           ui.clientCart.push(item);
         }
         customizeDialog.close();
         renderClientCart();
+        if (editIdx !== null && !quantityRow.hidden) {
+          document.querySelector(`#client-cart [data-public-cart-edit="${editIdx}"]`)?.focus({ preventScroll: true });
+        }
         if (ui.role === 'nuevo-pedido') renderNuevoPedido();
         else lucide.createIcons();
         for (const el of [document.getElementById('carta-cart-link'), document.getElementById('btn-mobile-cart')]) {
@@ -5503,7 +5666,7 @@
           void el.offsetWidth;
           el.classList.add('is-updated');
         }
-        document.getElementById('cart-announcement').textContent = m.name + ' agregado. ' +
+        document.getElementById('cart-announcement').textContent = m.name + (editIdx === null ? ' agregado. ' : ' actualizado. ') +
           (document.getElementById('carta-cart-label')?.textContent || 'Pedido');
       });
 
@@ -6327,8 +6490,21 @@
         else if (ui.role === 'nuevo-pedido') renderNuevoPedidoCart();
       });
       document.addEventListener('keydown', event => {
-        if (event.key !== 'Escape') return;
+        if (event.key !== 'Escape' && event.key !== 'Tab') return;
         if (document.querySelector('dialog[open], [id^="modal-"].fixed:not(.hidden)')) return;
+        if (event.key === 'Tab') {
+          if (!document.body.hasAttribute('data-public-menu') || (!cartDrawerOpen && !categorySheetOpen)) return;
+          const panel = document.getElementById(cartDrawerOpen ? 'client-cart' : 'carta-category-sheet');
+          const controls = Array.from(panel.querySelectorAll('button, input, select, textarea, a[href]'))
+            .filter(control => !control.disabled && control.tabIndex >= 0 && control.getClientRects().length);
+          const first = controls[0];
+          const last = controls.at(-1);
+          const active = document.activeElement;
+          if (!first || !(event.shiftKey ? active === first || !panel.contains(active) : active === last || !panel.contains(active))) return;
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+          return;
+        }
         if (ui.moreDrawerOpen) {
           event.preventDefault();
           closeMoreDrawer({ restoreFocus: true });

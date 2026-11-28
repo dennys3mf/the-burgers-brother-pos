@@ -1,0 +1,420 @@
+/* Public Carta theme. The administrative menu retains the base POS palette. */
+body[data-public-menu] {
+  --menu-bg: #111111;
+  --menu-surface: #1c1c1c;
+  --menu-elevated: #292929;
+  --menu-border: #383838;
+  --menu-primary: #efb342;
+  --menu-hover: #f5c263;
+  --menu-pressed: #d99d2f;
+  --menu-text: #f5eedc;
+  --menu-muted: #b5b0a5;
+  --menu-accent: #d98a32;
+  --menu-error: #c84b37;
+  --menu-success: #4caf78;
+  --menu-overlay: rgb(0 0 0 / 68%);
+  --menu-control-border: #716d64;
+  --menu-radius: 12px;
+  --menu-sheet-radius: 24px;
+  --menu-transition: 160ms ease;
+  --menu-nav-height: 68px;
+
+  --carta-bg: var(--menu-bg);
+  --carta-surface: var(--menu-surface);
+  --carta-surface-2: var(--menu-elevated);
+  --carta-accent: var(--menu-primary);
+  --carta-text: var(--menu-text);
+  --carta-text-muted: var(--menu-muted);
+  --carta-border: var(--menu-border);
+  --carta-overlay: var(--menu-overlay);
+  --control-focus: var(--menu-primary);
+
+  color-scheme: dark;
+  color: var(--menu-text);
+  background: var(--menu-bg);
+}
+
+body[data-public-menu] .menu-browser :is(button, a, input):focus-visible {
+  outline: 2px solid var(--menu-primary);
+  outline-offset: 2px;
+}
+
+body[data-public-menu] .carta-header {
+  min-height: 58px;
+  gap: 8px;
+  padding: max(5px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 5px max(12px, env(safe-area-inset-left));
+  background: var(--menu-bg);
+  border-color: var(--menu-border);
+}
+
+body[data-public-menu] .carta-header-brand { gap: 10px; }
+body[data-public-menu] .carta-header-title {
+  font: 800 clamp(1.2rem, .98rem + .65vw, 1.55rem)/1.14 'Inter', system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+body[data-public-menu] .carta-brand-icon { width: 25px; height: 25px; }
+body[data-public-menu] .carta-brand-icon svg { width: 100%; height: 100%; }
+body[data-public-menu] .menu-order-context {
+  min-height: 28px;
+  padding-inline: 8px;
+  border-color: var(--menu-border);
+  background: var(--menu-surface);
+  color: var(--menu-primary);
+  font-size: .75rem;
+}
+body[data-public-menu] .carta-tracker-pill {
+  min-height: 48px;
+  border-color: var(--menu-border);
+  background: var(--menu-surface);
+}
+body[data-public-menu] .carta-tracker-pill:hover { background: var(--menu-elevated); }
+body[data-public-menu] .carta-tracker-dot { background: var(--menu-success); box-shadow: none; }
+body[data-public-menu] .carta-tracker-pill[data-has-active="false"] .carta-tracker-dot {
+  background: var(--menu-primary);
+  box-shadow: none;
+}
+body[data-public-menu] .carta-mode-switch {
+  padding: 3px;
+  background: var(--menu-surface);
+}
+body[data-public-menu] .carta-mode-switch button {
+  min-height: 42px;
+  color: var(--menu-muted);
+}
+body[data-public-menu] .carta-mode-switch button:hover:not([aria-pressed="true"]) {
+  color: var(--menu-text);
+  background: var(--menu-elevated);
+}
+body[data-public-menu] .carta-mode-switch button[aria-pressed="true"] {
+  color: var(--menu-primary);
+  background: var(--menu-elevated);
+}
+body[data-public-menu] .carta-order-btn {
+  min-height: 48px;
+  color: var(--menu-text);
+  background: var(--menu-surface);
+}
+body[data-public-menu] .carta-order-btn:hover {
+  border-color: var(--menu-control-border);
+  color: var(--menu-text);
+  background: var(--menu-elevated);
+}
+body[data-public-menu] .carta-order-btn[data-has-items="true"] {
+  border-color: transparent;
+  background: var(--menu-primary);
+  color: var(--menu-bg);
+}
+body[data-public-menu] .carta-order-btn[data-has-items="true"]:hover { background: var(--menu-hover); }
+body[data-public-menu] .carta-order-btn[data-has-items="true"]:active { background: var(--menu-pressed); }
+
+body[data-public-menu] .carta-main-stage {
+  padding: 10px max(10px, env(safe-area-inset-right)) 16px max(10px, env(safe-area-inset-left));
+}
+body[data-public-menu] .carta-book-workspace {
+  grid-template-columns: minmax(0, 1fr) 48px max-content 48px minmax(0, 1fr);
+  align-content: start;
+  justify-items: stretch;
+  gap: 8px 0;
+}
+body[data-public-menu] #carta-book-stage {
+  grid-area: 1 / 1 / 2 / -1;
+  width: 100%;
+  max-width: none;
+}
+body[data-public-menu] .carta-book-workspace .carta-sheet[data-book-mode="single"] {
+  width: min(100%, 42rem, calc(var(--carta-book-max-h, 70dvh) * 559 / 790));
+  max-width: 100%;
+}
+body[data-public-menu] .carta-book-workspace .carta-sheet[data-book-mode="spread"] {
+  width: min(100%, 76rem, calc(var(--carta-book-max-h, 74dvh) * 1118 / 790));
+  max-width: 100%;
+}
+body[data-public-menu] #carta-sheet {
+  border: 1px solid var(--menu-control-border);
+  border-radius: 6px;
+  background: var(--menu-bg);
+  box-shadow: none;
+}
+body[data-public-menu] .carta-page-leaf--single { border-radius: 5px; }
+body[data-public-menu] .carta-page-leaf--left { border-radius: 5px 0 0 5px; }
+body[data-public-menu] .carta-page-leaf--right { border-radius: 0 5px 5px 0; }
+body[data-public-menu] :is(.carta-page-leaf--single, .carta-page-leaf--right)::before,
+body[data-public-menu] .carta-page-leaf--left::after { content: none; }
+body[data-public-menu] .carta-book-spine { width: 2px; background: var(--menu-border); }
+body[data-public-menu] .carta-leaf-number { display: none; }
+body[data-public-menu] .carta-spot:hover {
+  border-color: var(--menu-primary);
+  background: rgb(239 179 66 / 10%);
+}
+body[data-public-menu] .menu-browser .carta-spot:focus-visible {
+  outline: 3px solid white;
+  outline-offset: -2px;
+}
+body[data-public-menu] .carta-spot:not(.carta-spot-priced)::after {
+  color: var(--menu-bg);
+  background: var(--menu-primary);
+}
+body[data-public-menu] .carta-book-flip[data-book-mode="single"] { max-width: 42rem; }
+
+body[data-public-menu] .carta-pagination-bar { display: contents; }
+body[data-public-menu] .carta-page-counter {
+  grid-area: 2 / 3;
+  min-height: 48px;
+  min-width: 4.5rem;
+  padding-inline: 2px;
+  border-radius: 0;
+  border-inline: 0;
+  font-size: .875rem;
+  user-select: none;
+}
+body[data-public-menu] .carta-nav-btn {
+  grid-row: 2;
+  width: 48px;
+  height: 48px;
+  justify-self: stretch;
+  color: var(--menu-text);
+  touch-action: manipulation;
+}
+body[data-public-menu] .carta-nav-btn:hover:not([aria-disabled="true"]) {
+  color: var(--menu-primary);
+  background: var(--menu-elevated);
+  border-color: var(--menu-border);
+}
+body[data-public-menu] .carta-nav-btn:focus-visible { position: relative; z-index: 1; }
+body[data-public-menu] .carta-nav-btn[aria-disabled="true"] {
+  opacity: 1;
+  color: #77756f;
+}
+body[data-public-menu] .carta-nav-prev { grid-column: 2; border-radius: 12px 0 0 12px; border-right-width: 0; }
+body[data-public-menu] .carta-nav-next { grid-column: 4; border-radius: 0 12px 12px 0; border-left-width: 0; }
+body[data-public-menu] .carta-drinks-note {
+  grid-area: 3 / 1 / 4 / -1;
+  justify-self: center;
+  padding: 0 12px;
+  color: var(--menu-muted);
+  background: transparent;
+  border: 0;
+  text-align: center;
+}
+
+body[data-public-menu] .carta-mobile-nav {
+  min-height: calc(var(--menu-nav-height) + env(safe-area-inset-bottom));
+  border-color: var(--menu-border);
+}
+body[data-public-menu] .carta-mobile-nav button { min-height: 60px; }
+body[data-public-menu] .carta-nav-icon-wrap svg { width: 24px; height: 24px; }
+body[data-public-menu] .carta-nav-badge { border-width: 0; }
+body[data-public-menu] .carta-nav-badge[data-has-items="false"] { display: none; }
+body[data-public-menu] .carta-nav-badge[data-has-items="true"] { color: var(--menu-bg); }
+body[data-public-menu] #btn-mobile-cart[data-has-items="true"] { color: var(--menu-primary); }
+
+body[data-public-menu] .carta-sheet-backdrop { backdrop-filter: none; }
+body[data-public-menu] .carta-category-sheet {
+  max-height: 85dvh;
+  gap: 4px;
+  padding: 4px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: var(--menu-sheet-radius) var(--menu-sheet-radius) 0 0;
+  box-shadow: 0 -12px 32px rgb(0 0 0 / 30%);
+  animation-duration: 180ms;
+}
+body[data-public-menu] .carta-sheet-grabber span { background: var(--menu-control-border); }
+body[data-public-menu] .carta-sheet-header { padding-inline: 4px; }
+body[data-public-menu] .carta-sheet-title-wrap > svg { display: none; }
+body[data-public-menu] .carta-sheet-title-wrap h2 { font: 800 1.25rem/1.2 'Inter', system-ui, sans-serif; }
+body[data-public-menu] .carta-sheet-close {
+  width: 48px;
+  height: 48px;
+  color: var(--menu-muted);
+  border: 0;
+  background: transparent;
+}
+body[data-public-menu] .carta-sheet-close:hover { color: var(--menu-text); background: var(--menu-elevated); }
+body[data-public-menu] .carta-sheet-list { gap: 4px; }
+body[data-public-menu] .carta-sheet-item {
+  min-height: 54px;
+  padding: 8px 12px;
+  color: var(--menu-text);
+  background: transparent;
+  border: 0;
+}
+body[data-public-menu] .carta-sheet-item:hover:not([aria-pressed="true"]) { background: var(--menu-elevated); }
+body[data-public-menu] .carta-sheet-item[aria-pressed="true"] {
+  color: var(--menu-bg);
+  background: var(--menu-primary);
+}
+body[data-public-menu] .carta-sheet-item .carta-cat-chevron { display: none; }
+body[data-public-menu] [data-public-all-products][hidden] { display: none; }
+body[data-public-menu] .carta-cat-icon svg { width: 22px; height: 22px; }
+
+body[data-public-menu] .carta-explore-panel { gap: 12px; padding: 0 2px 12px; }
+body[data-public-menu] .carta-explore-controls {
+  padding: 0;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+}
+body[data-public-menu] .carta-explore-cats,
+body[data-public-menu] .carta-station-tag { display: none; }
+body[data-public-menu] #public-explore-title {
+  margin: 2px 0 0;
+  color: var(--menu-text);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+body[data-public-menu] .carta-search-field > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--menu-muted);
+}
+body[data-public-menu] .carta-search-field input {
+  min-height: 50px;
+  padding: 8px 54px 8px 42px;
+  border-radius: var(--menu-radius);
+  background: var(--menu-surface);
+  border: 1px solid var(--menu-control-border);
+  color: var(--menu-text);
+  font-size: 1rem;
+}
+body[data-public-menu] #client-search::placeholder { color: var(--menu-muted); opacity: 1; }
+body[data-public-menu] .carta-search-field input::-webkit-search-cancel-button { display: none; }
+body[data-public-menu] #public-clear-search:not([hidden]) {
+  position: absolute;
+  inset: 1px 1px 1px auto;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  border-radius: 10px;
+  color: var(--menu-muted);
+}
+body[data-public-menu] #public-clear-search:hover { color: var(--menu-text); background: var(--menu-elevated); }
+body[data-public-menu] #public-clear-search svg { position: static; width: 20px; height: 20px; }
+body[data-public-menu] .carta-explore-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 248px), 1fr)); }
+body[data-public-menu] .carta-product-card {
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--menu-radius);
+  background: var(--menu-surface);
+  color: var(--menu-text);
+  border-color: var(--menu-border);
+}
+body[data-public-menu] .carta-product-card-head h3 { color: var(--menu-text); font-size: 1.0625rem; }
+body[data-public-menu] .carta-product-card-desc { color: var(--menu-muted); font-size: .875rem; line-height: 1.45; }
+body[data-public-menu] .carta-product-card-foot { padding-top: 0; border-top: 0; }
+body[data-public-menu] .carta-product-card-price { font-size: 1.1875rem; color: var(--menu-primary); }
+body[data-public-menu] #client-menu-grid .carta-product-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--menu-primary);
+  color: var(--menu-bg);
+  box-shadow: none;
+  transition: background-color var(--menu-transition);
+}
+body[data-public-menu] .carta-product-add svg { width: 18px; height: 18px; }
+body[data-public-menu] #client-menu-grid .carta-product-add:hover { background: var(--menu-hover); }
+body[data-public-menu] #client-menu-grid .carta-product-add:active { background: var(--menu-pressed); }
+
+body[data-public-menu] .carta-sidebar-head,
+body[data-public-menu] #public-sidebar-toggle { display: none; }
+
+@media (max-width: 1023px) {
+  body[data-public-menu] .menu-browser {
+    padding-bottom: calc(var(--menu-nav-height) + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 359px) {
+  body[data-public-menu] .carta-header-brand { gap: 6px; }
+  body[data-public-menu] .carta-brand-icon { width: 21px; height: 21px; }
+  body[data-public-menu] .carta-header { padding-inline: 10px; }
+}
+
+@media (min-width: 768px) {
+  body[data-public-menu] .carta-main-stage { padding: 16px; }
+}
+
+@media (min-width: 1024px) {
+  body[data-public-menu] .carta-header { padding-inline: 20px; }
+  body[data-public-menu] .carta-header-brand { gap: 12px; }
+  body[data-public-menu] .carta-mode-switch button { min-height: 48px; }
+  body[data-public-menu] .carta-desktop-shell { grid-template-columns: minmax(0, 214px) minmax(0, 1fr); }
+  body[data-public-menu] .carta-sidebar {
+    gap: 12px;
+    padding: 12px;
+    border-color: var(--menu-border);
+  }
+  body[data-public-menu] .carta-sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  body[data-public-menu] .carta-sidebar-title {
+    margin: 0 0 0 6px;
+    color: var(--menu-muted);
+    font-size: .875rem;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  body[data-public-menu] #public-sidebar-toggle {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 10px;
+    color: var(--menu-muted);
+  }
+  body[data-public-menu] #public-sidebar-toggle:hover {
+    color: var(--menu-text);
+    background: var(--menu-elevated);
+  }
+  body[data-public-menu] #public-sidebar-toggle svg { width: 22px; height: 22px; }
+  body[data-public-menu] .carta-sidebar-item {
+    min-height: 48px;
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  body[data-public-menu] .carta-sidebar-item:hover:not([aria-pressed="true"]) {
+    background: var(--menu-elevated);
+    border-color: var(--menu-border);
+  }
+  body[data-public-menu] .carta-sidebar-item[data-in-spread] {
+    color: var(--menu-primary);
+    background: var(--menu-elevated);
+  }
+  body[data-public-menu] .carta-sidebar-item[aria-pressed="true"] {
+    color: var(--menu-bg);
+    background: var(--menu-primary);
+  }
+  body[data-public-menu][data-menu-sidebar-compact] .carta-desktop-shell {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+  body[data-public-menu][data-menu-sidebar-compact] :is(.carta-sidebar-head, .carta-sidebar-item) {
+    justify-content: center;
+  }
+  body[data-public-menu][data-menu-sidebar-compact] .carta-sidebar :is(.carta-cat-label, .carta-sidebar-title) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-public-menu] .carta-category-sheet,
+  body[data-public-menu] .carta-order-btn.is-updated,
+  body[data-public-menu] .carta-mobile-nav .is-updated { animation: none; }
+  body[data-public-menu] :is(.carta-mode-switch button, .carta-tracker-pill, .carta-nav-btn, .carta-sidebar-item, .carta-sheet-item, .carta-order-btn, .carta-product-add, .carta-mobile-nav button) { transition: none; }
+}

@@ -1,0 +1,519 @@
+/* Public customer sheets. Theme variables are defined on the public menu body. */
+body[data-public-menu] :is(#client-cart, #modal-customize, .business-closed-modal) {
+  --menu-field-border: color-mix(in srgb, var(--menu-muted) 45%, var(--menu-border));
+  color: var(--menu-text);
+  color-scheme: dark;
+}
+
+body[data-public-menu] #cart-drawer-backdrop,
+body[data-public-menu] :is(#modal-customize, .business-closed-modal)::backdrop {
+  background: rgb(0 0 0 / 66%);
+  backdrop-filter: none;
+}
+
+body[data-public-menu] #client-cart:not([hidden]) {
+  background: var(--menu-surface);
+  border-color: var(--menu-border);
+  box-shadow: 0 20px 48px rgb(0 0 0 / 36%);
+  scroll-padding-block: 5rem 10rem;
+  animation-duration: .18s;
+}
+
+body[data-public-menu] #client-cart .checkout-header {
+  flex: none;
+  align-items: center;
+  padding: .75rem 1rem;
+  background: var(--menu-surface);
+  border-color: var(--menu-border);
+}
+
+body[data-public-menu] #client-cart-title,
+body[data-public-menu] #cust-title,
+body[data-public-menu] :is(.business-closed-modal-body h2, #tracker-modal-title) {
+  color: var(--menu-text);
+  font: 800 1.375rem/1.18 Inter, system-ui, sans-serif;
+  letter-spacing: -.025em;
+}
+
+body[data-public-menu] :is(.checkout-origin, #cust-base-price) {
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] #client-cart:has(#client-checkout[hidden]) .checkout-origin {
+  display: none;
+}
+
+body[data-public-menu] :is(.checkout-close, .product-customize-close, .business-closed-x) {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: .675rem;
+  background: transparent;
+  color: var(--menu-text);
+  box-shadow: none;
+}
+
+body[data-public-menu] :is(.checkout-close, .product-customize-close, .business-closed-x):hover {
+  border-color: var(--menu-border);
+  background: var(--menu-elevated);
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] :is(.checkout-close, .product-customize-close, .business-closed-x) :is(svg, i) {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+body[data-public-menu] #client-cart :is(.checkout-clear, .checkout-item-del, .public-cart-edit) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  min-height: 48px;
+  padding: .35rem .6rem;
+  border: 0;
+  border-radius: .6rem;
+  background: transparent;
+  color: var(--menu-muted);
+  font-size: .8125rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+body[data-public-menu] #client-cart :is(.checkout-clear, .checkout-item-del, .public-cart-edit):hover {
+  background: var(--menu-elevated);
+  color: var(--menu-text);
+}
+
+body[data-public-menu] #btn-client-clear[hidden] { display: none; }
+body[data-public-menu] .public-cart-edit :is(svg, i),
+body[data-public-menu] .checkout-item-del :is(svg, i) { width: 1.1rem; height: 1.1rem; }
+
+body[data-public-menu] #client-cart-items {
+  flex: none;
+  padding: 0 1rem;
+  gap: 0;
+}
+
+body[data-public-menu] .checkout-empty {
+  justify-items: center;
+  align-content: center;
+  min-height: 13rem;
+  gap: .45rem;
+  padding: 1.5rem .5rem 2rem;
+  border: none;
+  background: transparent;
+}
+
+body[data-public-menu] .checkout-empty-icon,
+body[data-public-menu] .checkout-empty > :is(svg, i) {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: .25rem;
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] .checkout-empty p {
+  color: var(--menu-text);
+  font-size: 1.0625rem;
+}
+
+body[data-public-menu] .checkout-empty span {
+  color: var(--menu-muted);
+  font-size: .875rem;
+}
+
+body[data-public-menu] .checkout-item {
+  padding: .875rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+body[data-public-menu] .checkout-item + .checkout-item {
+  border-top: 1px solid var(--menu-border);
+}
+
+body[data-public-menu] .checkout-item-title strong {
+  color: var(--menu-text);
+  font-size: 1rem;
+}
+
+body[data-public-menu] :is(.checkout-item-price, .client-tracker-total) {
+  color: var(--menu-primary);
+  font-size: 1rem;
+}
+
+body[data-public-menu] :is(.checkout-item-unit, .checkout-item-meta, .checkout-item-note, .order-breakdown) {
+  color: var(--menu-muted);
+}
+
+body[data-public-menu] .checkout-item-note {
+  padding: 0;
+  background: transparent;
+  font-weight: 500;
+}
+
+body[data-public-menu] .checkout-item-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: .25rem .5rem;
+}
+
+body[data-public-menu] .checkout-item-del { margin-inline-start: auto; }
+
+body[data-public-menu] :is(.checkout-stepper, #cust-quantity-row [role="group"]) {
+  border-color: var(--menu-border);
+  background: var(--menu-elevated);
+  overflow: visible;
+}
+
+body[data-public-menu] #client-cart :is([data-cc-inc], [data-cc-dec]),
+body[data-public-menu] :is(.checkout-taper-stepper button, #cust-quantity-row button) {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--menu-border);
+  border-radius: .55rem;
+  background: var(--menu-elevated);
+  color: var(--menu-primary);
+  box-shadow: none;
+}
+
+body[data-public-menu] #client-cart :is([data-cc-inc], [data-cc-dec]) {
+  border-color: transparent;
+  background: transparent;
+}
+
+body[data-public-menu] #client-cart :is([data-cc-inc], [data-cc-dec]):hover:not(:disabled),
+body[data-public-menu] :is(.checkout-taper-stepper button, #cust-quantity-row button):hover:not(:disabled) {
+  border-color: var(--menu-muted);
+  color: var(--menu-hover);
+}
+
+body[data-public-menu] :is(#client-cart, #modal-customize) :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--menu-primary);
+  outline-offset: 2px;
+}
+
+/* Let the summary stick to the drawer while keeping all fields in the existing form. */
+body[data-public-menu] #client-checkout:not([hidden]) { display: contents; }
+
+body[data-public-menu] .checkout-fields {
+  flex: none;
+  gap: .875rem;
+  padding: 1rem;
+  border-top-color: var(--menu-border);
+}
+
+body[data-public-menu] :is(.checkout-field label, .checkout-tapers-info label, .checkout-delivery-head,
+  .checkout-payment legend, .checkout-location-head, .checkout-recojo-title) {
+  color: var(--menu-text);
+  font-size: .875rem;
+}
+
+body[data-public-menu] :is(.checkout-badge-opt, .checkout-location-prompt, .checkout-tapers-info span,
+  .checkout-recojo-sub, .customize-optional, #cust-desc) {
+  color: var(--menu-muted);
+}
+
+body[data-public-menu] .checkout-badge-req { color: var(--menu-muted); }
+
+body[data-public-menu] #client-checkout input:not([type="checkbox"]),
+body[data-public-menu] #modal-customize :is(#cust-note, #cust-drink) {
+  min-height: 48px;
+  border-color: var(--menu-field-border);
+  background: var(--menu-bg);
+  color: var(--menu-text);
+  font-size: 1rem;
+}
+
+body[data-public-menu] #client-checkout input:not([type="checkbox"]):focus,
+body[data-public-menu] #modal-customize :is(#cust-note, #cust-drink):focus {
+  border-color: var(--menu-primary);
+  box-shadow: none;
+}
+
+body[data-public-menu] :is(#client-checkout input, #modal-customize input)::placeholder {
+  color: var(--menu-muted);
+}
+
+body[data-public-menu] :is(.checkout-option input, .customize-cream-check) {
+  accent-color: var(--menu-primary);
+}
+
+body[data-public-menu] :is(.checkout-option, .checkout-tapers, .checkout-pay-info, .checkout-gps-status) {
+  border-color: var(--menu-border);
+  background: var(--menu-elevated);
+  color: var(--menu-text);
+}
+
+body[data-public-menu] :is(.checkout-option, .checkout-gps-link) { min-height: 48px; }
+
+body[data-public-menu] .checkout-option:has(input:checked) {
+  border-color: var(--menu-primary);
+  background: var(--menu-elevated);
+  color: var(--menu-text);
+}
+
+body[data-public-menu] #client-delivery-fields:not(.hidden),
+body[data-public-menu] .checkout-recojo-card {
+  padding: .875rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--menu-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+body[data-public-menu] :is(.checkout-payment, .checkout-summary, .checkout-tracker-bar) {
+  border-color: var(--menu-border);
+}
+
+body[data-public-menu] :is(.checkout-recojo-head svg, .checkout-gps-link, .del-pay-btn span) {
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] #client-cart :is(.checkout-remote-btn, .checkout-loc-btn, .del-pay-btn, .checkout-copy-btn, .checkout-gps-action),
+body[data-public-menu] #modal-customize :is(.customize-option, #cust-flavors-grid button) {
+  min-height: 48px;
+  border: 1px solid var(--menu-border);
+  border-radius: .55rem;
+  background: var(--menu-elevated);
+  color: var(--menu-text);
+  box-shadow: none;
+}
+
+body[data-public-menu] #client-cart :is(.checkout-remote-btn, .checkout-loc-btn, .del-pay-btn, .checkout-copy-btn, .checkout-gps-action):hover:not(:disabled, [aria-pressed="true"]),
+body[data-public-menu] #modal-customize :is(.customize-option, #cust-flavors-grid button):hover:not(:disabled, [aria-pressed="true"]) {
+  border-color: var(--menu-muted);
+  background: var(--menu-elevated);
+  box-shadow: none;
+}
+
+body[data-public-menu] #client-cart :is(.checkout-remote-btn, .checkout-loc-btn, .del-pay-btn)[aria-pressed="true"],
+body[data-public-menu] #modal-customize :is(.customize-option[aria-pressed="true"], .customize-cream:has(input:checked), #cust-flavors-grid button[aria-pressed="true"]) {
+  border-color: var(--menu-primary);
+  background: var(--menu-primary);
+  color: var(--menu-bg);
+  box-shadow: none;
+}
+
+body[data-public-menu] #client-cart :is(.checkout-remote-btn, .checkout-loc-btn, .del-pay-btn)[aria-pressed="true"] :is(svg, span),
+body[data-public-menu] #modal-customize .customize-option[aria-pressed="true"] .customize-extra-meta {
+  color: var(--menu-bg);
+}
+
+body[data-public-menu] #modal-customize .customize-cream:has(input:checked) input {
+  accent-color: var(--menu-bg);
+}
+
+body[data-public-menu] .checkout-gps-status[data-state="ready"] {
+  border-color: var(--menu-success);
+  background: color-mix(in srgb, var(--menu-success) 10%, var(--menu-surface));
+  color: var(--menu-text);
+}
+
+body[data-public-menu] :is(.checkout-gps-status[data-state="error"], #client-checkout-error, .business-closed-inline, .business-closed-pill) {
+  border-color: var(--menu-error);
+  background: color-mix(in srgb, var(--menu-error) 14%, var(--menu-surface));
+  color: var(--menu-text);
+}
+
+body[data-public-menu] #client-checkout input[aria-invalid="true"] { border-color: var(--menu-error); }
+
+body[data-public-menu] #client-cart .checkout-summary {
+  flex: none;
+  padding: .75rem 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  background: var(--menu-surface);
+  box-shadow: none;
+}
+
+body[data-public-menu] .checkout-total { color: var(--menu-text); }
+
+body[data-public-menu] :is(#client-cart-total, #cust-price-preview) {
+  color: var(--menu-primary);
+  font-size: clamp(1.375rem, 5vw, 1.75rem);
+}
+
+body[data-public-menu] :is(.checkout-empty-browse, #btn-submit-client-order, #customize-submit-label,
+  .business-closed-modal-cta, .checkout-tracker-btn) {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: .6rem;
+  background: var(--menu-primary);
+  color: var(--menu-bg);
+  box-shadow: none;
+}
+
+body[data-public-menu] :is(.checkout-empty-browse, #btn-submit-client-order, #customize-submit-label,
+  .business-closed-modal-cta, .checkout-tracker-btn):hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--menu-hover);
+  box-shadow: none;
+}
+
+body[data-public-menu] :is(.checkout-empty-browse, #btn-submit-client-order, #customize-submit-label,
+  .business-closed-modal-cta, .checkout-tracker-btn):active:not(:disabled) {
+  background: var(--menu-pressed);
+  transform: none;
+  box-shadow: none;
+}
+
+body[data-public-menu] :is(#btn-submit-client-order, #customize-submit-label):disabled {
+  border-color: var(--menu-border);
+  background: var(--menu-elevated);
+  color: var(--menu-muted);
+  opacity: 1;
+}
+
+/* Product configuration uses the same public panels as checkout. */
+body[data-public-menu] #modal-customize {
+  border-color: var(--menu-border);
+  background: var(--menu-surface);
+  box-shadow: 0 24px 48px rgb(0 0 0 / 36%);
+}
+
+body[data-public-menu] .product-customize-header {
+  flex: none;
+  padding: .875rem 1rem;
+  border-bottom: 1px solid var(--menu-border);
+  background: var(--menu-surface);
+}
+
+body[data-public-menu] .product-customize-header p {
+  line-height: 1.45;
+}
+
+body[data-public-menu] :is(.product-customize-body label, .product-customize-body legend) {
+  color: var(--menu-text);
+}
+
+body[data-public-menu] #cust-flavors-req,
+body[data-public-menu] .customize-extra-meta { color: var(--menu-primary); }
+
+body[data-public-menu] #cust-error { color: color-mix(in srgb, var(--menu-error) 42%, var(--menu-text)); }
+
+body[data-public-menu] #cust-quantity-row:not([hidden]) {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--menu-border);
+  color: var(--menu-text);
+  font-weight: 750;
+}
+
+body[data-public-menu] #cust-quantity-row [role="group"] {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+body[data-public-menu] #cust-quantity-row :is(output, [aria-live]) {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+body[data-public-menu] .product-customize-body { scrollbar-color: var(--menu-border) var(--menu-surface); }
+
+body[data-public-menu] .product-customize-footer {
+  padding: .75rem 1rem max(.75rem, env(safe-area-inset-bottom, 0px));
+  border-color: var(--menu-border);
+  background: var(--menu-surface);
+}
+
+body[data-public-menu] .customize-total { color: var(--menu-muted); }
+
+body[data-public-menu] :is(#modal-customize, #client-cart) :is(.ph, .ph-fill, .ph-duotone) {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Public order tracking and availability. */
+body[data-public-menu] .business-closed-modal-card {
+  border-color: var(--menu-border);
+  background: var(--menu-surface);
+  color: var(--menu-text);
+  box-shadow: 0 24px 48px rgb(0 0 0 / 36%);
+}
+
+body[data-public-menu] .business-closed-pill {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+body[data-public-menu] .business-closed-modal-icon {
+  border: 0;
+  background: var(--menu-elevated);
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] :is(.client-tracker-code, .checkout-tracker-copy, .business-closed-modal-body p) {
+  color: var(--menu-text);
+}
+
+body[data-public-menu] :is(.client-tracker-modal-sub, .client-tracker-empty, .business-closed-modal-body .business-closed-sub) {
+  color: var(--menu-muted);
+}
+
+body[data-public-menu] :is(.client-tracker-item, .checkout-tracker-bar) {
+  border-color: var(--menu-border);
+  background: var(--menu-elevated);
+}
+
+body[data-public-menu] .client-tracker-badge {
+  background: var(--menu-elevated);
+  color: var(--menu-primary);
+}
+
+body[data-public-menu] .client-tracker-badge[data-tone="cooking"] {
+  color: color-mix(in srgb, var(--menu-accent) 72%, var(--menu-text));
+}
+
+body[data-public-menu] .client-tracker-badge[data-tone="ready"] {
+  color: var(--menu-success);
+}
+
+body[data-public-menu] .client-tracker-badge[data-tone="closed"] {
+  color: color-mix(in srgb, var(--menu-error) 42%, var(--menu-text));
+}
+
+body[data-public-menu] .business-closed-modal button:focus-visible {
+  outline-color: var(--menu-primary);
+}
+
+@media (max-width: 767px) {
+  body[data-public-menu] #client-cart:not([hidden]),
+  body[data-public-menu] #modal-customize[open] {
+    border-radius: 1.375rem 1.375rem 0 0;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-public-menu] .product-customize-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .6rem;
+  }
+
+  body[data-public-menu] .customize-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-public-menu] :is(#client-cart, #modal-customize, .business-closed-modal),
+  body[data-public-menu] :is(#client-cart, #modal-customize, .business-closed-modal) :is(button, input, select) {
+    animation: none;
+    transition: none;
+  }
+}

@@ -20,8 +20,8 @@ copyFileSync(path('node_modules/tailwindcss/LICENSE'), path('public/vendor/tailw
 copyFileSync(path('node_modules/qrcode-generator/qrcode.js'), path('public/vendor/qrcode.js'));
 copyFileSync(path('node_modules/@phosphor-icons/core/LICENSE'), path('public/vendor/phosphor-LICENSE.txt'));
 
-// Extract exact verified Phosphor Icons SVG definitions for the staff login screen (zero CDN / zero font FOUT).
-const phosphorSpecs = [
+// Extract the official SVG definitions used by each surface.
+const loginIcons = [
   ['identification-badge-duotone', 'duotone/identification-badge-duotone.svg'],
   ['chef-hat-duotone', 'duotone/chef-hat-duotone.svg'],
   ['lock-simple', 'regular/lock-simple.svg'],
@@ -33,19 +33,36 @@ const phosphorSpecs = [
   ['warning-circle', 'regular/warning-circle.svg'],
   ['spinner-gap', 'regular/spinner-gap.svg']
 ];
-const phosphorEntries = phosphorSpecs.map(([name, rel]) => {
-  const raw = readFileSync(path(`node_modules/@phosphor-icons/core/assets/${rel}`), 'utf8').trim();
-  const inner = raw.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
-  return `  ${JSON.stringify(name)}: ${JSON.stringify(inner)}`;
+const menuIcons = [
+  'hamburger-duotone', 'book-open-duotone', 'squares-four-duotone',
+  'magnifying-glass-duotone', 'shopping-bag-duotone', 'shopping-bag-fill',
+  'bowl-food-duotone', 'fork-knife-duotone', 'coffee-duotone', 'wine-duotone',
+  'check', 'trash', 'caret-left', 'caret-right', 'plus', 'minus', 'pencil-simple',
+  'x', 'columns', 'map-pin', 'crosshair', 'arrow-square-out', 'arrow-right',
+  'warning-circle', 'clock', 'storefront', 'receipt', 'paper-plane-tilt',
+  'check-circle', 'credit-card', 'bicycle', 'calendar-x'
+].map(name => {
+  const weight = name.endsWith('-duotone') ? 'duotone' : name.endsWith('-fill') ? 'fill' : 'regular';
+  return [name, `${weight}/${name}.svg`];
 });
-writeFileSync(
-  path('public/personal/phosphor-icons.js'),
-  `// Auto-generated from @phosphor-icons/core via scripts/build-assets.mjs. Do not edit manually.\n`
-  + `export const PHOSPHOR_ICONS = Object.freeze({\n${phosphorEntries.join(',\n')}\n});\n\n`
-  + `export function phosphorIconSvg(name, { size = 20, className = '' } = {}) {\n`
-  + `  const inner = PHOSPHOR_ICONS[name];\n`
-  + `  if (!inner) return '';\n`
-  + `  const cls = className ? \` class="\${className}"\` : '';\n`
-  + `  return \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="\${size}" height="\${size}" fill="currentColor" aria-hidden="true" focusable="false"\${cls}>\${inner}</svg>\`;\n`
-  + `}\n`
-);
+
+function writePhosphorIcons(target, specs) {
+  const phosphorEntries = specs.map(([name, rel]) => {
+    const raw = readFileSync(path(`node_modules/@phosphor-icons/core/assets/${rel}`), 'utf8').trim();
+    const inner = raw.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+    return `  ${JSON.stringify(name)}: ${JSON.stringify(inner)}`;
+  });
+  writeFileSync(
+    path(target),
+    `// Auto-generated from @phosphor-icons/core via scripts/build-assets.mjs. Do not edit manually.\n`
+    + `export const PHOSPHOR_ICONS = Object.freeze({\n${phosphorEntries.join(',\n')}\n});\n\n`
+    + `export function phosphorIconSvg(name, { size = 20, className = '' } = {}) {\n`
+    + `  const inner = PHOSPHOR_ICONS[name];\n`
+    + `  if (!inner) return '';\n`
+    + `  const cls = className ? \` class="\${className}"\` : '';\n`
+    + `  return \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="\${size}" height="\${size}" fill="currentColor" aria-hidden="true" focusable="false"\${cls}>\${inner}</svg>\`;\n`
+    + `}\n`
+  );
+}
+writePhosphorIcons('public/personal/phosphor-icons.js', loginIcons);
+writePhosphorIcons('public/carta-icons.js', menuIcons);
